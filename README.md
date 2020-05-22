@@ -10,7 +10,7 @@ Generate masks for glint regions in RGB images.
     - You can most likely just do `conda env create -f environment.yml` with the environment.yml file provided in this repository.
 
 ## glint_mask_RGB.py
-This is the method based on work by Tom Bell at UC Santa Barbara.
+This is the method based on Matlab code written by Tom Bell at UC Santa Barbara from 2019-06-28.
 
 ### Running the code
 `glint_mask_RGB.py` can be run as a command line script or incorporated into other Python scripts for more advanced use cases.
@@ -73,5 +73,3 @@ python specular_mask.py /path/to/dir/with/images/ /path/to/out_masks/dir/ --perc
 
 ---
 *Created by Taylor Denouden @ Hakai Institute on 2020-05-22*
-
-*Based on Matlab code by Tom Bell @ UCSB on 2019-06-28*
