@@ -6,7 +6,8 @@ Mask Glint in RGB Images. Based on Matlab script by Tom Bell written 6/28/2019
 ## Installation
 1. You must have the Anaconda package manager installed. Do that. [Instructions here](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html)
 2. Install the necessary packages listed in environment.yml file. 
-    - See the [Anaconda documentation here](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-from-file) for installing from an environment.yml file. You can most likely just do `conda env create -f environment.yml`
+    - See the [Anaconda documentation here](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-from-file) for installing from an environment.yml file. 
+    - You can most likely just do `conda env create -f environment.yml` with the environment.yml file provided in this repository.
 
 ## Running the code
 The glint mask code can be run as either a command line script or incorporated into another Python script (i.e. for more complex use cases).

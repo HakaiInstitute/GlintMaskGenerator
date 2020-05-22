@@ -4,7 +4,7 @@
 #
 # Description: Mask Glint in RGB Images. Based on Matlab script by Tom Bell written 6/28/2019
 # Instructions:
-# 1. Install the necessary packages listed in environment.yaml file.
+# 1. Install the necessary packages listed in environment.yml file.
 #   See the Anaconda documentation. You can most likely just do `conda env create -f environme.yaml`
 # 2. Activate the created conda environment `conda activate deglint`
 # 3. Navigate to the directory this file is located in the terminal and run it.
