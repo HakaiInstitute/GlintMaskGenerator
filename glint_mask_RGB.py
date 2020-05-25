@@ -24,7 +24,7 @@ def make_mask(img_path, mask_out_path, glint_threshold=0.9, mask_buffer_sigma=20
     :param mask_out_path: The path to send your out image including the file name and type. e.g. "/path/to/mask.png".
         mask_out_path must be a directory if img_path is specified as a directory.
     :param glint_threshold: The amount of binned "blueness" that should be glint. Domain for values is (0.0, 1.0).
-        Play with this value. Default is 0.5.
+        Play with this value. Default is 0.9.
     :param mask_buffer_sigma: The sigma for the Gaussian kernel used to buffer the mask. Defaults to 20
     :param num_bins: The number of bins the blue channel is slotted into. Defaults to 8 as in Tom's script.
     :return: Numpy array of mask for results on single files, None for directory processing.
