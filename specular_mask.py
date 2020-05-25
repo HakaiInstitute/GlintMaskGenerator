@@ -47,13 +47,10 @@ def estimate_specular_reflection_component(img, percent_diffuse):
     # Estimate the spectral component of each pixel
     spec_ref_est = np.clip(i_max - (q_x_hat * i_range), 0, None)
 
-    # MinMax scale values
-    spec_ref_scaled = (spec_ref_est - spec_ref_est.min()) / (spec_ref_est.max() - spec_ref_est.min())
-
-    return spec_ref_scaled
+    return spec_ref_est
 
 
-def make_mask(img_path, mask_out_path, percent_diffuse=0.2, mask_thresh=0.5, opening_iterations=2):
+def make_mask(img_path, mask_out_path, percent_diffuse=0.1, mask_thresh=0.2, opening_iterations=0):
     """
     Create and return a glint mask for RGB imagery.
 
@@ -64,11 +61,11 @@ def make_mask(img_path, mask_out_path, percent_diffuse=0.2, mask_thresh=0.5, ope
     :param mask_out_path: The path to send your out image including the file name and type. e.g. "/path/to/mask.png".
         mask_out_path must be a directory if img_path is specified as a directory.
     :param percent_diffuse: An estimate of the percentage of pixels in an image that show pure diffuse reflectance, and
-        thus no specular reflectance (glint). Defaults to 0.5. Try playing with values, low ones typically work well.
+        thus no specular reflectance (glint). Defaults to 0.1. Try playing with values, low ones typically work well.
     :param mask_thresh: The threshold on the specular reflectance estimate image to convert into a mask.
-        Default is 0.5.
+        E.g. if more than 50% specular reflectance is unacceptable, use 0.5. Default is 0.2.
     :param opening_iterations: The number of morphological opening iterations on the produced mask.
-        Useful for closing small holes in the mask. Set to 0 to shut off.
+        Useful for closing small holes in the mask. Set to 0 by default (i.e. it's shut off).
     :return: Numpy array of mask for results on single files, None for directory processing.
         Side effects are that the mask is saved to the specified mask_out_path location.
     """
@@ -90,7 +87,7 @@ def make_mask(img_path, mask_out_path, percent_diffuse=0.2, mask_thresh=0.5, ope
         img = Image.open(img_path)
 
         # Use RGB bands only
-        img = np.array(img)[:, :, :3]
+        img = np.array(img)[:, :, :3] / 255.
 
         spec_ref = estimate_specular_reflection_component(img, percent_diffuse)
 
@@ -98,13 +95,14 @@ def make_mask(img_path, mask_out_path, percent_diffuse=0.2, mask_thresh=0.5, ope
         mask = (spec_ref <= mask_thresh).astype(np.uint8)
 
         # Fill in small holes in the mask
-        mask_closed = binary_opening(mask, iterations=opening_iterations).astype(np.uint8)
+        if opening_iterations > 0:
+            mask = binary_opening(mask, iterations=opening_iterations).astype(np.uint8)
 
         # Save the mask
-        mask_closed *= 255
-        Image.fromarray(mask_closed).save(mask_out_path)
+        mask *= 255
+        Image.fromarray(mask.astype(np.uint8)).save(mask_out_path)
 
-        return mask_closed
+        return mask
 
 
 if __name__ == '__main__':
