@@ -34,20 +34,20 @@ def estimate_specular_reflection_component(img, percent_diffuse):
     i_range = i_max - i_min
 
     # Calculate intensity ratio
-    q = np.divide(i_max, np.clip(i_range, EPSILON, None))
+    q = np.divide(i_max, i_range + EPSILON)
 
     # Select diffuse only pixels using the PERCENTILE_THRESH
     # i.e. A percentage of PERCENTILE_THRESH pixels are supposed to have no
     #     specular reflection
     num_thresh = math.ceil(percent_diffuse * q.size)
 
-    # Get indices of the percentage of pixels with lowest intensity ratio
-    q_x_hat = np.partition(q.flatten(), num_thresh - 1)[num_thresh - 1]
+    # Get intensity ratio for pixel that would divide the image pixels such that percent_diffuse pixels have a lower intensity ratio
+    q_x_hat = np.partition(q.ravel(), num_thresh)[num_thresh]
 
     # Estimate the spectral component of each pixel
     spec_ref_est = np.clip(i_max - (q_x_hat * i_range), 0, None)
 
-    # Scale value
+    # MinMax scale values
     spec_ref_scaled = (spec_ref_est - spec_ref_est.min()) / (spec_ref_est.max() - spec_ref_est.min())
 
     return spec_ref_scaled
@@ -88,6 +88,9 @@ def make_mask(img_path, mask_out_path, percent_diffuse=0.2, mask_thresh=0.5, ope
     else:
         # Open the image
         img = Image.open(img_path)
+
+        # Use RGB bands only
+        img = np.array(img)[:, :, :3]
 
         spec_ref = estimate_specular_reflection_component(img, percent_diffuse)
 
