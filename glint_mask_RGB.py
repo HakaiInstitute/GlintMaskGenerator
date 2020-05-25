@@ -5,14 +5,15 @@
 #
 # Description: Generate masks for glint regions in in RGB Images.
 
-from PIL import Image
-import numpy as np
-from scipy.ndimage.filters import gaussian_filter
-from fire import Fire
 from pathlib import Path
 
+import numpy as np
+from PIL import Image
+from fire import Fire
+from scipy.ndimage.filters import gaussian_filter
 
-def make_mask(img_path, mask_out_path, glint_threshold=0.5, mask_buffer_sigma=20, num_bins=8):
+
+def make_mask(img_path, mask_out_path, glint_threshold=0.9, mask_buffer_sigma=20, num_bins=8):
     """
     Create and return a glint mask for RGB imagery.
 
@@ -45,11 +46,14 @@ def make_mask(img_path, mask_out_path, glint_threshold=0.5, mask_buffer_sigma=20
         # Open the image
         img = Image.open(img_path)
 
+        # Use RGB bands only
+        img = np.array(img)[:, :, :3]
+
         # Get the Blue Channel
-        blue = np.array(img)[:, :, 2]
+        blue = img[:, :, 2]
 
         # Quantize blue channel into num_bins bins
-        bins = np.linspace(blue.min(), blue.max(), num_bins)
+        bins = np.linspace(0, 255, num_bins, endpoint=False)
         si = np.digitize(blue, bins)
         # Rescale to (0, 1) range
         sis = (si.astype(np.float) - si.min()) / (si.max() - si.min())
