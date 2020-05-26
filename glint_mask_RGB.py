@@ -14,6 +14,7 @@ from scipy.ndimage.filters import gaussian_filter
 
 Image.MAX_IMAGE_PIXELS = None
 
+
 def make_mask(img_path, mask_out_path, glint_threshold=0.9, mask_buffer_sigma=20, num_bins=8):
     """
     Create and return a glint mask for RGB imagery.
@@ -39,7 +40,7 @@ def make_mask(img_path, mask_out_path, glint_threshold=0.9, mask_buffer_sigma=20
         # Get all images in the specified directory
         for ext in ("png", "jpg", "jpeg"):
             for path in Path(img_path).glob(f"*.{ext}"):
-                out_path = Path(mask_out_path).joinpath(f"{path.stem}_mask{path.suffix}")
+                out_path = Path(mask_out_path).joinpath(f"{path.stem}_mask.png")
                 _ = make_mask(str(path), str(out_path),
                               glint_threshold=glint_threshold, mask_buffer_sigma=mask_buffer_sigma, num_bins=num_bins)
 
@@ -59,19 +60,17 @@ def make_mask(img_path, mask_out_path, glint_threshold=0.9, mask_buffer_sigma=20
         # Rescale to (0, 1) range
         sis = (si.astype(np.float) - si.min()) / (si.max() - si.min())
 
-        # Create empty Mask
-        mask = np.ones(blue.shape)
-
         # Find Glint Threshold and Set those Pixels to 1
-        mask[sis > glint_threshold] = 0
+        mask = (sis <= glint_threshold)
 
         # Create Buffered Mask
-        mask_buffered = gaussian_filter(mask, mask_buffer_sigma)
-        mask[mask_buffered < 0.99] = 0
-        mask = mask.astype(np.uint8) * 255
+        mask_buffered = gaussian_filter(mask.astype(np.float), mask_buffer_sigma)
+        mask = mask_buffered >= 0.99
 
         # Save the mask
-        Image.fromarray(mask).save(mask_out_path)
+        mask = mask.astype(np.uint8) * 255
+        mask_img = Image.fromarray(mask, mode='L')
+        mask_img.save(mask_out_path)
 
         return mask
 

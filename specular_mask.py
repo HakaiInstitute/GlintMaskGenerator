@@ -79,7 +79,7 @@ def make_mask(img_path, mask_out_path, percent_diffuse=0.1, mask_thresh=0.2, ope
         # Get all images in the specified directory
         for ext in ("png", "jpg", "jpeg"):
             for path in Path(img_path).glob(f"*.{ext}"):
-                out_path = Path(mask_out_path).joinpath(f"{path.stem}_mask{path.suffix}")
+                out_path = Path(mask_out_path).joinpath(f"{path.stem}_mask.png")
                 _ = make_mask(str(path), str(out_path),
                               percent_diffuse=percent_diffuse, mask_thresh=mask_thresh,
                               opening_iterations=opening_iterations)
@@ -94,15 +94,16 @@ def make_mask(img_path, mask_out_path, percent_diffuse=0.1, mask_thresh=0.2, ope
         spec_ref = estimate_specular_reflection_component(img, percent_diffuse)
 
         # Generate the mask
-        mask = (spec_ref <= mask_thresh).astype(np.uint8)
+        mask = (spec_ref <= mask_thresh)
 
         # Fill in small holes in the mask
         if opening_iterations > 0:
-            mask = binary_opening(mask, iterations=opening_iterations).astype(np.uint8)
+            mask = binary_opening(mask.astype(np.uint8), iterations=opening_iterations).astype(np.bool)
 
         # Save the mask
-        mask *= 255
-        Image.fromarray(mask.astype(np.uint8)).save(mask_out_path)
+        mask = mask.astype(np.uint8) * 255
+        mask_img = Image.fromarray(mask, mode='L')
+        mask_img.save(mask_out_path)
 
         return mask
 
