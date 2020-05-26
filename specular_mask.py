@@ -13,6 +13,8 @@ from PIL import Image
 from fire import Fire
 from scipy.ndimage.morphology import binary_opening
 
+Image.MAX_IMAGE_PIXELS = None
+
 # For numerical stability in division ops
 EPSILON = 1e-8
 

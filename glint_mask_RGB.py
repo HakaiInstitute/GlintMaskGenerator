@@ -12,6 +12,7 @@ from PIL import Image
 from fire import Fire
 from scipy.ndimage.filters import gaussian_filter
 
+Image.MAX_IMAGE_PIXELS = None
 
 def make_mask(img_path, mask_out_path, glint_threshold=0.9, mask_buffer_sigma=20, num_bins=8):
     """
