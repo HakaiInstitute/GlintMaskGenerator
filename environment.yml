@@ -1,4 +1,4 @@
-name: deglint
+name: glint
 channels:
   - conda-forge
 dependencies:
