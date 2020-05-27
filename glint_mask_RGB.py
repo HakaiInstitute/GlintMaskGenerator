@@ -38,7 +38,7 @@ def make_mask(img_path, mask_out_path, glint_threshold=0.9, mask_buffer_sigma=20
                 "img_path and mask_out_path must both be a path to a directory, or both be a path to a named file.")
 
         # Get all images in the specified directory
-        for ext in ("png", "jpg", "jpeg"):
+        for ext in ("png", "PNG", "jpg", "JPG", "jpeg", "JPEG"):
             for path in Path(img_path).glob(f"*.{ext}"):
                 out_path = Path(mask_out_path).joinpath(f"{path.stem}_mask.png")
                 _ = make_mask(str(path), str(out_path),
