@@ -11,6 +11,7 @@ import numpy as np
 from PIL import Image
 from fire import Fire
 from scipy.ndimage.filters import gaussian_filter
+from tqdm import tqdm
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -38,8 +39,8 @@ def make_mask(img_path, mask_out_path, glint_threshold=0.9, mask_buffer_sigma=20
                 "img_path and mask_out_path must both be a path to a directory, or both be a path to a named file.")
 
         # Get all images in the specified directory
-        for ext in ("png", "PNG", "jpg", "JPG", "jpeg", "JPEG"):
-            for path in Path(img_path).glob(f"*.{ext}"):
+        for ext in tqdm(("png", "PNG", "jpg", "JPG", "jpeg", "JPEG")):
+            for path in tqdm(list(Path(img_path).glob(f"*.{ext}"))):
                 out_path = Path(mask_out_path).joinpath(f"{path.stem}_mask.png")
                 _ = make_mask(str(path), str(out_path),
                               glint_threshold=glint_threshold, mask_buffer_sigma=mask_buffer_sigma, num_bins=num_bins)

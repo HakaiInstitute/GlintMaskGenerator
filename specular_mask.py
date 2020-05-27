@@ -12,6 +12,7 @@ import numpy as np
 from PIL import Image
 from fire import Fire
 from scipy.ndimage.morphology import binary_opening
+from tqdm import tqdm
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -77,8 +78,8 @@ def make_mask(img_path, mask_out_path, percent_diffuse=0.1, mask_thresh=0.2, ope
                 "img_path and mask_out_path must both be a path to a directory, or both be a path to a named file.")
 
         # Get all images in the specified directory
-        for ext in ("png", "PNG", "jpg", "JPG", "jpeg", "JPEG"):
-            for path in Path(img_path).glob(f"*.{ext}"):
+        for ext in tqdm(("png", "PNG", "jpg", "JPG", "jpeg", "JPEG")):
+            for path in tqdm(list(Path(img_path).glob(f"*.{ext}"))):
                 out_path = Path(mask_out_path).joinpath(f"{path.stem}_mask.png")
                 _ = make_mask(str(path), str(out_path),
                               percent_diffuse=percent_diffuse, mask_thresh=mask_thresh,
