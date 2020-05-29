@@ -18,7 +18,7 @@ from tqdm import tqdm
 Image.MAX_IMAGE_PIXELS = None
 
 
-def make_and_save_mask(img_path, mask_out_path, glint_threshold=0.9, mask_buffer_sigma=20, num_bins=8):
+def make_and_save_mask(img_path, mask_out_path, glint_threshold=0.9, mask_buffer_sigma=20, num_bins=8, processes=None):
     """
     Create and return a glint mask for RGB imagery.
 
@@ -32,6 +32,7 @@ def make_and_save_mask(img_path, mask_out_path, glint_threshold=0.9, mask_buffer
         Play with this value. Default is 0.9.
     :param mask_buffer_sigma: The sigma for the Gaussian kernel used to buffer the mask. Defaults to 20
     :param num_bins: The number of bins the blue channel is slotted into. Defaults to 8 as in Tom's script.
+    :param processes: The number of processes to use for parallel processing. Defaults to number of CPUs.
     :return: None. Side effects are that the mask is saved to the specified mask_out_path location.
     """
     if Path(img_path).is_dir():
@@ -50,7 +51,7 @@ def make_and_save_mask(img_path, mask_out_path, glint_threshold=0.9, mask_buffer
     f = partial(make_single_mask, glint_threshold=glint_threshold,
                 mask_buffer_sigma=mask_buffer_sigma, num_bins=num_bins)
 
-    with ProcessPoolExecutor(initializer=tqdm.set_lock, initargs=(tqdm.get_lock(),)) as executor:
+    with ProcessPoolExecutor(max_workers=processes, initializer=tqdm.set_lock, initargs=(tqdm.get_lock(),)) as executor:
         for path, mask in zip(img_paths, executor.map(f, img_paths)):
             progress.update()
             # Save the mask
@@ -59,6 +60,7 @@ def make_and_save_mask(img_path, mask_out_path, glint_threshold=0.9, mask_buffer
             mask_img.save(str(out_path))
 
     progress.close()
+
 
 def make_single_mask(img_path, glint_threshold=0.9, mask_buffer_sigma=20, num_bins=8):
     """

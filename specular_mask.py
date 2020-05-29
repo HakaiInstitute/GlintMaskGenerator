@@ -56,7 +56,8 @@ def estimate_specular_reflection_component(img, percent_diffuse):
     return spec_ref_est
 
 
-def make_and_save_mask(img_path, mask_out_path, percent_diffuse=0.1, mask_thresh=0.2, opening_iterations=0):
+def make_and_save_mask(img_path, mask_out_path, percent_diffuse=0.1, mask_thresh=0.4, opening_iterations=0,
+                       processes=None):
     """
     Create and return a glint mask for RGB imagery.
 
@@ -69,9 +70,10 @@ def make_and_save_mask(img_path, mask_out_path, percent_diffuse=0.1, mask_thresh
     :param percent_diffuse: An estimate of the percentage of pixels in an image that show pure diffuse reflectance, and
         thus no specular reflectance (glint). Defaults to 0.1. Try playing with values, low ones typically work well.
     :param mask_thresh: The threshold on the specular reflectance estimate image to convert into a mask.
-        E.g. if more than 50% specular reflectance is unacceptable, use 0.5. Default is 0.2.
+        E.g. if more than 50% specular reflectance is unacceptable, use 0.5. Default is 0.4.
     :param opening_iterations: The number of morphological opening iterations on the produced mask.
         Useful for closing small holes in the mask. Set to 0 by default (i.e. it's shut off).
+    :param processes: The number of processes to use for parallel processing. Defaults to number of CPUs.
     :return: None. Side effects are that the mask is saved to the specified mask_out_path location.
     """
     if Path(img_path).is_dir():
@@ -90,7 +92,7 @@ def make_and_save_mask(img_path, mask_out_path, percent_diffuse=0.1, mask_thresh
     f = partial(make_single_mask, percent_diffuse=percent_diffuse, mask_thresh=mask_thresh,
                 opening_iterations=opening_iterations)
 
-    with ProcessPoolExecutor(initializer=tqdm.set_lock, initargs=(tqdm.get_lock(),)) as executor:
+    with ProcessPoolExecutor(max_workers=processes, initializer=tqdm.set_lock, initargs=(tqdm.get_lock(),)) as executor:
         for path, mask in zip(img_paths, executor.map(f, img_paths)):
             progress.update()
             # Save the mask
@@ -101,7 +103,7 @@ def make_and_save_mask(img_path, mask_out_path, percent_diffuse=0.1, mask_thresh
     progress.close()
 
 
-def make_single_mask(img_path, percent_diffuse=0.1, mask_thresh=0.2, opening_iterations=0):
+def make_single_mask(img_path, percent_diffuse=0.1, mask_thresh=0.4, opening_iterations=0):
     """
     Create and return a glint mask for RGB imagery.
 
@@ -112,7 +114,7 @@ def make_single_mask(img_path, percent_diffuse=0.1, mask_thresh=0.2, opening_ite
     :param percent_diffuse: An estimate of the percentage of pixels in an image that show pure diffuse reflectance, and
         thus no specular reflectance (glint). Defaults to 0.1. Try playing with values, low ones typically work well.
     :param mask_thresh: The threshold on the specular reflectance estimate image to convert into a mask.
-        E.g. if more than 50% specular reflectance is unacceptable, use 0.5. Default is 0.2.
+        E.g. if more than 50% specular reflectance is unacceptable, use 0.5. Default is 0.4.
     :param opening_iterations: The number of morphological opening iterations on the produced mask.
         Useful for closing small holes in the mask. Set to 0 by default (i.e. it's shut off).
     :return: Numpy array of mask.
