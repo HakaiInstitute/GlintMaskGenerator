@@ -85,15 +85,20 @@ def make_and_save_mask(img_path, mask_out_path, percent_diffuse=0.1, mask_thresh
     else:
         img_paths = [Path(img_path)]
 
-    with ProcessPoolExecutor() as executor:
-        f = partial(make_single_mask, percent_diffuse=percent_diffuse, mask_thresh=mask_thresh,
-                    opening_iterations=opening_iterations)
+    img_paths = [str(p) for p in list(img_paths)]
+    progress = tqdm(total=len(img_paths, ))
+    f = partial(make_single_mask, percent_diffuse=percent_diffuse, mask_thresh=mask_thresh,
+                opening_iterations=opening_iterations)
 
-        for path, mask in tqdm(zip(img_paths, executor.map(f, img_paths))):
+    with ProcessPoolExecutor(initializer=tqdm.set_lock, initargs=(tqdm.get_lock(),)) as executor:
+        for path, mask in zip(img_paths, executor.map(f, img_paths)):
+            progress.update()
             # Save the mask
-            out_path = Path(mask_out_path).joinpath(f"{path.stem}_mask.png")
+            out_path = Path(mask_out_path).joinpath(f"{Path(path).stem}_mask.png")
             mask_img = Image.fromarray(mask, mode='L')
-            mask_img.save(out_path)
+            mask_img.save(str(out_path))
+
+    progress.close()
 
 
 def make_single_mask(img_path, percent_diffuse=0.1, mask_thresh=0.2, opening_iterations=0):

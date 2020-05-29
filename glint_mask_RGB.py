@@ -45,16 +45,20 @@ def make_and_save_mask(img_path, mask_out_path, glint_threshold=0.9, mask_buffer
     else:
         img_paths = [Path(img_path)]
 
-    with ProcessPoolExecutor() as executor:
-        f = partial(make_single_mask, glint_threshold=glint_threshold,
-                    mask_buffer_sigma=mask_buffer_sigma, num_bins=num_bins)
+    img_paths = [str(p) for p in list(img_paths)]
+    progress = tqdm(total=len(img_paths, ))
+    f = partial(make_single_mask, glint_threshold=glint_threshold,
+                mask_buffer_sigma=mask_buffer_sigma, num_bins=num_bins)
 
-        for path, mask in tqdm(zip(img_paths, executor.map(f, img_paths))):
+    with ProcessPoolExecutor(initializer=tqdm.set_lock, initargs=(tqdm.get_lock(),)) as executor:
+        for path, mask in zip(img_paths, executor.map(f, img_paths)):
+            progress.update()
             # Save the mask
-            out_path = Path(mask_out_path).joinpath(f"{path.stem}_mask.png")
+            out_path = Path(mask_out_path).joinpath(f"{Path(path).stem}_mask.png")
             mask_img = Image.fromarray(mask, mode='L')
-            mask_img.save(out_path)
+            mask_img.save(str(out_path))
 
+    progress.close()
 
 def make_single_mask(img_path, glint_threshold=0.9, mask_buffer_sigma=20, num_bins=8):
     """
