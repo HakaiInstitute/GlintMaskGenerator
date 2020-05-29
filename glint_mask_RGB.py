@@ -5,6 +5,8 @@
 #
 # Description: Generate masks for glint regions in in RGB Images.
 import itertools
+from concurrent.futures import ProcessPoolExecutor
+from functools import partial
 from pathlib import Path
 
 import numpy as np
@@ -43,13 +45,15 @@ def make_and_save_mask(img_path, mask_out_path, glint_threshold=0.9, mask_buffer
     else:
         img_paths = [Path(img_path)]
 
-    for path in tqdm(img_paths):
-        out_path = Path(mask_out_path).joinpath(f"{path.stem}_mask.png")
-        mask = make_single_mask(str(path), glint_threshold=glint_threshold,
-                                mask_buffer_sigma=mask_buffer_sigma, num_bins=num_bins)
-        # Save the mask
-        mask_img = Image.fromarray(mask, mode='L')
-        mask_img.save(out_path)
+    with ProcessPoolExecutor() as executor:
+        f = partial(make_single_mask, glint_threshold=glint_threshold,
+                    mask_buffer_sigma=mask_buffer_sigma, num_bins=num_bins)
+
+        for path, mask in tqdm(zip(img_paths, executor.map(f, img_paths))):
+            # Save the mask
+            out_path = Path(mask_out_path).joinpath(f"{path.stem}_mask.png")
+            mask_img = Image.fromarray(mask, mode='L')
+            mask_img.save(out_path)
 
 
 def make_single_mask(img_path, glint_threshold=0.9, mask_buffer_sigma=20, num_bins=8):

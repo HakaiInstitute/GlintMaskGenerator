@@ -7,6 +7,8 @@
 
 import itertools
 import math
+from concurrent.futures import ProcessPoolExecutor
+from functools import partial
 from pathlib import Path
 
 import numpy as np
@@ -83,13 +85,15 @@ def make_and_save_mask(img_path, mask_out_path, percent_diffuse=0.1, mask_thresh
     else:
         img_paths = [Path(img_path)]
 
-    for path in tqdm(img_paths):
-        out_path = Path(mask_out_path).joinpath(f"{path.stem}_mask.png")
-        mask = make_single_mask(str(path), percent_diffuse=percent_diffuse, mask_thresh=mask_thresh,
-                                opening_iterations=opening_iterations)
-        # Save the mask
-        mask_img = Image.fromarray(mask, mode='L')
-        mask_img.save(out_path)
+    with ProcessPoolExecutor() as executor:
+        f = partial(make_single_mask, percent_diffuse=percent_diffuse, mask_thresh=mask_thresh,
+                    opening_iterations=opening_iterations)
+
+        for path, mask in tqdm(zip(img_paths, executor.map(f, img_paths))):
+            # Save the mask
+            out_path = Path(mask_out_path).joinpath(f"{path.stem}_mask.png")
+            mask_img = Image.fromarray(mask, mode='L')
+            mask_img.save(out_path)
 
 
 def make_single_mask(img_path, percent_diffuse=0.1, mask_thresh=0.2, opening_iterations=0):
