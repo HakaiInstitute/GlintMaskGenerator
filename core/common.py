@@ -51,7 +51,8 @@ def get_img_paths(img_path: str, mask_out_path: str, red_edge: Optional[bool] = 
     return [str(p) for p in list(img_paths)]
 
 
-def process_imgs(process_func: Callable, img_paths: Iterable[str], mask_out_path: str, processes: Optional[int] = 1):
+def process_imgs(process_func: Callable, img_paths: Iterable[str], mask_out_path: str, processes: Optional[int] = 1,
+                 callback: Optional[Callable] = None):
     """Compute the glint masks for all images in img_paths using the process_func and save to the mask_out_path.
 
     Args:
@@ -67,10 +68,13 @@ def process_imgs(process_func: Callable, img_paths: Iterable[str], mask_out_path
         processes: Optional[int]
             The number of processes to use to process images in parallel. Default to 1.
 
+        callback: Optional[Callable]
+            Optional callback function passed the name of each input and output mask files after processing it.
+
     Returns:
 
     """
-    progress = tqdm(total=len(img_paths, ))
+    progress = tqdm(total=len(img_paths))
 
     with ProcessPoolExecutor(max_workers=processes, initializer=tqdm.set_lock, initargs=(tqdm.get_lock(),)) as executor:
         for path, mask in zip(img_paths, executor.map(process_func, img_paths)):
@@ -79,5 +83,8 @@ def process_imgs(process_func: Callable, img_paths: Iterable[str], mask_out_path
             out_path = Path(mask_out_path).joinpath(f"{Path(path).stem}_mask.png")
             mask_img = Image.fromarray(mask, mode='L')
             mask_img.save(str(out_path))
+
+            if callback is not None:
+                callback(path, out_path)
 
     progress.close()
