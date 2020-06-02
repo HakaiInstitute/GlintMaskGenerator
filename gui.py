@@ -2,6 +2,7 @@
 # Organization: Hakai Institute
 # Date: 2020-05-30
 # Description: Graphical interface to the glint mask tools.
+import os
 from functools import partial
 from tkinter import *
 from tkinter import filedialog, ttk, messagebox
@@ -21,7 +22,7 @@ class DirectoryPicker(ttk.Frame):
         self.callback = callback
 
         self.grid_rowconfigure(0, weight=1)
-        ttk.Label(master=self, text=label, width=15).grid(row=0, column=0, sticky=E)
+        ttk.Label(master=self, text=label).grid(row=0, column=0, sticky=E)
 
         self.grid_columnconfigure(1, weight=2)
         ttk.Label(master=self, textvariable=self.variable, style='BW.TLabel').grid(row=0, column=1, sticky=EW, padx=5)
@@ -59,12 +60,10 @@ class GlintMaskApp(ttk.Frame):
         self.picker_imgs_in = DirectoryPicker(self, label="In imgs dir.", variable=self.imgs_in,
                                               callback=lambda _: self.reset())
         self.picker_imgs_in.grid(row=1, columnspan=3, sticky=E + W)
-        self.imgs_in.set(".ignore/imgs")
 
         self.picker_masks_out = DirectoryPicker(self, label="Out mask dir.", variable=self.masks_out,
                                                 callback=lambda _: self.reset())
         self.picker_masks_out.grid(row=2, columnspan=3, sticky=E + W)
-        self.masks_out.set(".ignore/out")
 
         self.progress = ttk.Progressbar(master=self, orient=HORIZONTAL, mode='determinate', variable=self.progress_val)
         self.progress.grid(row=3, columnspan=3, sticky=E + W)
@@ -109,8 +108,9 @@ class GlintMaskApp(ttk.Frame):
 if __name__ == '__main__':
     root = Tk()
     root.resizable(True, True)
-    root.rowconfigure(0, weight=2)
-    root.columnconfigure(0, weight=2)
+    root.rowconfigure(0, weight=1)
+    root.columnconfigure(0, weight=1)
+    root.wm_minsize(width=500, height=120)
 
     app = GlintMaskApp(root, padding="12 3 12 3")
     app.grid(sticky=N + W + E + S)

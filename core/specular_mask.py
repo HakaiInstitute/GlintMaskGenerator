@@ -6,14 +6,13 @@
 # component of reflection.
 
 import math
-from functools import partial
+from pathlib import Path
 
-import fire
 import numpy as np
 from PIL import Image
 from scipy.ndimage.morphology import binary_opening
 
-from .common import get_img_paths, process_imgs
+from core.common import save_mask
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -61,47 +60,6 @@ def estimate_specular_reflection_component(img: np.ndarray, percent_diffuse: flo
     spec_ref_est = np.clip(i_max - (q_x_hat * i_range), 0, None)
 
     return spec_ref_est
-
-
-def make_and_save_mask(img_path: str, mask_out_path: str, percent_diffuse: float = 0.1, mask_thresh: float = 0.4,
-                       opening_iterations: int = 0, processes: int or None = None) -> None:
-    """Generate masks for glint regions in in RGB images using a thresholding on the estimated specular component of
-        reflection.
-
-    Parameters
-    ----------
-    img_path: str
-        The path to a named input image or directory containing images. If img_path is a directory, all jpg, jpeg, and
-        png images in that directory will be processed.
-
-    mask_out_path: str
-        The path to send your out image including the file name and type. e.g. "/path/to/mask.png".
-        mask_out_path must be a directory if img_path is specified as a directory.
-
-    percent_diffuse: Optional[float]
-        An estimate of the percentage of pixels in an image that show pure diffuse reflectance, and
-        thus no specular reflectance (glint). Defaults to 0.1. Try playing with values, low ones typically work well.
-
-    mask_thresh: Optional[float]
-        The threshold on the specular reflectance estimate image to convert into a mask.
-        i.e. if more than 50% specular reflectance is unacceptable, use 0.5. Default is 0.4.
-
-    opening_iterations: Optional[int]
-        The number of morphological opening iterations on the produced mask.
-        Useful for closing small holes in the mask. Set to 0 by default (i.e. it's shut off).
-
-    processes: Optional[int]
-        The number of processes to use for parallel processing. Defaults to number of CPUs.
-
-    Returns
-    -------
-    None
-        Side effects are that the mask is saved to the specified mask_out_path location.
-    """
-    img_paths = get_img_paths(img_path, mask_out_path)
-    f = partial(make_single_mask, percent_diffuse=percent_diffuse, mask_thresh=mask_thresh,
-                opening_iterations=opening_iterations)
-    return process_imgs(f, img_paths, mask_out_path, processes=processes)
 
 
 def make_single_mask(img_path: str, percent_diffuse: float = 0.1, mask_thresh: float = 0.4,
@@ -153,5 +111,38 @@ def make_single_mask(img_path: str, percent_diffuse: float = 0.1, mask_thresh: f
     return mask
 
 
-if __name__ == '__main__':
-    fire.Fire(make_and_save_mask)
+def make_and_save_single_mask(img_path: str, mask_out_path: str, percent_diffuse: float = 0.1, mask_thresh: float = 0.4,
+                              opening_iterations: int = 0) -> np.ndarray:
+    """Create and return a glint mask for RGB imagery.
+
+    Parameters
+    ----------
+    img_path: str
+        The path to a named input image or directory containing images.
+        Supported formats for single image processing are here:
+        https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html.
+
+    mask_out_path: str
+        The directory where the image mask should be saved.
+
+    percent_diffuse: Optional[float]
+        An estimate of the percentage of pixels in an image that show pure diffuse reflectance, and
+        thus no specular reflectance (glint). Defaults to 0.1. Try playing with values, low ones typically work well.
+
+    mask_thresh: Optional[float]
+        The threshold on the specular reflectance estimate image to convert into a mask.
+        E.g. if more than 50% specular reflectance is unacceptable, use 0.5. Default is 0.4.
+
+    opening_iterations: Optional[int]
+        The number of morphological opening iterations on the produced mask.
+        Useful for closing small holes in the mask. Set to 0 by default (i.e. it's shut off).
+
+    Returns
+    -------
+    numpy.ndarray, shape=(H,W)
+        Numpy array of glint mask for img at input_path.
+    """
+    out_path = Path(mask_out_path).joinpath(f"{Path(img_path).stem}_mask.png")
+    mask = make_single_mask(img_path=img_path, percent_diffuse=percent_diffuse, mask_thresh=mask_thresh,
+                            opening_iterations=opening_iterations)
+    return save_mask(out_path, mask)

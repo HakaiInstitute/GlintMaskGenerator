@@ -5,7 +5,7 @@
 
 import concurrent.futures
 import itertools
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Callable, Iterable, Optional
 
@@ -51,7 +51,7 @@ def get_img_paths(img_path: str, mask_out_path: str, red_edge: Optional[bool] = 
     return [str(p) for p in list(img_paths)]
 
 
-def process_imgs(process_func: Callable, img_paths: Iterable[str], processes: Optional[int] = 1,
+def process_imgs(process_func: Callable, img_paths: Iterable[str],
                  callback: Optional[Callable] = None, err_callback: Optional[Callable] = None):
     """Compute the glint masks for all images in img_paths using the process_func and save to the mask_out_path.
 
@@ -74,7 +74,7 @@ def process_imgs(process_func: Callable, img_paths: Iterable[str], processes: Op
     Returns:
 
     """
-    with ProcessPoolExecutor(max_workers=processes) as executor:
+    with ThreadPoolExecutor() as executor:
         future_to_path = {executor.submit(process_func, path): path for path in img_paths}
         for future in concurrent.futures.as_completed(future_to_path):
             path = future_to_path[future]
@@ -82,17 +82,13 @@ def process_imgs(process_func: Callable, img_paths: Iterable[str], processes: Op
                 data = future.result()
                 if callback is not None:
                     callback(data)
-                print(data)
 
             except Exception as exc:
-                print('%r generated an exception: %s' % (path, exc))
-
                 if err_callback is not None:
                     err_callback(path, exc)
 
-                for future in future_to_path:
-                    future.cancel()
-
+                for f in future_to_path:
+                    f.cancel()
                 return
 
 
