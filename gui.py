@@ -4,8 +4,8 @@
 # Description: Graphical interface to the glint mask tools.
 
 from tkinter import *
-from tkinter import filedialog
-from tkinter import ttk
+from tkinter import filedialog, ttk
+import multiprocessing as mp
 
 from core.common import get_img_paths
 from core.glint_mask import red_edge_make_and_save_mask, rgb_make_and_save_mask
@@ -38,25 +38,37 @@ class GlintMaskApp(ttk.Frame):
 
         self.picker_imgs_in = DirectoryPicker(self, label="In imgs dir.")
         self.picker_imgs_in.grid(row=1, columnspan=3, sticky=E + W)
-
-        self.progress = ttk.Progressbar(master=self, orient=HORIZONTAL, mode='determinate')
-        self.progress.grid(row=3, columnspan=3, sticky=E + W)
+        self.picker_imgs_in.ent.insert(0, "H:/Internal/RS/UAV/Files/Calvert/2019/20190714_Calvert_NorthBeachKelp_RE_U0669/Imagery/90m/Micasense_RedEdge/RedEdge")
 
         self.picker_masks_out = DirectoryPicker(self, label="Out mask dir.")
         self.picker_masks_out.grid(row=2, columnspan=3, sticky=E + W)
+        self.picker_masks_out.ent.insert(0, "H:/Working/Deglint_testing/Masks_by_Mission/U0669/rededge")
+
+        self.progress_lock = mp.RLock()
+        self.progress = ttk.Progressbar(master=self, orient=HORIZONTAL, mode='determinate')
+        self.progress.grid(row=3, columnspan=3, sticky=E + W)
 
         btn_process = ttk.Button(master=self, text="Generate", command=self.process)
         btn_process.grid(row=4, column=2, sticky=SE)
 
-    def _inc_progress(self, *args, **kwargs):
-        if self.progress['value'] < self.progress['maximum']:
-            self.progress['value'] += 1
+    def _inc_progress(self, future):
+        import pdb; pdb.set_trace()
+        # self.progress_lock.acquire()
+        try:
+            if self.progress['value'] < self.progress['maximum']:
+                self.progress['value'] += 1
+        except Exception as e:
+
+            print(e.message)
+            import pdb; pdb.set_trace()
+        # finally:
+            # self.progress_lock.release()
 
     def process(self):
-        img_files = get_img_paths(self.picker_imgs_in.val, self.picker_imgs_in.val, red_edge=self.red_edge)
+        img_files = get_img_paths(self.picker_imgs_in.val, self.picker_imgs_in.val, red_edge=self.red_edge.get())
         self.progress['maximum'] = len(img_files)
 
-        if self.red_edge:
+        if self.red_edge.get():
             red_edge_make_and_save_mask(self.picker_imgs_in.val, self.picker_masks_out.val, callback=self._inc_progress)
         else:
             rgb_make_and_save_mask(self.picker_imgs_in.val, self.picker_masks_out.val, callback=self._inc_progress)

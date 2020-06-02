@@ -11,8 +11,9 @@ from typing import Optional, Callable
 import numpy as np
 from PIL import Image
 from scipy.ndimage.filters import gaussian_filter
+from pathlib import Path
 
-from .common import get_img_paths, process_imgs
+from .common import get_img_paths, process_imgs, save_mask
 
 Image.MAX_IMAGE_PIXELS = None
 EPSILON = 1e-8
@@ -56,9 +57,9 @@ def red_edge_make_and_save_mask(img_path: str, mask_out_path: str, glint_thresho
         Side effects are that the mask is saved to the specified mask_out_path location.
     """
     img_paths = get_img_paths(img_path, mask_out_path, red_edge=True)
-    f = partial(make_single_mask, red_edge=True, glint_threshold=glint_threshold,
+    f = partial(make_and_save_single_mask, mask_out_path=mask_out_path, red_edge=True, glint_threshold=glint_threshold,
                 mask_buffer_sigma=mask_buffer_sigma, num_bins=num_bins)
-    return process_imgs(f, img_paths, mask_out_path, processes=processes, callback=callback)
+    process_imgs(f, img_paths, mask_out_path, processes=processes, callback=callback)
 
 
 def rgb_make_and_save_mask(img_path: str, mask_out_path: str, glint_threshold: float = 0.9, mask_buffer_sigma: int = 20,
@@ -99,9 +100,17 @@ def rgb_make_and_save_mask(img_path: str, mask_out_path: str, glint_threshold: f
         Side effects are that the mask is saved to the specified mask_out_path location.
     """
     img_paths = get_img_paths(img_path, mask_out_path, red_edge=False)
-    f = partial(make_single_mask, red_edge=False, glint_threshold=glint_threshold, mask_buffer_sigma=mask_buffer_sigma,
+    f = partial(make_and_save_single_mask, mask_out_path=mask_out_path, red_edge=False, glint_threshold=glint_threshold, mask_buffer_sigma=mask_buffer_sigma,
                 num_bins=num_bins)
-    return process_imgs(f, img_paths, mask_out_path, processes=processes, callback=callback)
+    process_imgs(f, img_paths, mask_out_path, processes=processes, callback=callback)
+
+
+def make_and_save_single_mask(img_path: str, mask_out_path: str, red_edge: bool = False, glint_threshold: float = 0.9, mask_buffer_sigma: int = 20,
+                     num_bins: int = 8) -> np.ndarray:
+    out_path = out_path = Path(mask_out_path).joinpath(f"{Path(img_path).stem}_mask.png")
+    mask = make_single_mask(img_path=img_path, red_edge=red_edge, glint_threshold=glint_threshold, mask_buffer_sigma=mask_buffer_sigma,
+                     num_bins=num_bins)
+    save_mask(out_path, mask)
 
 
 def make_single_mask(img_path: str, red_edge: bool = False, glint_threshold: float = 0.9, mask_buffer_sigma: int = 20,

@@ -74,17 +74,25 @@ def process_imgs(process_func: Callable, img_paths: Iterable[str], mask_out_path
     Returns:
 
     """
-    progress = tqdm(total=len(img_paths))
+    # progress = tqdm(total=len(img_paths))
 
-    with ProcessPoolExecutor(max_workers=processes, initializer=tqdm.set_lock, initargs=(tqdm.get_lock(),)) as executor:
-        for path, mask in zip(img_paths, executor.map(process_func, img_paths)):
-            progress.update()
-            # Save the mask
+    with ProcessPoolExecutor(max_workers=processes) as executor:
+        for path in img_paths:
             out_path = Path(mask_out_path).joinpath(f"{Path(path).stem}_mask.png")
-            mask_img = Image.fromarray(mask, mode='L')
-            mask_img.save(str(out_path))
 
+            f = executor.submit(process_func, path)
+            # f.add_done_callback(save_mask)
+            
+            # f.add_done_callback(lambda f: progress.update())
             if callback is not None:
-                callback(path, out_path)
+                f.add_done_callback(callback)
 
-    progress.close()
+            # if callback is not None:
+            #     callback(path, out_path)
+
+    # progress.close()
+
+
+def save_mask(out_path, mask):
+    mask_img = Image.fromarray(mask, mode='L')
+    mask_img.save(str(out_path))

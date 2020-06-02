@@ -13,7 +13,8 @@ if __name__ == '__main__':
         '--name=glint-mask-tools',
         '--onefile',
         '--clean',
-        '--windowed',
+        '--console',
         # '--icon=%s' % os.path.join('resources', 'icon.ico'),
+        '--version-file=VERSION',
         'gui.py',
     ])
