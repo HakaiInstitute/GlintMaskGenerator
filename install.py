@@ -4,16 +4,17 @@
 # Description: Generate a executable file for the CLI and GUI interface using PyInstaller.
 #   Requires pyinstaller installation.
 
-import os
-
 import PyInstaller.__main__
+from os import path
 
 if __name__ == '__main__':
     PyInstaller.__main__.run([
-        '--name=glint-mask-tools',
+        '--name=glint-mask-generator',
         '--onefile',
         '--clean',
+        # '--console',
         '--windowed',
-        # '--icon=%s' % os.path.join('resources', 'icon.ico'),
-        'gui.py',
+        f'--icon={path.join("resources", "gmt.ico")}',
+        '--version-file=VERSION',
+        'gui.py'
     ])

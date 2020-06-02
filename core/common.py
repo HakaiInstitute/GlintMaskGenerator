@@ -3,13 +3,13 @@
 # Date: 2020-06-01
 # Description: Common functions used by all glint mask algorithms
 
+import concurrent.futures
 import itertools
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Callable, Iterable, Optional
 
 from PIL import Image
-from tqdm import tqdm
 
 
 def get_img_paths(img_path: str, mask_out_path: str, red_edge: Optional[bool] = False):
@@ -51,8 +51,8 @@ def get_img_paths(img_path: str, mask_out_path: str, red_edge: Optional[bool] = 
     return [str(p) for p in list(img_paths)]
 
 
-def process_imgs(process_func: Callable, img_paths: Iterable[str], mask_out_path: str, processes: Optional[int] = 1,
-                 callback: Optional[Callable] = None):
+def process_imgs(process_func: Callable, img_paths: Iterable[str],
+                 callback: Optional[Callable] = None, err_callback: Optional[Callable] = None):
     """Compute the glint masks for all images in img_paths using the process_func and save to the mask_out_path.
 
     Args:
@@ -62,29 +62,49 @@ def process_imgs(process_func: Callable, img_paths: Iterable[str], mask_out_path
         img_paths: Iterable(str)
             An iterable of str image paths to process.
 
-        mask_out_path: str
-            The directory where the produced glint masks should be saved.
-
         processes: Optional[int]
             The number of processes to use to process images in parallel. Default to 1.
 
         callback: Optional[Callable]
             Optional callback function passed the name of each input and output mask files after processing it.
 
+        err_callback: Optional[Callable]
+            Optional callback function passed exception object on processing failure.
+
     Returns:
 
     """
-    progress = tqdm(total=len(img_paths))
+    with ThreadPoolExecutor() as executor:
+        future_to_path = {executor.submit(process_func, path): path for path in img_paths}
+        for future in concurrent.futures.as_completed(future_to_path):
+            path = future_to_path[future]
+            try:
+                data = future.result()
+                if callback is not None:
+                    callback(data)
 
-    with ProcessPoolExecutor(max_workers=processes, initializer=tqdm.set_lock, initargs=(tqdm.get_lock(),)) as executor:
-        for path, mask in zip(img_paths, executor.map(process_func, img_paths)):
-            progress.update()
-            # Save the mask
-            out_path = Path(mask_out_path).joinpath(f"{Path(path).stem}_mask.png")
-            mask_img = Image.fromarray(mask, mode='L')
-            mask_img.save(str(out_path))
+            except Exception as exc:
+                if err_callback is not None:
+                    err_callback(path, exc)
 
-            if callback is not None:
-                callback(path, out_path)
+                for f in future_to_path:
+                    f.cancel()
+                return
 
-    progress.close()
+
+def save_mask(out_path, mask):
+    """Save the image mask to location out_path.
+
+    Args:
+        out_path : str
+            The path where the file should be saved, including img extension.
+
+        mask : np.ndarray shape=(H,W)
+            2D image mask to save into the image format specified in the out_path.
+
+    Returns:
+        None
+    """
+    mask_img = Image.fromarray(mask, mode='L')
+    mask_img.save(str(out_path))
+    return out_path
