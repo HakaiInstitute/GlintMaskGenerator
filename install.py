@@ -5,14 +5,16 @@
 #   Requires pyinstaller installation.
 
 import PyInstaller.__main__
+from os import path
 
 if __name__ == '__main__':
     PyInstaller.__main__.run([
-        '--name=glint-mask-tools',
+        '--name=glint-mask-generator',
         '--onefile',
         '--clean',
-        '--console',
-        # '--icon=%s' % os.path.join('resources', 'icon.ico'),
+        # '--console',
+        '--windowed',
+        f'--icon={path.join("resources", "gmt.ico")}',
         '--version-file=VERSION',
-        'gui.py',
+        'gui.py'
     ])
