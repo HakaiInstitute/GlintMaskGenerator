@@ -4,8 +4,6 @@
 # Description: Generate a executable file for the CLI and GUI interface using PyInstaller.
 #   Requires pyinstaller installation.
 
-import os
-
 import PyInstaller.__main__
 
 if __name__ == '__main__':
