@@ -1,5 +1,5 @@
 # Glint Mask Tools
-![Python application](https://github.com/HakaiInstitute/glint-mask-tools/workflows/Python%20application/badge.svg?branch=master)
+![Python application](https://github.com/HakaiInstitute/glint-mask-tools/workflows/Main/badge.svg?branch=master)
 
 
 ## Description 
