@@ -32,12 +32,12 @@ jobs:
           pyinstaller --name=glint-mask-${{ steps.tag.outputs.tag }} -F cli.py
       - name: Archiving release
         run: |
-          tar -czvf dist/glint-mask-${{ steps.tag.outputs.tag }}-linux.tar.gz dist/*
+          tar -czvf dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.tar.gz dist/*
       - name: Upload release file
         uses: actions/upload-artifact@v1
         with:
-          name: glint-mask-${{ steps.tag.outputs.tag }}-linux.tar.gz
-          path: dist/glint-mask-${{ steps.tag.outputs.tag }}-linux.tar.gz
+          name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.tar.gz
+          path: dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.tar.gz
 
   Release:
     needs: [Linux]
