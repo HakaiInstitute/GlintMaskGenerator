@@ -10,11 +10,12 @@ def test_get_img_paths(tmp_path):
     # Test detection of RGB files
     true_paths = ["1.jpg", "2.JPG", "3.tif", "4.tiff", "5.TIF", "6.TIFF", "7.png", "8.PNG", "9.jpeg", "10.JPEG"]
     true_paths = sorted([str(tmp_path.joinpath(n)) for n in true_paths])
+    print(true_paths)
     for name in true_paths:
         IMG_CONTENT.save(name)
 
     img_paths = sorted(get_img_paths(str(tmp_path), str(tmp_path), red_edge=False))
-
+    print(img_paths)
     assert len(true_paths) == len(img_paths)
     assert all(np.array(true_paths) == np.array(img_paths))
 
