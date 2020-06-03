@@ -38,12 +38,12 @@ def get_img_paths(img_path: str, mask_out_path: str, red_edge: Optional[bool] = 
     elif Path(img_path).is_dir():
         # Get all images in the specified directory
         if red_edge:
-            micasense_paths = Path(img_path).glob("IMG_*[0-9]_4.tif")
+            micasense_paths = Path(img_path).glob("IMG_*[0-9]_5.tif")
             dji_paths = Path(img_path).glob("DJI_*[0-9]4.TIF")
             # Add more here if we get new cameras or anything changes
             img_paths = itertools.chain(micasense_paths, dji_paths)
         else:
-            extensions = ("png", "PNG", "jpg", "JPG", "jpeg", "JPEG", "tif", "TIF")
+            extensions = ("png", "PNG", "jpg", "JPG", "jpeg", "JPEG", "tif", "TIF", "tiff", "TIFF")
             img_paths = itertools.chain.from_iterable((Path(img_path).glob(f"*.{ext}") for ext in extensions))
     else:
         raise ValueError("Check that img_path is a valid file or directory location.")
