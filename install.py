@@ -9,7 +9,7 @@ from os import path
 
 if __name__ == '__main__':
     PyInstaller.__main__.run([
-        '--name=glint-mask-generator',
+        '--name=GlintMaskGenerator',
         '--onefile',
         '--windowed',
         f'--icon={path.join("resources", "gmt.ico")}',
