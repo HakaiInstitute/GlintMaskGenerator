@@ -1,0 +1,5 @@
+fire
+numpy
+pillow
+scipy
+tqdm
