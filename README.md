@@ -1,67 +1,95 @@
 # Glint Mask Tools
 ![Python application](https://github.com/HakaiInstitute/glint-mask-tools/workflows/Main/badge.svg?branch=master)
 
-
 ## Description 
 Generate masks for glint regions in RGB images.
 
-## Installation
-1. You must have the Anaconda package manager installed. Do that. [Instructions here](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html)
-2. Install the necessary packages listed in environment.yml file. 
-    - See the [Anaconda documentation here](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-from-file) for installing from an environment.yml file. 
-    - You can most likely just do `conda env create -f environment.yml` with the environment.yml file provided in this repository.
+### Installation
+1. Go to the [releases page](https://github.com/HakaiInstitute/glint-mask-tools/releases)
+2. download the latest release file for your operating system.
+3. Extract the compressed binary files from the gzipped archive. 
+4. This archive contains two files which provide different interfaces to the same glint mask generation program. 
+    4. GlintMaskGenerator-a.b.c.exe provides the GUI interface
+    4. glint-mask-a.b.c.exe is a command line interface and has a few more options available.
+5. Copy these files wherever is convenient for you.
+    5. On Windows, you'll probably want to copy the GUI interface to your Desktop.
+    5. On Linux, copying glint-mask-a.b.c to `user/local/bin` will allow you to call the CLI from anywhere by typing `glint-mask-a.b.c`.
 
-## Methods
-#### glint_mask_RGB.py
-This is the method based on Matlab code written by Tom Bell at UC Santa Barbara from 2019-06-28.
+### Usage
+#### GUI
+Launch the GUI by double clicking the executable file. The options presented are self explanatory. 
 
-This method bins pixel values based on the blue band component of the image and then divides very blue parts as being "glinty".
-The found mask is padded using a Gaussian filter.
-
-#### specular_mask.py
-This is the method based on the method outlined in:\
-Wang, S., Yu, C., Sun, Y. et al. "Specular reflection removal of ocean surface remote sensing images from UAVs". Multimed Tools Appl 77, 11363–11379 (2018). https://doi.org/10.1007/s11042-017-5551-7
-
-This method estimates the component of pixel-wise specular reflectance. Following this, a threshold on this estimate can partition the image into the "glinty" and "non-glinty" parts.
-The calculated mask is padded with Morphological Opening operations.
-
-## Running the code
-`glint_mask_RGB.py` and `specular_mask.py` can both be run as a command line script or incorporated into other Python scripts for more advanced use cases.
-
-### Running from the Terminal
-1. Activate the created conda environment: `conda activate glint`
-2. Navigate to the directory this file is located in the terminal and run it to process a single file.
-3. Run `python glint_mask_RGB.py --help` for a description of the required parameters for this method.
-3. Run `python specular_mask.py --help` for a description of the required parameters for this method.
+Be sure to check the "red edge" option if you are processing a directory which contains
+imagery from the Micasense or DJI multi-spectral cameras. You will be notified of any processing errors via a pop-up dialog.
+ 
+#### CLI
+For information about the parameters expected by the CLI, just run `./glint-mask-a.b.c --help` in a bash terminal or command line interface. 
+All the functionality of the CLI is documented there.
 
 ##### Examples
 ```bash
-# Process a single file
-python glint_mask_RGB.py /path/to/in_file.jpg /path/to/out_mask.jpg --glint_threshold 0.5
-
-python specular_mask.py /path/to/in_file.jpg /path/to/out_mask.jpg --percent_diffuse 0.2 --mask_thresh 0.5
+# Process a single file with custom thresholds
+glint-mask-1.0.0 rgb /path/to/in_file.jpg /path/to/out_mask.jpg --glint_threshold 0.5
+glint-mask-1.0.0 red_edge /path/to/in_file.jpg /path/to/out_mask.jpg --glint_threshold 0.5
+glint-mask-1.0.0 specular /path/to/in_file.jpg /path/to/out_mask.jpg --percent_diffuse 0.2 --mask_thresh 0.5
 
 
 # Process a directory of files
-python glint_mask_RGB.py /path/to/dir/with/images/ /path/to/out_masks/dir/ --glint_threshold 0.5
-
-python specular_mask.py /path/to/dir/with/images/ /path/to/out_masks/dir/ --percent_diffuse 0.2 --mask_thresh 0.5
+glint-mask-1.0.0 rgb /path/to/dir/with/images/ /path/to/out_masks/dir/ --glint_threshold 0.5
+glint-mask-1.0.0 red_edge /path/to/dir/with/images/ /path/to/out_masks/dir/ --glint_threshold 0.5
+glint-mask-1.0.0 specular /path/to/dir/with/images/ /path/to/out_masks/dir/ --percent_diffuse 0.2 --mask_thresh 0.5
 ```
 
-### Running from a Python script
-1. Import the glint mask function into your Python script
-    - `from glint_mask_RGB import make_mask`
-    - or `from specular_mask import make_mask`
-2. run `help(make_mask)` for parameter details, or inspect the source code, which is well-documented.
-    
-### Notes
-#### Single image processing
+#### Notes
+##### Single image processing
 - The [supported file formats](https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html) are listed here for processing individual files.
 
-#### Directory of images processing
-- All files with "jpg", "jpeg", and "png" extensions will be processed. This can be extended as needed if you ask Taylor to do it.
+##### Directory of images processing
+- All files with "jpg", "jpeg", "tif", "tiff" and "png" extensions will be processed. This can be extended as needed. File extension matching is case insensitive.
 - Output mask files with be in the specified directory, and have the same name as the input file with "_mask" appended to the end of the file name stem. The file type will match the input type.
 
+##### Red Edge file processing
+- Currently, the program looks for files that match the patterns "IMG\_\*[0-9]\_5.tif" for Micasense images and "DJI\_\*[0-9]4.TIF" for multi-spectral DJI images.
+- As required, the matching logic can be updated in the "core/common.py" source code.
+
+## Development
+The functions available in the executable binaries are actually just Python scripts packaged using PyInstaller. To update the logic, you'll need to install the required packages to run the individual
+gui.py and cli.py scripts found in the root of the Git repository.
+
+### Installation
+1. Start by cloning the code repository from GitHub.
+2. You must have the Anaconda package manager installed. Do that. [Instructions here](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html)
+3. Install the necessary packages listed in environment.yml file. 
+    - See the [Anaconda documentation here](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-from-file) for installing from an environment.yml file. 
+    - You can most likely just do `conda env create -f environment.yml` with the environment.yml file provided in this repository.
+
+### Running the code
+1. Activate the created conda environment: `conda activate glint`
+2. Navigate to the directory this file is located in the terminal and run it to process a single file.
+3. `python gui.py` and `python cli.py` can both be run from the command line for debugging purposes. 
+    3. These two scripts are the entry point into the program.
+
+### Project structure
+- The bulk of the actual processing logic takes place in the files found in the "core/" directory. 
+    - The functions in core are carefully documented with comments and function help strings. 
+    - The strings at the beginning of each function is ingested by the "python-fire" package to create help strings for 
+    the command line interface. Update these strings to update the CLI help output.
+- The "test/" directory contains some files for testing those functions found in "core". 
+    - Tests can be run with pytest. First install pytest with `pip install pytest` and then run `pytest` from the terminal to run the test functions. 
+    - All functions beginning with the word "test_" are taken as test functions by pytest.
+
+### Updating the executable files
+This is done automatically via some *Fancy-Pants GitHub Actions* logic. The workflow to trigger this action is as follows:
+
+1. Make the code changes and commit them to GitHub.
+    1. Ideally, use a Pull-Request workflow. Make a pull-request to the master branch from some other branch on GitHub.
+    1. By doing this, you can see if tests pass and make changes as necessary to get them to pass before merging the updates to master.
+    1. See the Actions tab on GitHub for some clues as to why the tests might not be passing.
+2. Once the tests are passing, tag the master branch on your copy locally with `git checkout master && git pull && git tag a.b.c` 
+    using an appropriate version number instead of `a.b.c`, e.g. `1.2.1`. Use semantic version numbers as much as possible.
+3. Push the tag to GitHub with `git push --tags`
+    3. Pushing a tag of the format `*.*.*` triggers an action where the code is checked to see tests are passing, then 
+    executables for Linux and Windows are built and uploaded to the GitHub release page.
 
 ---
 *Created by Taylor Denouden @ Hakai Institute on 2020-05-22*
