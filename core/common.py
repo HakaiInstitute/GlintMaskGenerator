@@ -13,6 +13,12 @@ from typing import Callable, Iterable, Optional
 from PIL import Image
 
 
+def case_insensitive_glob(dir_path, pattern):
+    """Find files with a glob pattern while ignore upper/lower case."""
+    return Path(dir_path).glob(
+        ''.join('[%s%s]' % (char.lower(), char.upper()) if char.isalpha() else char for char in pattern))
+
+
 def get_img_paths(img_path: str, mask_out_path: str, red_edge: Optional[bool] = False):
     """Get the paths of images to process from location img_path.
 
@@ -39,15 +45,13 @@ def get_img_paths(img_path: str, mask_out_path: str, red_edge: Optional[bool] = 
     elif Path(img_path).is_dir():
         # Get all images in the specified directory
         if red_edge:
-            micasense_paths = Path(img_path).glob("IMG_*[0-9]_5.tif")
-            dji_paths = Path(img_path).glob("DJI_*[0-9]4.TIF")
+            micasense_paths = case_insensitive_glob(img_path, "IMG_*[0-9]_5.tif")
+            dji_paths = case_insensitive_glob(img_path, "DJI_*[0-9]4.TIF")
             # Add more here if we get new cameras or anything changes
             img_paths = itertools.chain(micasense_paths, dji_paths)
         else:
             extensions = ("png", "jpg", "jpeg", "tif", "tiff")
-            if not os.name == 'nt':
-                extensions = extensions + tuple(e.upper() for e in extensions)
-            img_paths = itertools.chain.from_iterable((Path(img_path).glob(f"*.{ext}") for ext in extensions))
+            img_paths = itertools.chain.from_iterable(case_insensitive_glob(img_path, f"*.{ext}") for ext in extensions)
     else:
         raise ValueError("Check that img_path is a valid file or directory location.")
 
