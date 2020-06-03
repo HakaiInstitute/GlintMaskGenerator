@@ -8,7 +8,7 @@ on:
 jobs:
 
   Test:
-    name: ${{ matrix.os }} / ${{ matrix.python-version }}
+    name: Test ${{ matrix.os }} / ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}-latest
     strategy:
       matrix:
@@ -36,6 +36,7 @@ jobs:
           pytest
 
   Linux:
+    name: Build Linux
     needs: [Test]
     runs-on: ubuntu-latest
     steps:
@@ -69,6 +70,7 @@ jobs:
           path: dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.tar.gz
 
   Windows:
+    name: Build Windows
     needs: [Test]
     runs-on: windows-latest
     steps:
