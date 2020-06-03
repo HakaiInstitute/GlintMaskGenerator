@@ -5,6 +5,7 @@
 
 import concurrent.futures
 import itertools
+import os
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Callable, Iterable, Optional
@@ -43,7 +44,9 @@ def get_img_paths(img_path: str, mask_out_path: str, red_edge: Optional[bool] = 
             # Add more here if we get new cameras or anything changes
             img_paths = itertools.chain(micasense_paths, dji_paths)
         else:
-            extensions = ("png", "PNG", "jpg", "JPG", "jpeg", "JPEG", "tif", "TIF", "tiff", "TIFF")
+            extensions = ("png", "jpg", "jpeg", "tif", "tiff")
+            if not os.name == 'nt':
+                extensions = extensions + tuple(e.upper() for e in extensions)
             img_paths = itertools.chain.from_iterable((Path(img_path).glob(f"*.{ext}") for ext in extensions))
     else:
         raise ValueError("Check that img_path is a valid file or directory location.")
