@@ -1,0 +1,6 @@
+fire
+numpy
+pillow
+pyinstaller
+scipy
+tqdm

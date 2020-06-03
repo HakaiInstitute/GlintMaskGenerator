@@ -2,9 +2,8 @@
 # Organization: Hakai Institute
 # Date: 2020-05-30
 # Description: Graphical interface to the glint mask tools.
-import os
+import tkinter as tk
 from functools import partial
-from tkinter import *
 from tkinter import filedialog, ttk, messagebox
 
 from core.common import get_img_paths, process_imgs
@@ -22,13 +21,13 @@ class DirectoryPicker(ttk.Frame):
         self.callback = callback
 
         self.grid_rowconfigure(0, weight=1)
-        ttk.Label(master=self, text=label).grid(row=0, column=0, sticky=E)
+        ttk.Label(master=self, text=label).grid(row=0, column=0, sticky='e')
 
         self.grid_columnconfigure(1, weight=2)
-        ttk.Label(master=self, textvariable=self.variable, style='BW.TLabel').grid(row=0, column=1, sticky=EW, padx=5)
+        ttk.Label(master=self, textvariable=self.variable, style='BW.TLabel').grid(row=0, column=1, sticky='ew', padx=5)
 
         self.btn = ttk.Button(master=self, text="...", width=3, command=self._pick)
-        self.btn.grid(row=0, column=2, sticky=E)
+        self.btn.grid(row=0, column=2, sticky='e')
 
     def _pick(self):
         dir_name = filedialog.askdirectory()
@@ -48,28 +47,29 @@ class GlintMaskApp(ttk.Frame):
         for x in range(4):
             self.rowconfigure(x, weight=1)
 
-        self.red_edge = BooleanVar()
-        self.progress_val = IntVar()
-        self.imgs_in = StringVar()
-        self.masks_out = StringVar()
+        self.red_edge = tk.BooleanVar()
+        self.progress_val = tk.IntVar()
+        self.imgs_in = tk.StringVar()
+        self.masks_out = tk.StringVar()
 
         self.chk_red_edge = ttk.Checkbutton(master=self, text="Red edge sensor", variable=self.red_edge)
-        self.chk_red_edge.grid(row=0, sticky=W)
+        self.chk_red_edge.grid(row=0, sticky='w')
         self.chk_red_edge.bind('<Button-1>', lambda e: self.reset())
 
         self.picker_imgs_in = DirectoryPicker(self, label="In imgs dir.", variable=self.imgs_in,
                                               callback=lambda _: self.reset())
-        self.picker_imgs_in.grid(row=1, columnspan=3, sticky=E + W)
+        self.picker_imgs_in.grid(row=1, columnspan=3, sticky='ew')
 
         self.picker_masks_out = DirectoryPicker(self, label="Out mask dir.", variable=self.masks_out,
                                                 callback=lambda _: self.reset())
-        self.picker_masks_out.grid(row=2, columnspan=3, sticky=E + W)
+        self.picker_masks_out.grid(row=2, columnspan=3, sticky='ew')
 
-        self.progress = ttk.Progressbar(master=self, orient=HORIZONTAL, mode='determinate', variable=self.progress_val)
-        self.progress.grid(row=3, columnspan=3, sticky=E + W)
+        self.progress = ttk.Progressbar(master=self, orient=tk.HORIZONTAL, mode='determinate',
+                                        variable=self.progress_val)
+        self.progress.grid(row=3, columnspan=3, sticky='ew')
 
         self.btn_process = ttk.Button(master=self, text="Generate", command=self.process)
-        self.btn_process.grid(row=4, column=2, sticky=SE)
+        self.btn_process.grid(row=4, column=2, sticky='se')
 
     @staticmethod
     def _err_callback(img_path, err):
@@ -85,15 +85,15 @@ class GlintMaskApp(ttk.Frame):
 
     def reset(self):
         self.progress_val.set(0)
-        self.btn_process.state = NORMAL
-        self.picker_imgs_in.btn = NORMAL
-        self.picker_masks_out.btn = NORMAL
+        self.btn_process.state = tk.NORMAL
+        self.picker_imgs_in.btn = tk.NORMAL
+        self.picker_masks_out.btn = tk.NORMAL
         self.update_idletasks()
 
     def process(self):
-        self.btn_process.state = DISABLED
-        self.picker_imgs_in.btn = DISABLED
-        self.picker_masks_out.btn = DISABLED
+        self.btn_process.state = tk.DISABLED
+        self.picker_imgs_in.btn = tk.DISABLED
+        self.picker_masks_out.btn = tk.DISABLED
 
         red_edge = self.red_edge.get()
         img_files = get_img_paths(self.imgs_in.get(), self.masks_out.get(), red_edge=red_edge)
@@ -106,14 +106,14 @@ class GlintMaskApp(ttk.Frame):
 
 
 if __name__ == '__main__':
-    root = Tk()
+    root = tk.Tk()
     root.resizable(True, True)
     root.rowconfigure(0, weight=1)
     root.columnconfigure(0, weight=1)
     root.wm_minsize(width=500, height=120)
 
     app = GlintMaskApp(root, padding="12 3 12 3")
-    app.grid(sticky=N + W + E + S)
+    app.grid(sticky='nsew')
 
     root.title("Glint Mask Generator")
     root.bind("<Return>", app.process)

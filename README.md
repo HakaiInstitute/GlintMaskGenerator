@@ -1,4 +1,7 @@
 # Glint Mask Tools
+![Python application](https://github.com/HakaiInstitute/glint-mask-tools/workflows/Python%20application/badge.svg?branch=master&event=public)
+![Python application](https://github.com/HakaiInstitute/glint-mask-tools/workflows/Python%20application/badge.svg?branch=master&event=status)
+
 
 ## Description 
 Generate masks for glint regions in RGB images.

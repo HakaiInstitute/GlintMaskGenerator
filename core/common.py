@@ -38,8 +38,8 @@ def get_img_paths(img_path: str, mask_out_path: str, red_edge: Optional[bool] = 
     elif Path(img_path).is_dir():
         # Get all images in the specified directory
         if red_edge:
-            micasense_paths = Path(img_path).glob(f"IMG_*[0-9]_4.tif")
-            dji_paths = Path(img_path).glob(f"DJI_*[0-9]4.TIF")
+            micasense_paths = Path(img_path).glob("IMG_*[0-9]_4.tif")
+            dji_paths = Path(img_path).glob("DJI_*[0-9]4.TIF")
             # Add more here if we get new cameras or anything changes
             img_paths = itertools.chain(micasense_paths, dji_paths)
         else:
