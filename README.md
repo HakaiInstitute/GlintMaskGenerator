@@ -87,9 +87,8 @@ This is done automatically via some *Fancy-Pants GitHub Actions* logic. The work
     1. See the Actions tab on GitHub for some clues as to why the tests might not be passing.
 2. Once the tests are passing, tag the master branch on your copy locally with `git checkout master && git pull && git tag a.b.c` 
     using an appropriate version number instead of `a.b.c`, e.g. `1.2.1`. Use semantic version numbers as much as possible.
-3. Push the tag to GitHub with `git push --tags`
-    3. Pushing a tag of the format `*.*.*` triggers an action where the code is checked to see tests are passing, then 
-    executables for Linux and Windows are built and uploaded to the GitHub release page.
+3. Push the tag to GitHub with `git push --tags`.
+    3. Pushing a tag of the format `*.*.*` triggers an action where the code is checked to see tests are passing, then executables for Linux and Windows are built and uploaded to the GitHub release page.
 
 ---
 *Created by Taylor Denouden @ Hakai Institute on 2020-05-22*
