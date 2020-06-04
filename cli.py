@@ -98,7 +98,7 @@ def rgb(img_path: str, mask_out_path: str, glint_threshold: float = 0.9, mask_bu
 
 
 def specular(img_path: str, mask_out_path: str, percent_diffuse: float = 0.1, mask_thresh: float = 0.4,
-             opening_iterations: int = 0) -> None:
+             opening: int = 0, closing: int = 0) -> None:
     """Generate masks for glint regions in RGB imagery using Tom Bell's binning algorithm.
 
     Parameters
@@ -119,9 +119,13 @@ def specular(img_path: str, mask_out_path: str, percent_diffuse: float = 0.1, ma
         The threshold on the specular reflectance estimate image to convert into a mask.
         E.g. if more than 50% specular reflectance is unacceptable, use 0.5. Default is 0.4.
 
-    opening_iterations: Optional[int]
+    opening: Optional[int]
         The number of morphological opening iterations on the produced mask.
         Useful for closing small holes in the mask. Set to 0 by default (i.e. it's shut off).
+
+    closing: Optional[int]
+        The number of morphological closing iterations on the produced mask.
+        Useful for removing small bits of mask. Set to 0 by default (i.e. it's shut off).
 
     Returns
     -------
@@ -131,7 +135,7 @@ def specular(img_path: str, mask_out_path: str, percent_diffuse: float = 0.1, ma
     img_paths = get_img_paths(img_path, mask_out_path, red_edge=False)
     progress = tqdm(total=len(img_paths))
     f = partial(specular_make_and_save_single_mask, mask_out_path=mask_out_path, percent_diffuse=percent_diffuse,
-                mask_thresh=mask_thresh, opening_iterations=opening_iterations)
+                mask_thresh=mask_thresh, opening=opening, closing=closing)
     process_imgs(f, img_paths, callback=lambda _: progress.update())
     progress.close()
 
