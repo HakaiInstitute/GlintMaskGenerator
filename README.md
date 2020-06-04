@@ -6,38 +6,40 @@ Generate masks for glint regions in RGB images.
 
 ### Installation
 1. Go to the [releases page](https://github.com/HakaiInstitute/glint-mask-tools/releases)
-2. download the latest release file for your operating system.
+2. Download the latest release file for your operating system.
 3. Extract the compressed binary files from the gzipped archive. 
 4. This archive contains two files which provide different interfaces to the same glint mask generation program. 
-    4. GlintMaskGenerator-a.b.c.exe provides the GUI interface
-    4. glint-mask-a.b.c.exe is a command line interface and has a few more options available.
+    4. GlintMaskGenerator.exe provides the GUI interface
+    4. glint-mask.exe is a command line interface and has a few more options available.
 5. Copy these files wherever is convenient for you.
     5. On Windows, you'll probably want to copy the GUI interface to your Desktop.
-    5. On Linux, copying glint-mask-a.b.c to `user/local/bin` will allow you to call the CLI from anywhere by typing `glint-mask-a.b.c`.
+    5. On Linux, copying glint-mask to `user/local/bin` will allow you to call the CLI from anywhere by typing `glint-mask`.
 
 ### Usage
 #### GUI
-Launch the GUI by double clicking the executable file. The options presented are self explanatory. 
+In Windows, launch the GUI by double clicking the executable file. In Linux, you'll have to launch from the terminal `GlintMaskGenerator`.
+The options presented in the GUI are self explanatory. 
 
-Be sure to check the "red edge" option if you are processing a directory which contains
-imagery from the Micasense or DJI multi-spectral cameras. You will be notified of any processing errors via a pop-up dialog.
+For now, generating masks by passing directory paths containing images is the supported workflow.
+Be sure to check the "red edge" option if you are processing a directory which contains imagery from the Micasense or 
+DJI multi-spectral cameras. You will be notified of any processing errors via a pop-up dialog.
  
 #### CLI
-For information about the parameters expected by the CLI, just run `./glint-mask-a.b.c --help` in a bash terminal or command line interface. 
+For information about the parameters expected by the CLI, just run `./glint-mask --help` in a bash terminal or command line interface. 
 All the functionality of the CLI is documented there.
 
 ##### Examples
 ```bash
 # Process a single file with custom thresholds
-glint-mask-1.0.0 rgb /path/to/in_file.jpg /path/to/out_mask.jpg --glint_threshold 0.5
-glint-mask-1.0.0 red_edge /path/to/in_file.jpg /path/to/out_mask.jpg --glint_threshold 0.5
-glint-mask-1.0.0 specular /path/to/in_file.jpg /path/to/out_mask.jpg --percent_diffuse 0.2 --mask_thresh 0.5
+glint-mask rgb /path/to/in_file.jpg /path/to/out_mask.jpg --glint_threshold 0.5
+glint-mask red_edge /path/to/in_file.jpg /path/to/out_mask.jpg --glint_threshold 0.5
+glint-mask specular /path/to/in_file.jpg /path/to/out_mask.jpg --percent_diffuse 0.2 --mask_thresh 0.5
 
 
 # Process a directory of files
-glint-mask-1.0.0 rgb /path/to/dir/with/images/ /path/to/out_masks/dir/ --glint_threshold 0.5
-glint-mask-1.0.0 red_edge /path/to/dir/with/images/ /path/to/out_masks/dir/ --glint_threshold 0.5
-glint-mask-1.0.0 specular /path/to/dir/with/images/ /path/to/out_masks/dir/ --percent_diffuse 0.2 --mask_thresh 0.5
+glint-mask rgb /path/to/dir/with/images/ /path/to/out_masks/dir/ --glint_threshold 0.5
+glint-mask red_edge /path/to/dir/with/images/ /path/to/out_masks/dir/ --glint_threshold 0.5
+glint-mask specular /path/to/dir/with/images/ /path/to/out_masks/dir/ --percent_diffuse 0.2 --mask_thresh 0.5
 ```
 
 #### Notes
@@ -87,8 +89,8 @@ This is done automatically via some *Fancy-Pants GitHub Actions* logic. The work
     1. See the Actions tab on GitHub for some clues as to why the tests might not be passing.
 2. Once the tests are passing, tag the master branch on your copy locally with `git checkout master && git pull && git tag a.b.c` 
     using an appropriate version number instead of `a.b.c`, e.g. `1.2.1`. Use semantic version numbers as much as possible.
-3. Push the tag to GitHub with `git push --tags`.
-    3. Pushing a tag of the format `*.*.*` triggers an action where the code is checked to see tests are passing, then executables for Linux and Windows are built and uploaded to the GitHub release page.
+3. Push the tag to GitHub with `git push --tags`. Pushing a tag of the format `*.*.*` triggers an action where the code is 
+    checked to see tests are passing, then executables for Linux and Windows are built and uploaded to the GitHub release page.
 
 ---
 *Created by Taylor Denouden @ Hakai Institute on 2020-05-22*
