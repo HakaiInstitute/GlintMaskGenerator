@@ -91,9 +91,7 @@ def process_imgs(process_func: Callable, img_paths: Iterable[str],
             except Exception as exc:
                 if err_callback is not None:
                     err_callback(path, exc)
-
-                for f in future_to_path:
-                    f.cancel()
+                executor.shutdown(wait=False)
                 return
 
 
