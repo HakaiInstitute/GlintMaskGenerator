@@ -48,92 +48,112 @@ def test_get_img_paths(tmp_path):
 
 
 def test_is_dji_red_edge():
-    assert is_dji_red_edge("DJI_0014.TIF")
-    assert is_dji_red_edge("DJI_2224.TIF")
-    assert is_dji_red_edge("dji_0014.tif")
-    assert not is_dji_red_edge("DJI_0013.TIF")
-    assert not is_dji_red_edge("DJI_0015.TIF")
-    assert not is_dji_red_edge("DJI_00014.TIF")
-    assert not is_dji_red_edge("IMG_1234_1.TIF")
-    assert not is_dji_red_edge("IMG_1234_2.TIF")
-    assert not is_dji_red_edge("IMG_1234_3.TIF")
-    assert not is_dji_red_edge("IMG_1234_5.TIF")
+    assert is_dji_red_edge("DJI_0014.TIF") is True
+    assert is_dji_red_edge("DJI_2224.TIF") is True
+    assert is_dji_red_edge("dji_0014.tif") is True
+    assert is_dji_red_edge("DJI_0013.TIF") is False
+    assert is_dji_red_edge("DJI_0015.TIF") is False
+    assert is_dji_red_edge("DJI_00014.TIF") is False
+    assert is_dji_red_edge("IMG_1234_1.TIF") is False
+    assert is_dji_red_edge("IMG_1234_2.TIF") is False
+    assert is_dji_red_edge("IMG_1234_3.TIF") is False
+    assert is_dji_red_edge("IMG_1234_5.TIF") is False
 
-    assert is_dji_red_edge(Path("DJI_0014.TIF"))
-    assert is_dji_red_edge(Path("DJI_2224.TIF"))
-    assert is_dji_red_edge(Path("dji_0014.tif"))
-    assert not is_dji_red_edge(Path("DJI_0013.TIF"))
-    assert not is_dji_red_edge(Path("DJI_0015.TIF"))
-    assert not is_dji_red_edge(Path("DJI_00014.TIF"))
-    assert not is_dji_red_edge(Path("IMG_1234_1.TIF"))
-    assert not is_dji_red_edge(Path("IMG_1234_2.TIF"))
-    assert not is_dji_red_edge(Path("IMG_1234_3.TIF"))
-    assert not is_dji_red_edge(Path("IMG_1234_5.TIF"))
+    assert is_dji_red_edge(Path("DJI_0014.TIF")) is True
+    assert is_dji_red_edge(Path("DJI_2224.TIF")) is True
+    assert is_dji_red_edge(Path("dji_0014.tif")) is True
+    assert is_dji_red_edge(Path("DJI_0013.TIF")) is False
+    assert is_dji_red_edge(Path("DJI_0015.TIF")) is False
+    assert is_dji_red_edge(Path("DJI_00014.TIF")) is False
+    assert is_dji_red_edge(Path("IMG_1234_1.TIF")) is False
+    assert is_dji_red_edge(Path("IMG_1234_2.TIF")) is False
+    assert is_dji_red_edge(Path("IMG_1234_3.TIF")) is False
+    assert is_dji_red_edge(Path("IMG_1234_5.TIF")) is False
+
+    assert is_dji_red_edge(Path("/home/dir/dji_0014.tif")) is True
+    assert is_dji_red_edge(Path("/home/dir/DJI_0013.TIF")) is False
+    assert is_dji_red_edge("/home/wherever/dji_0014.tif") is True
+    assert is_dji_red_edge("/home/wherever/DJI_0013.TIF") is False
+
+    assert is_dji_red_edge(Path("C:\\Users\\some\\dir\\dji_0014.tif")) is True
+    assert not is_dji_red_edge(Path("C:\\Users\\some\\dir\\DJI_0013.TIF"))
+    assert is_dji_red_edge("C:\\Users\\some\\dir\\dji_0014.tif") is True
+    assert is_dji_red_edge("C:\\Users\\some\\dir\\DJI_0013.TIF") is False
 
 
 def test_is_micasense_red_edge():
-    assert not is_micasense_red_edge("DJI_0014.TIF")
-    assert not is_micasense_red_edge("DJI_2224.TIF")
-    assert not is_micasense_red_edge("dji_0014.tif")
-    assert not is_micasense_red_edge("DJI_0013.TIF")
-    assert not is_micasense_red_edge("DJI_0015.TIF")
-    assert not is_micasense_red_edge("DJI_00014.TIF")
-    assert is_micasense_red_edge("IMG_1234_5.TIF")
-    assert is_micasense_red_edge("IMG_9999_5.TIF")
-    assert is_micasense_red_edge("IMG_0000_5.TIF")
-    assert is_micasense_red_edge("img_3332_5.tif")
-    assert not is_micasense_red_edge("img_3332_1.tif")
-    assert not is_micasense_red_edge("img_3332_2.tif")
-    assert not is_micasense_red_edge("img_3332_3.tif")
-    assert not is_micasense_red_edge("img_3332_4.tif")
+    assert is_micasense_red_edge("DJI_0014.TIF") is False
+    assert is_micasense_red_edge("DJI_2224.TIF") is False
+    assert is_micasense_red_edge("dji_0014.tif") is False
+    assert is_micasense_red_edge("DJI_0013.TIF") is False
+    assert is_micasense_red_edge("DJI_0015.TIF") is False
+    assert is_micasense_red_edge("DJI_00014.TIF") is False
+    assert is_micasense_red_edge("IMG_1234_5.TIF") is True
+    assert is_micasense_red_edge("IMG_9999_5.TIF") is True
+    assert is_micasense_red_edge("IMG_0000_5.TIF") is True
+    assert is_micasense_red_edge("img_3332_5.tif") is True
+    assert is_micasense_red_edge("img_3332_1.tif") is False
+    assert is_micasense_red_edge("img_3332_2.tif") is False
+    assert is_micasense_red_edge("img_3332_3.tif") is False
+    assert is_micasense_red_edge("img_3332_4.tif") is False
 
-    assert not is_micasense_red_edge(Path("DJI_0014.TIF"))
-    assert not is_micasense_red_edge(Path("DJI_2224.TIF"))
-    assert not is_micasense_red_edge(Path("dji_0014.tif"))
-    assert not is_micasense_red_edge(Path("DJI_0013.TIF"))
-    assert not is_micasense_red_edge(Path("DJI_0015.TIF"))
-    assert not is_micasense_red_edge(Path("DJI_00014.TIF"))
-    assert is_micasense_red_edge(Path("IMG_1234_5.TIF"))
-    assert is_micasense_red_edge(Path("IMG_9999_5.TIF"))
-    assert is_micasense_red_edge(Path("IMG_0000_5.TIF"))
-    assert is_micasense_red_edge(Path("img_3332_5.tif"))
-    assert not is_micasense_red_edge(Path("img_3332_1.tif"))
-    assert not is_micasense_red_edge(Path("img_3332_2.tif"))
-    assert not is_micasense_red_edge(Path("img_3332_3.tif"))
-    assert not is_micasense_red_edge(Path("img_3332_4.tif"))
+    assert is_micasense_red_edge(Path("DJI_0014.TIF")) is False
+    assert is_micasense_red_edge(Path("DJI_2224.TIF")) is False
+    assert is_micasense_red_edge(Path("dji_0014.tif")) is False
+    assert is_micasense_red_edge(Path("DJI_0013.TIF")) is False
+    assert is_micasense_red_edge(Path("DJI_0015.TIF")) is False
+    assert is_micasense_red_edge(Path("DJI_00014.TIF")) is False
+    assert is_micasense_red_edge(Path("IMG_1234_5.TIF")) is True
+    assert is_micasense_red_edge(Path("IMG_9999_5.TIF")) is True
+    assert is_micasense_red_edge(Path("IMG_0000_5.TIF")) is True
+    assert is_micasense_red_edge(Path("img_3332_5.tif")) is True
+    assert is_micasense_red_edge(Path("img_3332_1.tif")) is False
+    assert is_micasense_red_edge(Path("img_3332_2.tif")) is False
+    assert is_micasense_red_edge(Path("img_3332_3.tif")) is False
+    assert is_micasense_red_edge(Path("img_3332_4.tif")) is False
+
+    assert is_micasense_red_edge(Path("/home/dir/img_3332_5.tif")) is True
+    assert is_micasense_red_edge(Path("/home/dir/img_3332_1.tif")) is False
+    assert is_micasense_red_edge("/home/dir/img_3332_5.tif") is True
+    assert is_micasense_red_edge("/home/dir/img_3332_1.tif") is False
+
+    assert is_micasense_red_edge(Path("C:\\Users\\some\\dir\\img_3332_5.tif")) is True
+    assert is_micasense_red_edge(Path("C:\\Users\\some\\dir\\img_3332_1.tif")) is False
+    assert is_micasense_red_edge("C:\\Users\\some\\dir\\img_3332_5.tif") is True
+    assert is_micasense_red_edge("C:\\Users\\some\\dir\\img_3332_1.tif") is False
 
 
 def test_is_red_edge():
-    assert is_red_edge("DJI_0014.TIF")
-    assert is_red_edge("DJI_2224.TIF")
-    assert is_red_edge("dji_0014.tif")
-    assert not is_red_edge("DJI_0013.TIF")
-    assert not is_red_edge("DJI_0015.TIF")
-    assert not is_red_edge("DJI_00014.TIF")
-    assert is_red_edge("IMG_1234_5.TIF")
-    assert is_red_edge("IMG_9999_5.TIF")
-    assert is_red_edge("IMG_0000_5.TIF")
-    assert is_red_edge("img_3332_5.tif")
-    assert not is_red_edge("img_3332_1.tif")
-    assert not is_red_edge("img_3332_2.tif")
-    assert not is_red_edge("img_3332_3.tif")
-    assert not is_red_edge("img_3332_4.tif")
-    assert not is_red_edge("helloworld")
-    assert not is_red_edge("")
+    assert is_red_edge("DJI_0014.TIF") is True
+    assert is_red_edge("DJI_2224.TIF") is True
+    assert is_red_edge("dji_0014.tif") is True
+    assert is_red_edge("DJI_0013.TIF") is False
+    assert is_red_edge("DJI_0015.TIF") is False
+    assert is_red_edge("DJI_00014.TIF") is False
+    assert is_red_edge("IMG_1234_5.TIF") is True
+    assert is_red_edge("IMG_9999_5.TIF") is True
+    assert is_red_edge("IMG_0000_5.TIF") is True
+    assert is_red_edge("img_3332_5.tif") is True
+    assert is_red_edge("img_3332_1.tif") is False
+    assert is_red_edge("img_3332_2.tif") is False
+    assert is_red_edge("img_3332_3.tif") is False
+    assert is_red_edge("img_3332_4.tif") is False
+    assert is_red_edge("helloworld") is False
+    assert is_red_edge("") is False
 
-    assert is_red_edge(Path("DJI_0014.TIF"))
-    assert is_red_edge(Path("DJI_2224.TIF"))
-    assert is_red_edge(Path("dji_0014.tif"))
-    assert not is_red_edge(Path("DJI_0013.TIF"))
-    assert not is_red_edge(Path("DJI_0015.TIF"))
-    assert not is_red_edge(Path("DJI_00014.TIF"))
-    assert is_red_edge(Path("IMG_1234_5.TIF"))
-    assert is_red_edge(Path("IMG_9999_5.TIF"))
-    assert is_red_edge(Path("IMG_0000_5.TIF"))
-    assert is_red_edge(Path("img_3332_5.tif"))
-    assert not is_red_edge(Path("img_3332_1.tif"))
-    assert not is_red_edge(Path("img_3332_2.tif"))
-    assert not is_red_edge(Path("img_3332_3.tif"))
-    assert not is_red_edge(Path("img_3332_4.tif"))
-    assert not is_red_edge(Path("helloworld"))
-    assert not is_red_edge(Path(""))
+    assert is_red_edge(Path("DJI_0014.TIF")) is True
+    assert is_red_edge(Path("DJI_2224.TIF")) is True
+    assert is_red_edge(Path("dji_0014.tif")) is True
+    assert is_red_edge(Path("DJI_0013.TIF")) is False
+    assert is_red_edge(Path("DJI_0015.TIF")) is False
+    assert is_red_edge(Path("DJI_00014.TIF")) is False
+    assert is_red_edge(Path("IMG_1234_5.TIF")) is True
+    assert is_red_edge(Path("IMG_9999_5.TIF")) is True
+    assert is_red_edge(Path("IMG_0000_5.TIF")) is True
+    assert is_red_edge(Path("img_3332_5.tif")) is True
+    assert is_red_edge(Path("img_3332_1.tif")) is False
+    assert is_red_edge(Path("img_3332_2.tif")) is False
+    assert is_red_edge(Path("img_3332_3.tif")) is False
+    assert is_red_edge(Path("img_3332_4.tif")) is False
+    assert is_red_edge(Path("helloworld")) is False
+    assert is_red_edge(Path("")) is False

@@ -115,14 +115,14 @@ def save_mask(out_path, mask):
 
 def is_dji_red_edge(filename):
     """Determine if the filename belongs to a DJI red edge image using regular expression matching."""
-    matcher = re.compile("(.*/)?DJI_[0-9]{2}[1-9]4.TIF", flags=re.IGNORECASE)
-    return matcher.match(str(filename))
+    matcher = re.compile("(.*[\\\\/])?DJI_[0-9]{2}[1-9]4.TIF", flags=re.IGNORECASE)
+    return matcher.match(str(filename)) is not None
 
 
 def is_micasense_red_edge(filename):
     """Determine if the filename belongs to a Micasense red edge image."""
-    matcher = re.compile("(.*/)?IMG_[0-9]{4}_5.tif", flags=re.IGNORECASE)
-    return matcher.match(str(filename))
+    matcher = re.compile("(.*[\\\\/])?IMG_[0-9]{4}_5.tif", flags=re.IGNORECASE)
+    return matcher.match(str(filename)) is not None
 
 
 def is_red_edge(filename):
