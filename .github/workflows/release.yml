@@ -56,18 +56,26 @@ jobs:
           pip install -r requirements.txt
       - name: Building GUI
         run: |
-          pyinstaller --name=GlintMaskGenerator-${{ steps.tag.outputs.tag }} -F --windowed --icon=resources/gmt.ico gui.py
+          pyinstaller --name=GlintMaskGenerator -F --windowed --icon=resources/gmt.ico gui.py
       - name: Building CLI
         run: |
-          pyinstaller --name=glint-mask-${{ steps.tag.outputs.tag }} -F cli.py
-      - name: Archiving release
+          pyinstaller --name=glint-mask -F cli.py
+      - name: Gzip release
         run: |
-          tar -czvf dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.tar.gz -C dist GlintMaskGenerator-${{ steps.tag.outputs.tag }} glint-mask-${{ steps.tag.outputs.tag }}
-      - name: Upload release file
+          tar -czvf dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.tar.gz -C dist GlintMaskGenerator glint-mask
+      - name: Zip release
+        run: |
+          zip -r -j dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.zip dist/GlintMaskGenerator dist/glint-mask
+      - name: Upload Gzip artifact
         uses: actions/upload-artifact@v1
         with:
           name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.tar.gz
           path: dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.tar.gz
+      - name: Upload Zip artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.zip
+          path: dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.zip
 
   Windows:
     name: Build Windows
@@ -91,18 +99,28 @@ jobs:
           pip install -r requirements.txt
       - name: Building GUI
         run: |
-          pyinstaller --name=GlintMaskGenerator-${{ steps.tag.outputs.tag }} -F --windowed --icon=resources/gmt.ico gui.py
+          pyinstaller --name=GlintMaskGenerator -F --windowed --icon=resources/gmt.ico gui.py
       - name: Building CLI
         run: |
-          pyinstaller --name=glint-mask-${{ steps.tag.outputs.tag }} -F cli.py
-      - name: Archiving release
+          pyinstaller --name=glint-mask -F cli.py
+      - name: Gzip release
         run: |
-          tar -czvf dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.tar.gz -C dist GlintMaskGenerator-${{ steps.tag.outputs.tag }}.exe glint-mask-${{ steps.tag.outputs.tag }}.exe
-      - name: Upload release file
+          tar -czvf dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.tar.gz -C dist GlintMaskGenerator.exe glint-mask.exe
+      - name: Zip release
+        run: |
+          cd dist
+          7z a GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.zip GlintMaskGenerator.exe glint-mask.exe
+          cd -
+      - name: Upload Gzip artifact
         uses: actions/upload-artifact@v1
         with:
           name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.tar.gz
           path: dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.tar.gz
+      - name: Upload Zip artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.zip
+          path: dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.zip
 
   Release:
     needs: [Linux, Windows]
@@ -115,16 +133,26 @@ jobs:
         id: tag
         run: |
           echo ::set-output name=tag::${GITHUB_REF#refs/tags/}
-      - name: Download Linux release file
+      - name: Download Linux gzip release file
         uses: actions/download-artifact@master
         with:
           name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.tar.gz
           path: dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.tar.gz
-      - name: Download Windows release file
+      - name: Download Linux zip release file
+        uses: actions/download-artifact@master
+        with:
+          name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.zip
+          path: dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.zip
+      - name: Download Windows gzip release file
         uses: actions/download-artifact@master
         with:
           name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.tar.gz
           path: dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.tar.gz
+      - name: Download Windows zip release file
+        uses: actions/download-artifact@master
+        with:
+          name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.zip
+          path: dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.zip
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -135,7 +163,7 @@ jobs:
           release_name: ${{ steps.tag.outputs.tag }}
           draft: false
           prerelease: false
-      - name: Upload Linux release file asset
+      - name: Upload Linux gzip release file asset
         uses: actions/upload-release-asset@v1.0.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -144,7 +172,16 @@ jobs:
           asset_path: dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.tar.gz/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.tar.gz
           asset_name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.tar.gz
           asset_content_type: application/gzip
-      - name: Upload Windows release file asset
+      - name: Upload Linux zip release file asset
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.zip/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.zip
+          asset_name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.zip
+          asset_content_type: application/zip
+      - name: Upload Windows gzip release file asset
         uses: actions/upload-release-asset@v1.0.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -153,3 +190,12 @@ jobs:
           asset_path: dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.tar.gz/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.tar.gz
           asset_name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.tar.gz
           asset_content_type: application/gzip
+      - name: Upload Windows zip release file asset
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.zip/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.zip
+          asset_name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.zip
+          asset_content_type: application/zip
