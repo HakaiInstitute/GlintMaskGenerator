@@ -97,8 +97,8 @@ def rgb(img_path: str, mask_out_path: str, glint_threshold: float = 0.9, mask_bu
          mask_buffer_sigma=mask_buffer_sigma, num_bins=num_bins)
 
 
-def specular(img_path: str, mask_out_path: str, percent_diffuse: float = 0.1, mask_thresh: float = 0.4,
-             opening: int = 0, closing: int = 0) -> None:
+def specular(img_path: str, mask_out_path: str, percent_diffuse: float = 0.1, mask_thresh: float = 0.8,
+             opening: int = 5, closing: int = 5) -> None:
     """Generate masks for glint regions in RGB imagery using Tom Bell's binning algorithm.
 
     Parameters
