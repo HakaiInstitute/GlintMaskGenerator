@@ -5,7 +5,7 @@
 
 import concurrent.futures
 import itertools
-import os
+import re
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Callable, Iterable, Optional
@@ -44,18 +44,16 @@ def get_img_paths(img_path: str, mask_out_path: str, red_edge: Optional[bool] = 
 
     elif Path(img_path).is_dir():
         # Get all images in the specified directory
-        if red_edge:
-            micasense_paths = case_insensitive_glob(img_path, "IMG_*[0-9]_5.tif")
-            dji_paths = case_insensitive_glob(img_path, "DJI_*[0-9]4.TIF")
-            # Add more here if we get new cameras or anything changes
-            img_paths = itertools.chain(micasense_paths, dji_paths)
-        else:
-            extensions = ("png", "jpg", "jpeg", "tif", "tiff")
-            img_paths = itertools.chain.from_iterable(case_insensitive_glob(img_path, f"*.{ext}") for ext in extensions)
+        extensions = ("png", "jpg", "jpeg", "tif", "tiff")
+        img_paths = itertools.chain.from_iterable(case_insensitive_glob(img_path, f"*.{ext}") for ext in extensions)
     else:
         raise ValueError("Check that img_path is a valid file or directory location.")
 
-    return [str(p) for p in list(img_paths)]
+    img_paths = [str(p) for p in list(img_paths)]
+    if red_edge:
+        return list(filter(is_red_edge, img_paths))
+    else:
+        return img_paths
 
 
 def process_imgs(process_func: Callable, img_paths: Iterable[str],
@@ -93,9 +91,7 @@ def process_imgs(process_func: Callable, img_paths: Iterable[str],
             except Exception as exc:
                 if err_callback is not None:
                     err_callback(path, exc)
-
-                for f in future_to_path:
-                    f.cancel()
+                executor.shutdown(wait=False)
                 return
 
 
@@ -115,3 +111,20 @@ def save_mask(out_path, mask):
     mask_img = Image.fromarray(mask, mode='L')
     mask_img.save(str(out_path))
     return out_path
+
+
+def is_dji_red_edge(filename):
+    """Determine if the filename belongs to a DJI red edge image using regular expression matching."""
+    matcher = re.compile("(.*[\\\\/])?DJI_[0-9]{2}[1-9]4.TIF", flags=re.IGNORECASE)
+    return matcher.match(str(filename)) is not None
+
+
+def is_micasense_red_edge(filename):
+    """Determine if the filename belongs to a Micasense red edge image."""
+    matcher = re.compile("(.*[\\\\/])?IMG_[0-9]{4}_5.tif", flags=re.IGNORECASE)
+    return matcher.match(str(filename)) is not None
+
+
+def is_red_edge(filename):
+    """Determine if the filename belongs to one of the known red edge file patterns."""
+    return is_dji_red_edge(filename) or is_micasense_red_edge(filename)

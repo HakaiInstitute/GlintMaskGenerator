@@ -7,6 +7,7 @@
 
 import math
 from pathlib import Path
+from typing import List
 
 import numpy as np
 from PIL import Image
@@ -62,8 +63,8 @@ def estimate_specular_reflection_component(img: np.ndarray, percent_diffuse: flo
     return spec_ref_est
 
 
-def make_single_mask(img_path: str, percent_diffuse: float = 0.1, mask_thresh: float = 0.4,
-                     opening: int = 0, closing: int = 0) -> np.ndarray:
+def make_single_mask(img_path: str, percent_diffuse: float = 0.1, mask_thresh: float = 0.8,
+                     opening: int = 5, closing: int = 5) -> np.ndarray:
     """Create and return a glint mask for RGB imagery.
 
     Parameters
@@ -79,15 +80,15 @@ def make_single_mask(img_path: str, percent_diffuse: float = 0.1, mask_thresh: f
 
     mask_thresh: Optional[float]
         The threshold on the specular reflectance estimate image to convert into a mask.
-        E.g. if more than 50% specular reflectance is unacceptable, use 0.5. Default is 0.4.
+        E.g. if more than 50% specular reflectance is unacceptable, use 0.5. Default is 0.8.
 
     opening: Optional[int]
         The number of morphological opening iterations on the produced mask.
-        Useful for closing small holes in the mask. Set to 0 by default (i.e. it's shut off).
+        Useful for closing small holes in the mask. 5 by default.
 
     closing: Optional[int]
         The number of morphological closing iterations on the produced mask.
-        Useful for removing small bits of mask. Set to 0 by default (i.e. it's shut off).
+        Useful for removing small bits of mask. 5 by default.
 
     Returns
     -------
@@ -119,8 +120,8 @@ def make_single_mask(img_path: str, percent_diffuse: float = 0.1, mask_thresh: f
     return mask
 
 
-def make_and_save_single_mask(img_path: str, mask_out_path: str, percent_diffuse: float = 0.1, mask_thresh: float = 0.4,
-                              opening: int = 0, closing: int = 0) -> np.ndarray:
+def make_and_save_single_mask(img_path: str, mask_out_path: str, percent_diffuse: float = 0.1, mask_thresh: float = 0.8,
+                              opening: int = 5, closing: int = 5) -> List[str]:
     """Create and return a glint mask for RGB imagery.
 
     Parameters
@@ -139,22 +140,22 @@ def make_and_save_single_mask(img_path: str, mask_out_path: str, percent_diffuse
 
     mask_thresh: Optional[float]
         The threshold on the specular reflectance estimate image to convert into a mask.
-        E.g. if more than 50% specular reflectance is unacceptable, use 0.5. Default is 0.4.
+        E.g. if more than 50% specular reflectance is unacceptable, use 0.5. Default is 0.8.
 
     opening: Optional[int]
         The number of morphological opening iterations on the produced mask.
-        Useful for closing small holes in the mask. Set to 0 by default (i.e. it's shut off).
+        Useful for closing small holes in the mask. 5 by default.
 
     closing: Optional[int]
         The number of morphological closing iterations on the produced mask.
-        Useful for removing small bits of mask. Set to 0 by default (i.e. it's shut off).
+        Useful for removing small bits of mask. 5 by default.
 
     Returns
     -------
-    numpy.ndarray, shape=(H,W)
-        Numpy array of glint mask for img at input_path.
+    List[str]
+        The name of the saved masks.
     """
     out_path = Path(mask_out_path).joinpath(f"{Path(img_path).stem}_mask.png")
     mask = make_single_mask(img_path=img_path, percent_diffuse=percent_diffuse, mask_thresh=mask_thresh,
                             opening=opening, closing=closing)
-    return save_mask(out_path, mask)
+    return [save_mask(out_path, mask)]
