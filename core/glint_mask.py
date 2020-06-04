@@ -6,12 +6,13 @@
 # Description: Generate masks for glint regions in in RGB images using Tom Bell's blue-channel binning algorithm.
 
 from pathlib import Path
+from typing import List
 
 import numpy as np
 from PIL import Image
 from scipy.ndimage.filters import gaussian_filter
 
-from .common import save_mask
+from .common import save_mask, is_dji_red_edge, is_micasense_red_edge
 
 Image.MAX_IMAGE_PIXELS = None
 EPSILON = 1e-8
@@ -78,7 +79,7 @@ def make_single_mask(img_path: str, red_edge: bool = False, glint_threshold: flo
 
 
 def make_and_save_single_mask(img_path: str, mask_out_path: str, red_edge: bool = False, glint_threshold: float = 0.9,
-                              mask_buffer_sigma: int = 20, num_bins: int = 8) -> None:
+                              mask_buffer_sigma: int = 20, num_bins: int = 8) -> List[str]:
     """Create and save a glint mask for RGB imagery.
 
     Parameters
@@ -106,11 +107,22 @@ def make_and_save_single_mask(img_path: str, mask_out_path: str, red_edge: bool 
 
     Returns
     -------
-    numpy.ndarray, shape=(H,W)
-        Numpy array of mask for the image at img_path.
+    List[str]
+        The name of the saved masks.
     """
-    out_path = Path(mask_out_path).joinpath(f"{Path(img_path).stem}_mask.png")
     mask = make_single_mask(img_path=img_path, red_edge=red_edge, glint_threshold=glint_threshold,
                             mask_buffer_sigma=mask_buffer_sigma,
                             num_bins=num_bins)
-    return save_mask(out_path, mask)
+
+    if red_edge:
+        if is_dji_red_edge(img_path):
+            out_paths = [Path(mask_out_path).joinpath(f"{Path(img_path).stem[:-1]}{i}_mask.png") for i in range(6)]
+        elif is_micasense_red_edge(img_path):
+            out_paths = [Path(mask_out_path).joinpath(f"{Path(img_path).stem[:-1]}{i}_mask.png") for i in range(1, 6)]
+        else:
+            raise RuntimeError(f"Could not identify what kind of red edge file was processed for file {str(img_path)}")
+
+        return [save_mask(out_path, mask) for out_path in out_paths]
+    else:
+        out_path = Path(mask_out_path).joinpath(f"{Path(img_path).stem}_mask.png")
+        return [save_mask(out_path, mask)]
