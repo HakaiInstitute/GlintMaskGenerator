@@ -6,7 +6,9 @@
 # Based on Matlab script by Tom Bell written 6/28/2019
 #
 # Description: Generate masks for glint regions in in RGB images using Tom Bell's blue-channel binning algorithm.
+import sys
 from functools import partial
+from typing import Callable, Iterable
 
 import fire
 from PIL import Image
@@ -20,15 +22,14 @@ Image.MAX_IMAGE_PIXELS = None
 EPSILON = 1e-8
 
 
-def _tom(img_path: str, red_edge_files, mask_out_path: str, glint_threshold: float = 0.9, mask_buffer_sigma: int = 20,
-         num_bins: int = 8, max_workers=None) -> None:
-    img_paths = get_img_paths(img_path, mask_out_path, red_edge=red_edge_files)
-    pbar = tqdm(total=len(img_paths))
-    f = partial(tom_make_and_save_single_mask, mask_out_path=mask_out_path, red_edge=red_edge_files,
-                glint_threshold=glint_threshold,
-                mask_buffer_sigma=mask_buffer_sigma, num_bins=num_bins)
-    process_imgs(f, img_paths, max_workers=None, callback=lambda _: pbar.update(), err_callback=print)
-    pbar.close()
+def _err_callback(path, exception):
+    tqdm.write(f"{path} failed with err:\n{exception}", file=sys.stderr)
+
+
+def _process(img_paths: Iterable[str], mask_func: Callable, max_workers=None) -> None:
+    with tqdm(total=len(list(img_paths))) as progress:
+        return process_imgs(mask_func, img_paths, max_workers=max_workers,
+                            callback=lambda _: progress.update(), err_callback=partial(_err_callback))
 
 
 def red_edge(img_path: str, mask_out_path: str, glint_threshold: float = 0.9,
@@ -64,8 +65,10 @@ def red_edge(img_path: str, mask_out_path: str, glint_threshold: float = 0.9,
     None
         Side effects are that the mask is saved to the specified mask_out_path location.
     """
-    _tom(img_path, red_edge_files=True, mask_out_path=mask_out_path, glint_threshold=glint_threshold,
-         mask_buffer_sigma=mask_buffer_sigma, num_bins=num_bins, max_workers=max_workers)
+    img_paths = get_img_paths(img_path, mask_out_path, red_edge=True)
+    mask_func = partial(tom_make_and_save_single_mask, mask_out_path=mask_out_path, red_edge=True,
+                        glint_threshold=glint_threshold, mask_buffer_sigma=mask_buffer_sigma, num_bins=num_bins)
+    return _process(img_paths, mask_func, max_workers=max_workers)
 
 
 def rgb(img_path: str, mask_out_path: str, glint_threshold: float = 0.9, mask_buffer_sigma: int = 20,
@@ -101,8 +104,10 @@ def rgb(img_path: str, mask_out_path: str, glint_threshold: float = 0.9, mask_bu
     None
         Side effects are that the mask is saved to the specified mask_out_path location.
     """
-    _tom(img_path, red_edge_files=False, mask_out_path=mask_out_path, glint_threshold=glint_threshold,
-         mask_buffer_sigma=mask_buffer_sigma, num_bins=num_bins, max_workers=max_workers)
+    img_paths = get_img_paths(img_path, mask_out_path, red_edge=False)
+    mask_func = partial(tom_make_and_save_single_mask, mask_out_path=mask_out_path, red_edge=False,
+                        glint_threshold=glint_threshold, mask_buffer_sigma=mask_buffer_sigma, num_bins=num_bins)
+    return _process(img_paths, mask_func, max_workers=max_workers)
 
 
 def specular(img_path: str, mask_out_path: str, percent_diffuse: float = 0.1, mask_thresh: float = 0.8,
@@ -145,11 +150,9 @@ def specular(img_path: str, mask_out_path: str, percent_diffuse: float = 0.1, ma
         Side effects are that the mask is saved to the specified mask_out_path location.
     """
     img_paths = get_img_paths(img_path, mask_out_path, red_edge=False)
-    progress = tqdm(total=len(img_paths))
-    f = partial(specular_make_and_save_single_mask, mask_out_path=mask_out_path, percent_diffuse=percent_diffuse,
-                mask_thresh=mask_thresh, opening=opening, closing=closing)
-    process_imgs(f, img_paths, max_workers=max_workers, callback=lambda _: progress.update(), err_callback=print)
-    progress.close()
+    mask_func = partial(specular_make_and_save_single_mask, mask_out_path=mask_out_path,
+                        percent_diffuse=percent_diffuse, mask_thresh=mask_thresh, opening=opening, closing=closing)
+    return _process(img_paths, mask_func, max_workers=max_workers)
 
 
 if __name__ == '__main__':
