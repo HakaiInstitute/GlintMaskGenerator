@@ -2,6 +2,7 @@
 # Organization: Hakai Institute
 # Date: 2020-05-30
 # Description: Graphical interface to the glint mask tools.
+import os
 import tkinter as tk
 from functools import partial
 from tkinter import filedialog, ttk, messagebox
@@ -24,7 +25,8 @@ class DirectoryPicker(ttk.Frame):
         ttk.Label(master=self, text=label).grid(row=0, column=0, sticky='e')
 
         self.grid_columnconfigure(1, weight=2)
-        ttk.Label(master=self, textvariable=self.variable, style='BW.TLabel').grid(row=0, column=1, sticky='ew', padx=5)
+        ent = ttk.Label(master=self, textvariable=self.variable, style='BW.TLabel')
+        ent.grid(row=0, column=1, sticky='ew', padx=5, ipady=5, pady=2)
 
         self.btn = ttk.Button(master=self, text="...", width=3, command=self._pick)
         self.btn.grid(row=0, column=2, sticky='e')
@@ -40,36 +42,46 @@ class DirectoryPicker(ttk.Frame):
 class GlintMaskApp(ttk.Frame):
     def __init__(self, master, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
+        self.DEFAULT_WORKERS = os.cpu_count() * 5
 
         for x in range(3):
-            self.columnconfigure(x, weight=1)
+            self.columnconfigure(0, weight=1)
 
-        for x in range(4):
-            self.rowconfigure(x, weight=1)
+        for x in range(6):
+            self.rowconfigure(x, weight=1, pad=5)
 
         self.red_edge = tk.BooleanVar()
         self.progress_val = tk.IntVar()
         self.imgs_in = tk.StringVar()
         self.masks_out = tk.StringVar()
-
-        self.chk_red_edge = ttk.Checkbutton(master=self, text="Red edge sensor", variable=self.red_edge)
-        self.chk_red_edge.grid(row=0, sticky='w')
-        self.chk_red_edge.bind('<Button-1>', lambda e: self.reset())
+        self.max_workers = tk.IntVar()
+        self.max_workers.set(self.DEFAULT_WORKERS)
 
         self.picker_imgs_in = DirectoryPicker(self, label="In imgs dir.", variable=self.imgs_in,
                                               callback=lambda _: self.reset())
-        self.picker_imgs_in.grid(row=1, columnspan=3, sticky='ew')
+        self.picker_imgs_in.grid(row=0, columnspan=3, sticky='ew')
 
         self.picker_masks_out = DirectoryPicker(self, label="Out mask dir.", variable=self.masks_out,
                                                 callback=lambda _: self.reset())
-        self.picker_masks_out.grid(row=2, columnspan=3, sticky='ew')
+        self.picker_masks_out.grid(row=1, columnspan=3, sticky='ew')
+
+        self.chk_red_edge = ttk.Checkbutton(master=self, text="Red edge sensor", variable=self.red_edge)
+        self.chk_red_edge.grid(row=2, column=0, sticky='w')
+        self.chk_red_edge.bind('<Button-1>', lambda e: self.reset())
+
+        self.lbl_max_workers = ttk.Label(master=self, text="Max workers").grid(row=2, column=1, sticky='e')
+        self.spin_max_workers = ttk.Spinbox(master=self, from_=1, to=self.DEFAULT_WORKERS,
+                                            textvariable=self.max_workers)
+        self.spin_max_workers.grid(row=2, column=2, sticky='w')
+
+        ttk.Separator(master=self, orient="horizontal").grid(row=3, columnspan=3, sticky="ew", ipady=5)
 
         self.progress = ttk.Progressbar(master=self, orient=tk.HORIZONTAL, mode='determinate',
                                         variable=self.progress_val)
-        self.progress.grid(row=3, columnspan=3, sticky='ew')
+        self.progress.grid(row=4, columnspan=3, sticky='ew', ipady=2, pady=2)
 
         self.btn_process = ttk.Button(master=self, text="Generate", command=self.process)
-        self.btn_process.grid(row=4, column=2, sticky='se')
+        self.btn_process.grid(row=5, column=2, sticky='se', ipady=5)
 
     @staticmethod
     def _err_callback(img_path, err):
@@ -102,7 +114,8 @@ class GlintMaskApp(ttk.Frame):
         self.progress['maximum'] = len(img_files)
 
         f = partial(make_and_save_single_mask, mask_out_path=self.masks_out.get(), red_edge=red_edge)
-        process_imgs(f, img_files, callback=self._inc_progress, err_callback=self._err_callback)
+        process_imgs(f, img_files, max_workers=max(self.max_workers.get(), 1),
+                     callback=self._inc_progress, err_callback=self._err_callback)
 
 
 if __name__ == '__main__':

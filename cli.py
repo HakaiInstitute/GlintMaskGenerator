@@ -21,18 +21,18 @@ EPSILON = 1e-8
 
 
 def _tom(img_path: str, red_edge_files, mask_out_path: str, glint_threshold: float = 0.9, mask_buffer_sigma: int = 20,
-         num_bins: int = 8) -> None:
+         num_bins: int = 8, max_workers=None) -> None:
     img_paths = get_img_paths(img_path, mask_out_path, red_edge=red_edge_files)
     pbar = tqdm(total=len(img_paths))
     f = partial(tom_make_and_save_single_mask, mask_out_path=mask_out_path, red_edge=red_edge_files,
                 glint_threshold=glint_threshold,
                 mask_buffer_sigma=mask_buffer_sigma, num_bins=num_bins)
-    process_imgs(f, img_paths, callback=lambda _: pbar.update())
+    process_imgs(f, img_paths, max_workers=None, callback=lambda _: pbar.update())
     pbar.close()
 
 
 def red_edge(img_path: str, mask_out_path: str, glint_threshold: float = 0.9,
-             mask_buffer_sigma: int = 20, num_bins: int = 8) -> None:
+             mask_buffer_sigma: int = 20, num_bins: int = 8, max_workers=None) -> None:
     """Generate masks for glint regions in Red Edge imagery using Tom Bell's binning algorithm.
 
     Parameters
@@ -55,17 +55,21 @@ def red_edge(img_path: str, mask_out_path: str, glint_threshold: float = 0.9,
     num_bins: Optional[int]
         The number of bins the blue channel is slotted into. Defaults to 8 as in Tom's script.
 
+    max_workers: Optional[int]
+        The maximum number of image processing workers. Useful for limiting memory usage.
+        Defaults to the number of CPUs * 5.
+
     Returns
     -------
     None
         Side effects are that the mask is saved to the specified mask_out_path location.
     """
     _tom(img_path, red_edge_files=True, mask_out_path=mask_out_path, glint_threshold=glint_threshold,
-         mask_buffer_sigma=mask_buffer_sigma, num_bins=num_bins)
+         mask_buffer_sigma=mask_buffer_sigma, num_bins=num_bins, max_workers=max_workers)
 
 
 def rgb(img_path: str, mask_out_path: str, glint_threshold: float = 0.9, mask_buffer_sigma: int = 20,
-        num_bins: int = 8) -> None:
+        num_bins: int = 8, max_workers=None) -> None:
     """Generate masks for glint regions in RGB imagery using Tom Bell's binning algorithm.
 
     Parameters
@@ -88,17 +92,21 @@ def rgb(img_path: str, mask_out_path: str, glint_threshold: float = 0.9, mask_bu
     num_bins: Optional[int]
         The number of bins the blue channel is slotted into. Defaults to 8 as in Tom's script.
 
+    max_workers: Optional[int]
+        The maximum number of image processing workers. Useful for limiting memory usage.
+        Defaults to the number of CPUs * 5.
+
     Returns
     -------
     None
         Side effects are that the mask is saved to the specified mask_out_path location.
     """
     _tom(img_path, red_edge_files=False, mask_out_path=mask_out_path, glint_threshold=glint_threshold,
-         mask_buffer_sigma=mask_buffer_sigma, num_bins=num_bins)
+         mask_buffer_sigma=mask_buffer_sigma, num_bins=num_bins, max_workers=max_workers)
 
 
 def specular(img_path: str, mask_out_path: str, percent_diffuse: float = 0.1, mask_thresh: float = 0.8,
-             opening: int = 5, closing: int = 5) -> None:
+             opening: int = 5, closing: int = 5, max_workers=None) -> None:
     """Generate masks for glint regions in RGB imagery using Tom Bell's binning algorithm.
 
     Parameters
@@ -127,6 +135,10 @@ def specular(img_path: str, mask_out_path: str, percent_diffuse: float = 0.1, ma
         The number of morphological closing iterations on the produced mask.
         Useful for removing small bits of mask. Set to 0 by default (i.e. it's shut off).
 
+    max_workers: Optional[int]
+        The maximum number of image processing workers. Useful for limiting memory usage.
+        Defaults to the number of CPUs * 5.
+
     Returns
     -------
     None
@@ -136,7 +148,7 @@ def specular(img_path: str, mask_out_path: str, percent_diffuse: float = 0.1, ma
     progress = tqdm(total=len(img_paths))
     f = partial(specular_make_and_save_single_mask, mask_out_path=mask_out_path, percent_diffuse=percent_diffuse,
                 mask_thresh=mask_thresh, opening=opening, closing=closing)
-    process_imgs(f, img_paths, callback=lambda _: progress.update())
+    process_imgs(f, img_paths, max_workers=None, callback=lambda _: progress.update())
     progress.close()
 
 

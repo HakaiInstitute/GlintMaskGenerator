@@ -56,7 +56,7 @@ def get_img_paths(img_path: str, mask_out_path: str, red_edge: Optional[bool] = 
         return img_paths
 
 
-def process_imgs(process_func: Callable, img_paths: Iterable[str],
+def process_imgs(process_func: Callable, img_paths: Iterable[str], max_workers=None,
                  callback: Optional[Callable] = None, err_callback: Optional[Callable] = None):
     """Compute the glint masks for all images in img_paths using the process_func and save to the mask_out_path.
 
@@ -67,8 +67,9 @@ def process_imgs(process_func: Callable, img_paths: Iterable[str],
         img_paths: Iterable(str)
             An iterable of str image paths to process.
 
-        processes: Optional[int]
-            The number of processes to use to process images in parallel. Default to 1.
+        max_workers: Optional[int]
+            The maximum number of image processing workers. Useful for limiting memory usage.
+            Defaults to the number of CPUs * 5.
 
         callback: Optional[Callable]
             Optional callback function passed the name of each input and output mask files after processing it.
@@ -79,7 +80,7 @@ def process_imgs(process_func: Callable, img_paths: Iterable[str],
     Returns:
 
     """
-    with ThreadPoolExecutor() as executor:
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
         future_to_path = {executor.submit(process_func, path): path for path in img_paths}
         for future in concurrent.futures.as_completed(future_to_path):
             path = future_to_path[future]
