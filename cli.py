@@ -27,7 +27,7 @@ def _tom(img_path: str, red_edge_files, mask_out_path: str, glint_threshold: flo
     f = partial(tom_make_and_save_single_mask, mask_out_path=mask_out_path, red_edge=red_edge_files,
                 glint_threshold=glint_threshold,
                 mask_buffer_sigma=mask_buffer_sigma, num_bins=num_bins)
-    process_imgs(f, img_paths, max_workers=None, callback=lambda _: pbar.update())
+    process_imgs(f, img_paths, max_workers=None, callback=lambda _: pbar.update(), err_callback=print)
     pbar.close()
 
 
@@ -148,7 +148,7 @@ def specular(img_path: str, mask_out_path: str, percent_diffuse: float = 0.1, ma
     progress = tqdm(total=len(img_paths))
     f = partial(specular_make_and_save_single_mask, mask_out_path=mask_out_path, percent_diffuse=percent_diffuse,
                 mask_thresh=mask_thresh, opening=opening, closing=closing)
-    process_imgs(f, img_paths, max_workers=None, callback=lambda _: progress.update())
+    process_imgs(f, img_paths, max_workers=max_workers, callback=lambda _: progress.update(), err_callback=print)
     progress.close()
 
 
