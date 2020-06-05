@@ -8,7 +8,8 @@ from functools import partial
 from tkinter import filedialog, ttk, messagebox
 
 from core.common import get_img_paths, process_imgs
-from core.glint_mask import make_and_save_single_mask
+from core.glint_mask import make_and_save_single_mask as process_rgb
+from core.specular_mask import make_and_save_single_mask as process_specular
 
 
 class DirectoryPicker(ttk.Frame):
@@ -108,13 +109,19 @@ class GlintMaskApp(ttk.Frame):
         self.picker_masks_out.btn = tk.DISABLED
 
         red_edge = self.red_edge.get()
-        img_files = get_img_paths(self.imgs_in.get(), self.masks_out.get(), red_edge=red_edge)
+        in_dir = self.imgs_in.get()
+        out_dir = self.masks_out.get()
+        img_files = get_img_paths(in_dir, out_dir, red_edge=red_edge)
+        max_workers = max(self.max_workers.get(), 1)
 
         self.progress_val.set(0)
         self.progress['maximum'] = len(img_files)
 
-        f = partial(make_and_save_single_mask, mask_out_path=self.masks_out.get(), red_edge=red_edge)
-        process_imgs(f, img_files, max_workers=max(self.max_workers.get(), 1),
+        if red_edge:
+            f = partial(process_rgb, mask_out_path=out_dir, red_edge=True)
+        else:
+            f = partial(process_specular, mask_out_path=out_dir)
+        process_imgs(f, img_files, max_workers=max_workers,
                      callback=self._inc_progress, err_callback=self._err_callback)
 
 
