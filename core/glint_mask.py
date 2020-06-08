@@ -69,8 +69,9 @@ def make_single_mask(img_path: str, red_edge: bool = False, glint_threshold: flo
     mask = (sis <= glint_threshold)
 
     # Create Buffered Mask
-    mask_buffered = gaussian_filter(mask.astype(np.float), mask_buffer_sigma)
-    mask = mask_buffered >= 0.99
+    if not red_edge:
+        mask_buffered = gaussian_filter(mask.astype(np.float), mask_buffer_sigma)
+        mask = mask_buffered >= 0.99
 
     # Save the mask
     mask = mask.astype(np.uint8) * 255
