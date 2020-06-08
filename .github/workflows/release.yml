@@ -34,19 +34,11 @@ jobs:
       - name: Gzip release
         run: |
           tar -czvf dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.tar.gz -C dist GlintMaskGenerator glint-mask
-      - name: Zip release
-        run: |
-          zip -r -j dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.zip dist/GlintMaskGenerator dist/glint-mask
       - name: Upload Gzip artifact
         uses: actions/upload-artifact@v1
         with:
           name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.tar.gz
           path: dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.tar.gz
-      - name: Upload Zip artifact
-        uses: actions/upload-artifact@v1
-        with:
-          name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.zip
-          path: dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.zip
 
   Windows:
     name: Build Windows
@@ -73,19 +65,11 @@ jobs:
       - name: Building CLI
         run: |
           pyinstaller --name=glint-mask -F cli.py
-      - name: Gzip release
-        run: |
-          tar -czvf dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.tar.gz -C dist GlintMaskGenerator.exe glint-mask.exe
       - name: Zip release
         run: |
           cd dist
           7z a GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.zip GlintMaskGenerator.exe glint-mask.exe
           cd -
-      - name: Upload Gzip artifact
-        uses: actions/upload-artifact@v1
-        with:
-          name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.tar.gz
-          path: dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.tar.gz
       - name: Upload Zip artifact
         uses: actions/upload-artifact@v1
         with:
@@ -108,16 +92,6 @@ jobs:
         with:
           name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.tar.gz
           path: dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.tar.gz
-      - name: Download Linux zip release file
-        uses: actions/download-artifact@master
-        with:
-          name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.zip
-          path: dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.zip
-      - name: Download Windows gzip release file
-        uses: actions/download-artifact@master
-        with:
-          name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.tar.gz
-          path: dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.tar.gz
       - name: Download Windows zip release file
         uses: actions/download-artifact@master
         with:
@@ -141,24 +115,6 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.tar.gz/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.tar.gz
           asset_name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.tar.gz
-          asset_content_type: application/gzip
-      - name: Upload Linux zip release file asset
-        uses: actions/upload-release-asset@v1.0.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.zip/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.zip
-          asset_name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.zip
-          asset_content_type: application/zip
-      - name: Upload Windows gzip release file asset
-        uses: actions/upload-release-asset@v1.0.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.tar.gz/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.tar.gz
-          asset_name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.tar.gz
           asset_content_type: application/gzip
       - name: Upload Windows zip release file asset
         uses: actions/upload-release-asset@v1.0.1
