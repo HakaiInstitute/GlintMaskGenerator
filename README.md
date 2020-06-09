@@ -2,7 +2,7 @@
 ![Python application](https://github.com/HakaiInstitute/glint-mask-tools/workflows/Main/badge.svg?branch=master)
 
 ## Description 
-Generate masks for glint regions in RGB images.
+Generate masks for glint regions in RGB and multispectral image files.
 
 ### Installation
 1. Go to the [releases page](https://github.com/HakaiInstitute/glint-mask-tools/releases)
@@ -21,8 +21,8 @@ In Windows, launch the GUI by double clicking the executable file. In Linux, you
 The options presented in the GUI are self explanatory. 
 
 For now, generating masks by passing directory paths containing images is the supported workflow.
-Be sure to check the "red edge" option if you are processing a directory which contains imagery from the Micasense or 
-DJI multi-spectral cameras. You will be notified of any processing errors via a pop-up dialog.
+Be sure to change the image type option when processing imagery from the Micasense or  DJI multi-spectral cameras. You 
+will be notified of any processing errors via a pop-up dialog.
  
 #### CLI
 For information about the parameters expected by the CLI, just run `./glint-mask --help` in a bash terminal or command line interface. 
@@ -31,15 +31,17 @@ All the functionality of the CLI is documented there.
 ##### Examples
 ```bash
 # Process a single file with custom thresholds
-glint-mask rgb /path/to/in_file.jpg /path/to/out_mask.jpg --glint_threshold 0.5
-glint-mask red_edge /path/to/in_file.jpg /path/to/out_mask.jpg --glint_threshold 0.5
-glint-mask specular /path/to/in_file.jpg /path/to/out_mask.jpg --percent_diffuse 0.2 --mask_thresh 0.5
+glint-mask rgb /path/to/in_file.jpg /path/to/out_mask.jpg
+glint-mask micasense_ms /path/to/in_file.jpg /path/to/out_mask.jpg
+glint-mask dji_ms /path/to/in_file.jpg /path/to/out_mask.jpg
+glint-mask specular /path/to/in_file.jpg /path/to/out_mask.jpg
 
 
 # Process a directory of files
-glint-mask rgb /path/to/dir/with/images/ /path/to/out_masks/dir/ --glint_threshold 0.5
-glint-mask red_edge /path/to/dir/with/images/ /path/to/out_masks/dir/ --glint_threshold 0.5
-glint-mask specular /path/to/dir/with/images/ /path/to/out_masks/dir/ --percent_diffuse 0.2 --mask_thresh 0.5
+glint-mask rgb /path/to/dir/with/images/ /path/to/out_masks/dir/
+glint-mask micasense_ms /path/to/dir/with/images/ /path/to/out_masks/dir/
+glint-mask dji_ms /path/to/dir/with/images/ /path/to/out_masks/dir/
+glint-mask specular /path/to/dir/with/images/ /path/to/out_masks/dir/
 ```
 
 #### Notes
@@ -53,10 +55,12 @@ glint-mask specular /path/to/dir/with/images/ /path/to/out_masks/dir/ --percent_
 ##### Red Edge file processing
 - Currently, the program looks for files that match the patterns "IMG\_\*[0-9]\_5.tif" for Micasense images and "DJI\_\*[0-9]4.TIF" for multi-spectral DJI images.
 - As required, the matching logic can be updated in the "core/common.py" source code.
+- More file types can be supported as needed and the GUI and CLI can be updated to provide more options.
 
 ## Development
-The functions available in the executable binaries are actually just Python scripts packaged using PyInstaller. To update the logic, you'll need to install the required packages to run the individual
-gui.py and cli.py scripts found in the root of the Git repository.
+The functions available in the executable binaries are actually just Python scripts packaged using PyInstaller. To 
+update the logic, you'll need to install the required packages to run the individual gui.py and cli.py scripts found in 
+the root of the Git repository.
 
 ### Installation
 1. Start by cloning the code repository from GitHub.
