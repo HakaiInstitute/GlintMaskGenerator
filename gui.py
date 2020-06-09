@@ -12,7 +12,7 @@ from core.glint_mask import make_and_save_single_mask
 
 
 class DirectoryPicker(ttk.Frame):
-    def __init__(self, master, label, variable, callback=None):
+    def __init__(self, master, label, variable, callback=None, label_width=None):
         super().__init__(master)
         style = ttk.Style()
         style.configure("BW.TLabel", foreground="black", background="white")
@@ -22,7 +22,7 @@ class DirectoryPicker(ttk.Frame):
         self.callback = callback
 
         self.grid_rowconfigure(0, weight=1)
-        ttk.Label(master=self, text=label).grid(row=0, column=0, sticky='e')
+        ttk.Label(master=self, text=label, width=label_width).grid(row=0, column=0, sticky='e')
 
         self.grid_columnconfigure(1, weight=2)
         ent = ttk.Label(master=self, textvariable=self.variable, style='BW.TLabel')
@@ -42,46 +42,69 @@ class DirectoryPicker(ttk.Frame):
 class GlintMaskApp(ttk.Frame):
     def __init__(self, master, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
+        self.LABEL_WIDTH = 16
         self.DEFAULT_WORKERS = os.cpu_count() * 5
+        self.IMG_TYPES = {
+            # Map display names to names required by backend api
+            'RGB': 'rgb',
+            'Micasense Multispectral': 'micasense_ms',
+            'DJI Multispectral': 'dji_ms'
+        }
 
-        for x in range(3):
-            self.columnconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=2)
+        self.grid_columnconfigure(2, weight=1)
 
-        for x in range(6):
+        for x in range(7):
             self.rowconfigure(x, weight=1, pad=5)
 
-        self.red_edge = tk.BooleanVar()
+        self.img_type = tk.StringVar()
+        self.img_type.set(list(self.IMG_TYPES.keys())[0])
         self.progress_val = tk.IntVar()
         self.imgs_in = tk.StringVar()
         self.masks_out = tk.StringVar()
         self.max_workers = tk.IntVar()
         self.max_workers.set(self.DEFAULT_WORKERS)
 
-        self.picker_imgs_in = DirectoryPicker(self, label="In imgs dir.", variable=self.imgs_in,
-                                              callback=lambda _: self.reset())
-        self.picker_imgs_in.grid(row=0, columnspan=3, sticky='ew')
+        # IMG TYPE SELECTION
+        frm_img_type = tk.Frame(master=self)
+        frm_img_type.grid(row=0, column=0, columnspan=3, sticky='ew')
+        frm_img_type.grid_columnconfigure(1, weight=2)
+        ttk.Label(master=frm_img_type, text="Imagery type", width=self.LABEL_WIDTH).grid(row=0, column=0, sticky='e')
+        ttk.Combobox(master=frm_img_type, textvariable=self.img_type, values=list(self.IMG_TYPES.keys())) \
+            .grid(row=0, column=1, columnspan=3, sticky='ew', padx=5, ipady=5, pady=2)
 
-        self.picker_masks_out = DirectoryPicker(self, label="Out mask dir.", variable=self.masks_out,
-                                                callback=lambda _: self.reset())
-        self.picker_masks_out.grid(row=1, columnspan=3, sticky='ew')
+        # IMG IN DIR
+        self.picker_imgs_in = DirectoryPicker(self, label="Input images dir", variable=self.imgs_in,
+                                              label_width=self.LABEL_WIDTH, callback=lambda _: self.reset())
+        self.picker_imgs_in.grid(row=1, columnspan=3, sticky='ew')
 
-        self.chk_red_edge = ttk.Checkbutton(master=self, text="Red edge sensor", variable=self.red_edge)
-        self.chk_red_edge.grid(row=2, column=0, sticky='w')
-        self.chk_red_edge.bind('<Button-1>', lambda e: self.reset())
+        # MASK OUT DIR
+        self.picker_masks_out = DirectoryPicker(self, label="Output masks dir", variable=self.masks_out,
+                                                label_width=self.LABEL_WIDTH, callback=lambda _: self.reset())
+        self.picker_masks_out.grid(row=2, columnspan=3, sticky='ew')
 
-        self.lbl_max_workers = ttk.Label(master=self, text="Max workers").grid(row=2, column=1, sticky='e')
-        self.spin_max_workers = ttk.Spinbox(master=self, from_=1, to=self.DEFAULT_WORKERS,
+        # MAX WORKERS
+        frm_max_workers = ttk.Frame(master=self)
+        frm_max_workers.grid(row=3, column=0, columnspan=3, sticky='ew')
+        frm_max_workers.grid_columnconfigure(1, weight=2)
+        ttk.Label(master=frm_max_workers, text="Max workers", width=self.LABEL_WIDTH) \
+            .grid(row=0, column=0, sticky='e', padx=2)
+        self.spin_max_workers = ttk.Spinbox(master=frm_max_workers, from_=1, to=self.DEFAULT_WORKERS, increment=5,
                                             textvariable=self.max_workers)
-        self.spin_max_workers.grid(row=2, column=2, sticky='w')
+        self.spin_max_workers.grid(row=0, column=1, columnspan=2, sticky='ew')
 
-        ttk.Separator(master=self, orient="horizontal").grid(row=3, columnspan=3, sticky="ew", ipady=5)
+        # SEPARATOR
+        ttk.Separator(master=self, orient="horizontal").grid(row=4, columnspan=3, sticky="ew", ipady=5)
 
+        # PROGRESS
         self.progress = ttk.Progressbar(master=self, orient=tk.HORIZONTAL, mode='determinate',
                                         variable=self.progress_val)
-        self.progress.grid(row=4, columnspan=3, sticky='ew', ipady=2, pady=2)
+        self.progress.grid(row=5, columnspan=3, sticky='ew', ipady=2, pady=2)
 
+        # PROCESS BUTTON
         self.btn_process = ttk.Button(master=self, text="Generate", command=self.process)
-        self.btn_process.grid(row=5, column=2, sticky='se', ipady=5)
+        self.btn_process.grid(row=6, column=2, sticky='se', ipady=5)
 
     @staticmethod
     def _err_callback(img_path, err):
@@ -107,13 +130,13 @@ class GlintMaskApp(ttk.Frame):
         self.picker_imgs_in.btn = tk.DISABLED
         self.picker_masks_out.btn = tk.DISABLED
 
-        red_edge = self.red_edge.get()
-        img_files = get_img_paths(self.imgs_in.get(), self.masks_out.get(), red_edge=red_edge)
+        img_type = self.IMG_TYPES[self.img_type.get()]
+        img_files = get_img_paths(self.imgs_in.get(), self.masks_out.get(), img_type=img_type)
 
         self.progress_val.set(0)
         self.progress['maximum'] = len(img_files)
 
-        f = partial(make_and_save_single_mask, mask_out_path=self.masks_out.get(), red_edge=red_edge)
+        f = partial(make_and_save_single_mask, mask_out_path=self.masks_out.get(), img_type=img_type)
         process_imgs(f, img_files, max_workers=max(self.max_workers.get(), 1),
                      callback=self._inc_progress, err_callback=self._err_callback)
 
@@ -123,7 +146,7 @@ if __name__ == '__main__':
     root.resizable(True, True)
     root.rowconfigure(0, weight=1)
     root.columnconfigure(0, weight=1)
-    root.wm_minsize(width=500, height=120)
+    root.wm_minsize(width=500, height=220)
 
     app = GlintMaskApp(root, padding="12 3 12 3")
     app.grid(sticky='nsew')
