@@ -131,13 +131,16 @@ class GlintMaskApp(ttk.Frame):
         self.picker_masks_out.btn = tk.DISABLED
 
         img_type = self.IMG_TYPES[self.img_type.get()]
-        img_files = get_img_paths(self.imgs_in.get(), self.masks_out.get(), img_type=img_type)
+        in_dir = self.imgs_in.get()
+        out_dir = self.masks_out.get()
+        img_files = get_img_paths(in_dir, out_dir, img_type=img_type)
+        max_workers = max(self.max_workers.get(), 1)
 
         self.progress_val.set(0)
         self.progress['maximum'] = len(img_files)
 
-        f = partial(make_and_save_single_mask, mask_out_path=self.masks_out.get(), img_type=img_type)
-        process_imgs(f, img_files, max_workers=max(self.max_workers.get(), 1),
+        f = partial(make_and_save_single_mask, mask_out_path=out_dir, img_type=img_type)
+        process_imgs(f, img_files, max_workers=max_workers,
                      callback=self._inc_progress, err_callback=self._err_callback)
 
 
