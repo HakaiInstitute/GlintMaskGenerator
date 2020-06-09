@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from core.common import get_img_paths, is_dji_red_edge, is_micasense_red_edge, is_red_edge
+from core.common import get_img_paths, is_dji_red_edge, is_micasense_red_edge
 
 IMG_CONTENT = Image.fromarray(np.ones((32, 32, 3)).astype(np.uint8) * 255)
 
@@ -22,7 +22,7 @@ def test_get_img_paths(tmp_path):
     for name in true_paths:
         IMG_CONTENT.save(name)
 
-    img_paths = sorted(get_img_paths(str(tmp_path), str(tmp_path), red_edge=False))
+    img_paths = sorted(get_img_paths(str(tmp_path), str(tmp_path)))
     assert len(true_paths) == len(img_paths)
     assert all(np.array(true_paths) == np.array(img_paths))
 
@@ -38,11 +38,15 @@ def test_get_img_paths(tmp_path):
     for name in true_paths:
         IMG_CONTENT.save(name)
 
-    valid_paths = ["IMG_1234_5.tif", "IMG_4321_5.TIF", "DJI_1024.TIF", "DJI_2024.tif"]
+    valid_paths = ["IMG_1234_5.tif", "IMG_4321_5.TIF"]
     valid_paths = sorted([str(tmp_path.joinpath(n)) for n in valid_paths])
+    img_paths = sorted(get_img_paths(str(tmp_path), str(tmp_path), img_type='micasense_ms'))
+    assert len(valid_paths) == len(img_paths)
+    assert all(np.array(valid_paths) == np.array(img_paths))
 
-    img_paths = sorted(get_img_paths(str(tmp_path), str(tmp_path), red_edge=True))
-    print(img_paths)
+    valid_paths = ["DJI_1024.TIF", "DJI_2024.tif"]
+    valid_paths = sorted([str(tmp_path.joinpath(n)) for n in valid_paths])
+    img_paths = sorted(get_img_paths(str(tmp_path), str(tmp_path), img_type='dji_ms'))
     assert len(valid_paths) == len(img_paths)
     assert all(np.array(valid_paths) == np.array(img_paths))
 
@@ -121,39 +125,3 @@ def test_is_micasense_red_edge():
     assert is_micasense_red_edge(Path("C:\\Users\\some\\dir\\img_3332_1.tif")) is False
     assert is_micasense_red_edge("C:\\Users\\some\\dir\\img_3332_5.tif") is True
     assert is_micasense_red_edge("C:\\Users\\some\\dir\\img_3332_1.tif") is False
-
-
-def test_is_red_edge():
-    assert is_red_edge("DJI_0014.TIF") is True
-    assert is_red_edge("DJI_2224.TIF") is True
-    assert is_red_edge("dji_0014.tif") is True
-    assert is_red_edge("DJI_0013.TIF") is False
-    assert is_red_edge("DJI_0015.TIF") is False
-    assert is_red_edge("DJI_00014.TIF") is False
-    assert is_red_edge("IMG_1234_5.TIF") is True
-    assert is_red_edge("IMG_9999_5.TIF") is True
-    assert is_red_edge("IMG_0000_5.TIF") is True
-    assert is_red_edge("img_3332_5.tif") is True
-    assert is_red_edge("img_3332_1.tif") is False
-    assert is_red_edge("img_3332_2.tif") is False
-    assert is_red_edge("img_3332_3.tif") is False
-    assert is_red_edge("img_3332_4.tif") is False
-    assert is_red_edge("helloworld") is False
-    assert is_red_edge("") is False
-
-    assert is_red_edge(Path("DJI_0014.TIF")) is True
-    assert is_red_edge(Path("DJI_2224.TIF")) is True
-    assert is_red_edge(Path("dji_0014.tif")) is True
-    assert is_red_edge(Path("DJI_0013.TIF")) is False
-    assert is_red_edge(Path("DJI_0015.TIF")) is False
-    assert is_red_edge(Path("DJI_00014.TIF")) is False
-    assert is_red_edge(Path("IMG_1234_5.TIF")) is True
-    assert is_red_edge(Path("IMG_9999_5.TIF")) is True
-    assert is_red_edge(Path("IMG_0000_5.TIF")) is True
-    assert is_red_edge(Path("img_3332_5.tif")) is True
-    assert is_red_edge(Path("img_3332_1.tif")) is False
-    assert is_red_edge(Path("img_3332_2.tif")) is False
-    assert is_red_edge(Path("img_3332_3.tif")) is False
-    assert is_red_edge(Path("img_3332_4.tif")) is False
-    assert is_red_edge(Path("helloworld")) is False
-    assert is_red_edge(Path("")) is False

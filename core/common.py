@@ -19,7 +19,7 @@ def case_insensitive_glob(dir_path, pattern):
         ''.join('[%s%s]' % (char.lower(), char.upper()) if char.isalpha() else char for char in pattern))
 
 
-def get_img_paths(img_path: str, mask_out_path: str, red_edge: Optional[bool] = False):
+def get_img_paths(img_path: str, mask_out_path: str, img_type: Optional[str] = 'rgb'):
     """Get the paths of images to process from location img_path.
 
     Args:
@@ -29,9 +29,9 @@ def get_img_paths(img_path: str, mask_out_path: str, red_edge: Optional[bool] = 
         mask_out_path: str
             The directory where the output masks should be saved.
 
-        red_edge: Optional[bool]
-            Flag indicating if the images at the specified img_path are Micasense or DJI images containing red edge band
-            files.
+        img_type: Optional[str]
+            Str describing what kind of files to look for in the specified img_path.
+            Should be one of 'rgb', 'micasense_ms', 'dji_ms'. Default is 'rgb'.
 
     Returns:
         None
@@ -50,8 +50,10 @@ def get_img_paths(img_path: str, mask_out_path: str, red_edge: Optional[bool] = 
         raise ValueError("Check that img_path is a valid file or directory location.")
 
     img_paths = [str(p) for p in list(img_paths)]
-    if red_edge:
-        return list(filter(is_red_edge, img_paths))
+    if img_type == 'micasense_ms':
+        return list(filter(is_micasense_red_edge, img_paths))
+    if img_type == 'dji_ms':
+        return list(filter(is_dji_red_edge, img_paths))
     else:
         return img_paths
 
@@ -124,8 +126,3 @@ def is_micasense_red_edge(filename):
     """Determine if the filename belongs to a Micasense red edge image."""
     matcher = re.compile("(.*[\\\\/])?IMG_[0-9]{4}_5.tif", flags=re.IGNORECASE)
     return matcher.match(str(filename)) is not None
-
-
-def is_red_edge(filename):
-    """Determine if the filename belongs to one of the known red edge file patterns."""
-    return is_dji_red_edge(filename) or is_micasense_red_edge(filename)
