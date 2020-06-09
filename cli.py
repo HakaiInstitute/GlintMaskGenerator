@@ -8,7 +8,7 @@
 # Description: Generate masks for glint regions in in RGB images using Tom Bell's blue-channel binning algorithm.
 import sys
 from functools import partial
-from typing import Callable, Iterable
+from typing import Callable, Iterable, Optional
 
 import fire
 from PIL import Image
@@ -26,21 +26,29 @@ def _err_callback(path, exception):
     tqdm.write(f"{path} failed with err:\n{exception}", file=sys.stderr)
 
 
-def _process(img_paths: Iterable[str], mask_func: Callable, max_workers=None) -> None:
+def _process(img_paths: Iterable[str], mask_func: Callable, max_workers: Optional[int] = None) -> None:
     with tqdm(total=len(list(img_paths))) as progress:
         return process_imgs(mask_func, img_paths, max_workers=max_workers,
                             callback=lambda _: progress.update(), err_callback=partial(_err_callback))
 
 
-def red_edge(img_path: str, mask_out_path: str, glint_threshold: float = 0.9,
-             mask_buffer_sigma: int = 20, num_bins: int = 8, max_workers=None) -> None:
-    """Generate masks for glint regions in Red Edge imagery using Tom Bell's binning algorithm.
+def _helper_rgb_ms(img_path: str, mask_out_path: str, img_type: str, glint_threshold: float,
+                   mask_buffer_sigma: int, num_bins: int, max_workers: int) -> None:
+    img_paths = get_img_paths(img_path, mask_out_path, img_type=img_type)
+    mask_func = partial(tom_make_and_save_single_mask, mask_out_path=mask_out_path, img_type=img_type,
+                        glint_threshold=glint_threshold, mask_buffer_sigma=mask_buffer_sigma, num_bins=num_bins)
+    return _process(img_paths, mask_func, max_workers=max_workers)
+
+
+def dji_ms(img_path: str, mask_out_path: str, glint_threshold: float = 0.9,
+           mask_buffer_sigma: int = 20, num_bins: int = 8, max_workers: Optional[int] = None) -> None:
+    """Generate masks for glint regions in multispectral imagery from the DJI camera using Tom Bell's algorithm.
 
     Parameters
     ----------
     img_path: str
-        The path to a named input image or directory containing images. If img_path is a directory, all IMG_xxxx_6.tif
-        and DJI_***4.TIF files will be processed.
+        The path to a named input image or directory containing images. If img_path is a directory, all DJI_***4.TIF
+        files will be processed.
 
     mask_out_path: str
         The path to send your out image including the file name and type. e.g. "/path/to/mask.png".
@@ -65,14 +73,49 @@ def red_edge(img_path: str, mask_out_path: str, glint_threshold: float = 0.9,
     None
         Side effects are that the mask is saved to the specified mask_out_path location.
     """
-    img_paths = get_img_paths(img_path, mask_out_path, red_edge=True)
-    mask_func = partial(tom_make_and_save_single_mask, mask_out_path=mask_out_path, red_edge=True,
-                        glint_threshold=glint_threshold, mask_buffer_sigma=mask_buffer_sigma, num_bins=num_bins)
-    return _process(img_paths, mask_func, max_workers=max_workers)
+    return _helper_rgb_ms(img_path, mask_out_path, 'dji_ms',
+                          glint_threshold, mask_buffer_sigma, num_bins, max_workers)
+
+
+def micasense_ms(img_path: str, mask_out_path: str, glint_threshold: float = 0.9,
+                 mask_buffer_sigma: int = 20, num_bins: int = 8, max_workers: Optional[int] = None) -> None:
+    """Generate masks for glint regions in multispectral imagery from the Micasense camera using Tom Bell's algorithm.
+
+    Parameters
+    ----------
+    img_path: str
+        The path to a named input image or directory containing images. If img_path is a directory, all IMG_xxxx_6.tif
+        files will be processed.
+
+    mask_out_path: str
+        The path to send your out image including the file name and type. e.g. "/path/to/mask.png".
+        mask_out_path must be a directory if img_path is specified as a directory.
+
+    glint_threshold: Optional[float]
+        The amount of binned "blueness" that should be glint. Domain for values is (0.0, 1.0).
+        Play with this value. Default is 0.9.
+
+    mask_buffer_sigma: Optional[int]
+        The sigma for the Gaussian kernel used to buffer the mask. Defaults to 20.
+
+    num_bins: Optional[int]
+        The number of bins the blue channel is slotted into. Defaults to 8 as in Tom's script.
+
+    max_workers: Optional[int]
+        The maximum number of image processing workers. Useful for limiting memory usage.
+        Defaults to the number of CPUs * 5.
+
+    Returns
+    -------
+    None
+        Side effects are that the mask is saved to the specified mask_out_path location.
+    """
+    return _helper_rgb_ms(img_path, mask_out_path, 'micasense_ms',
+                          glint_threshold, mask_buffer_sigma, num_bins, max_workers)
 
 
 def rgb(img_path: str, mask_out_path: str, glint_threshold: float = 0.9, mask_buffer_sigma: int = 20,
-        num_bins: int = 8, max_workers=None) -> None:
+        num_bins: int = 8, max_workers: Optional[int] = None) -> None:
     """Generate masks for glint regions in RGB imagery using Tom Bell's binning algorithm.
 
     Parameters
@@ -104,15 +147,13 @@ def rgb(img_path: str, mask_out_path: str, glint_threshold: float = 0.9, mask_bu
     None
         Side effects are that the mask is saved to the specified mask_out_path location.
     """
-    img_paths = get_img_paths(img_path, mask_out_path, red_edge=False)
-    mask_func = partial(tom_make_and_save_single_mask, mask_out_path=mask_out_path, red_edge=False,
-                        glint_threshold=glint_threshold, mask_buffer_sigma=mask_buffer_sigma, num_bins=num_bins)
-    return _process(img_paths, mask_func, max_workers=max_workers)
+    return _helper_rgb_ms(img_path, mask_out_path, 'rgb',
+                          glint_threshold, mask_buffer_sigma, num_bins, max_workers)
 
 
 def specular(img_path: str, mask_out_path: str, percent_diffuse: float = 0.1, mask_thresh: float = 0.8,
-             opening: int = 5, closing: int = 5, max_workers=None) -> None:
-    """Generate masks for glint regions in RGB imagery using Tom Bell's binning algorithm.
+             opening: int = 5, closing: int = 5, max_workers: Optional[int] = None) -> None:
+    """Generate masks for glint regions in RGB imagery by setting a threshold on estimated specular reflectance.
 
     Parameters
     ----------
@@ -149,7 +190,7 @@ def specular(img_path: str, mask_out_path: str, percent_diffuse: float = 0.1, ma
     None
         Side effects are that the mask is saved to the specified mask_out_path location.
     """
-    img_paths = get_img_paths(img_path, mask_out_path, red_edge=False)
+    img_paths = get_img_paths(img_path, mask_out_path, img_type='rgb')
     mask_func = partial(specular_make_and_save_single_mask, mask_out_path=mask_out_path,
                         percent_diffuse=percent_diffuse, mask_thresh=mask_thresh, opening=opening, closing=closing)
     return _process(img_paths, mask_func, max_workers=max_workers)
@@ -159,5 +200,6 @@ if __name__ == '__main__':
     fire.Fire({
         'rgb': rgb,
         'specular': specular,
-        'red_edge': red_edge
+        'micasense_ms': micasense_ms,
+        'dji_ms': dji_ms
     })
