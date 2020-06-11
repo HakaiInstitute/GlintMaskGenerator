@@ -2,13 +2,15 @@
 # Organization: Hakai Institute
 # Date: 2020-05-30
 # Description: Graphical interface to the glint mask tools.
+
 import os
 import tkinter as tk
 from functools import partial
 from tkinter import filedialog, ttk, messagebox
 
 from core.common import get_img_paths, process_imgs
-from core.glint_mask import make_and_save_single_mask
+from core.glint_mask import make_and_save_single_mask as process_rgb_f
+from core.specular_mask import make_and_save_single_mask as process_specular_f
 
 
 class DirectoryPicker(ttk.Frame):
@@ -139,7 +141,10 @@ class GlintMaskApp(ttk.Frame):
         self.progress_val.set(0)
         self.progress['maximum'] = len(img_files)
 
-        f = partial(make_and_save_single_mask, mask_out_path=out_dir, img_type=img_type)
+        if img_type == 'rgb':
+            f = partial(process_specular_f, mask_out_path=out_dir, img_type=img_type)
+        else:
+            f = partial(process_rgb_f, mask_out_path=out_dir, img_type=img_type)
         process_imgs(f, img_files, max_workers=max_workers,
                      callback=self._inc_progress, err_callback=self._err_callback)
 
