@@ -50,12 +50,15 @@ def get_img_paths(img_path: str, mask_out_path: str, img_type: Optional[str] = '
         raise ValueError("Check that img_path is a valid file or directory location.")
 
     img_paths = [str(p) for p in list(img_paths)]
+    print(img_type)
     if img_type == 'micasense_re':
         return list(filter(is_micasense_red_edge, img_paths))
     if img_type == 'dji_ms':
         return list(filter(is_dji_red_edge, img_paths))
-    else:
+    elif img_type == 'rgb':
         return img_paths
+    else:
+        raise ValueError(f"img_type {img_type} is not a known type")
 
 
 def process_imgs(process_func: Callable, img_paths: Iterable[str], max_workers=None,

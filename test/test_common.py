@@ -40,7 +40,7 @@ def test_get_img_paths(tmp_path):
 
     valid_paths = ["IMG_1234_5.tif", "IMG_4321_5.TIF"]
     valid_paths = sorted([str(tmp_path.joinpath(n)) for n in valid_paths])
-    img_paths = sorted(get_img_paths(str(tmp_path), str(tmp_path), img_type='micasense_ms'))
+    img_paths = sorted(get_img_paths(str(tmp_path), str(tmp_path), img_type='micasense_re'))
     assert len(valid_paths) == len(img_paths)
     assert all(np.array(valid_paths) == np.array(img_paths))
 
