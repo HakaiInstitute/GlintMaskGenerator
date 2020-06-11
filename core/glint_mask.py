@@ -31,7 +31,7 @@ def make_single_mask(img_path: str, img_type: Optional[str] = 'rgb', glint_thres
 
     img_type: Optional[str]
         Str describing what kind of files to look for in the specified img_path.
-        Should be one of 'rgb', 'micasense_ms', 'dji_ms'. Default is 'rgb'.
+        Should be one of 'rgb', 'micasense_re', 'dji_ms'. Default is 'rgb'.
 
     glint_threshold: Optional[float]
         The amount of binned "blueness" that should be glint. Domain for values is (0.0, 1.0).
@@ -58,7 +58,7 @@ def make_single_mask(img_path: str, img_type: Optional[str] = 'rgb', glint_thres
 
         # Quantize blue channel into num_bins bins
         bins = np.linspace(0, 255, num_bins, endpoint=False)
-    elif img_type in ['micasense_ms', 'dji_ms']:
+    elif img_type in ['micasense_re', 'dji_ms']:
         # Quantize 16-bit red edge values
         max_value = (1 << 16) - 1
         bins = np.linspace(0, max_value, num_bins, endpoint=False)
@@ -100,7 +100,7 @@ def make_and_save_single_mask(img_path: str, mask_out_path: str, img_type: Optio
 
     img_type: Optional[str]
         Str describing what kind of files to look for in the specified img_path.
-            Should be one of 'rgb', 'micasense_ms', 'dji_ms'. Default is 'rgb'.
+            Should be one of 'rgb', 'micasense_re', 'dji_ms'. Default is 'rgb'.
 
     glint_threshold: Optional[float]
         The amount of binned "blueness" that should be glint. Domain for values is (0.0, 1.0).
@@ -121,7 +121,7 @@ def make_and_save_single_mask(img_path: str, mask_out_path: str, img_type: Optio
                             mask_buffer_sigma=mask_buffer_sigma,
                             num_bins=num_bins)
 
-    if img_type == 'micasense_ms':
+    if img_type == 'micasense_re':
         out_paths = [Path(mask_out_path).joinpath(f"{Path(img_path).stem[:-1]}{i}_mask.png") for i in range(1, 6)]
         return [save_mask(out_path, mask) for out_path in out_paths]
 

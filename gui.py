@@ -46,8 +46,8 @@ class GlintMaskApp(ttk.Frame):
         self.DEFAULT_WORKERS = os.cpu_count() * 5
         self.IMG_TYPES = {
             # Map display names to names required by backend api
-            'RGB': 'rgb',
-            'Micasense Multispectral': 'micasense_ms',
+            'RGB / CIR': 'rgb',
+            'Micasense RedEdge': 'micasense_re',
             'DJI Multispectral': 'dji_ms'
         }
 

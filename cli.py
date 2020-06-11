@@ -77,7 +77,7 @@ def dji_ms(img_path: str, mask_out_path: str, glint_threshold: float = 0.9,
                           glint_threshold, mask_buffer_sigma, num_bins, max_workers)
 
 
-def micasense_ms(img_path: str, mask_out_path: str, glint_threshold: float = 0.9,
+def micasense_re(img_path: str, mask_out_path: str, glint_threshold: float = 0.9,
                  mask_buffer_sigma: int = 20, num_bins: int = 8, max_workers: Optional[int] = None) -> None:
     """Generate masks for glint regions in multispectral imagery from the Micasense camera using Tom Bell's algorithm.
 
@@ -110,7 +110,7 @@ def micasense_ms(img_path: str, mask_out_path: str, glint_threshold: float = 0.9
     None
         Side effects are that the mask is saved to the specified mask_out_path location.
     """
-    return _helper_rgb_ms(img_path, mask_out_path, 'micasense_ms',
+    return _helper_rgb_ms(img_path, mask_out_path, 'micasense_re',
                           glint_threshold, mask_buffer_sigma, num_bins, max_workers)
 
 
@@ -200,6 +200,6 @@ if __name__ == '__main__':
     fire.Fire({
         'rgb': rgb,
         'specular': specular,
-        'micasense_ms': micasense_ms,
+        'micasense_re': micasense_re,
         'dji_ms': dji_ms
     })
