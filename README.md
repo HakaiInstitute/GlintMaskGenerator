@@ -30,24 +30,14 @@ All the functionality of the CLI is documented there.
 
 ##### Examples
 ```bash
-# Process a single file with custom thresholds
-glint-mask rgb /path/to/in_file.jpg /path/to/out_mask.jpg
-glint-mask micasense_ms /path/to/in_file.jpg /path/to/out_mask.jpg
-glint-mask dji_ms /path/to/in_file.jpg /path/to/out_mask.jpg
-glint-mask specular /path/to/in_file.jpg /path/to/out_mask.jpg
-
-
 # Process a directory of files
 glint-mask rgb /path/to/dir/with/images/ /path/to/out_masks/dir/
-glint-mask micasense_ms /path/to/dir/with/images/ /path/to/out_masks/dir/
-glint-mask dji_ms /path/to/dir/with/images/ /path/to/out_masks/dir/
+glint-mask micasense /path/to/dir/with/images/ /path/to/out_masks/dir/
+glint-mask dji /path/to/dir/with/images/ /path/to/out_masks/dir/
 glint-mask specular /path/to/dir/with/images/ /path/to/out_masks/dir/
 ```
 
 #### Notes
-##### Single image processing
-- The [supported file formats](https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html) are listed here for processing individual files.
-
 ##### Directory of images processing
 - All files with "jpg", "jpeg", "tif", "tiff" and "png" extensions will be processed. This can be extended as needed. File extension matching is case insensitive.
 - Output mask files with be in the specified directory, and have the same name as the input file with "_mask" appended to the end of the file name stem. The file type will match the input type.
@@ -79,10 +69,16 @@ the root of the Git repository.
 - The bulk of the actual processing logic takes place in the files found in the "core/" directory. 
     - The functions in core are carefully documented with comments and function help strings. 
     - The strings at the beginning of each function is ingested by the "python-fire" package to create help strings for 
-    the command line interface. Update these strings to update the CLI help output.
+    the command line interface. Update these strings in `cli.py` to update the CLI help output.
 - The "test/" directory contains some files for testing those functions found in "core". 
     - Tests can be run with pytest. First install pytest with `pip install pytest` and then run `pytest` from the terminal to run the test functions. 
     - All functions beginning with the word "test_" are taken as test functions by pytest.
+- The code is written in an easily extensible object-oriented format. To support more kinds of Red Edge-based glint masking,
+    all that is needed is to write a new child class of the AbstractBinMasker class located in `core/bin_maskers.py`
+    - To do this most easily, copy one of the other child classes like `core/bin_maskers.py#MicasenseRedEdgeMasker` and 
+        update the functions so the appropriate files are processed and the imagery is normalized by the appropriate bit depth.
+    - After implementing a new Masker child class, just add it and a new drop-down option to the `gui.py` and everything should
+        continue to work since all the processing logic is contained in the Masker classes.
 
 ### Updating the executable files
 This is done automatically via some *Fancy-Pants GitHub Actions* logic. The workflow to trigger this action is as follows:

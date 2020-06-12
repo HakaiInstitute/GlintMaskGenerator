@@ -5,12 +5,10 @@
 
 import os
 import tkinter as tk
-from functools import partial
 from tkinter import filedialog, ttk, messagebox
 
-from core.common import get_img_paths, process_imgs
-from core.glint_mask import make_and_save_single_mask as process_rgb_f
-from core.specular_mask import make_and_save_single_mask as process_specular_f
+from core.bin_maskers import MicasenseRedEdgeMasker, DJIMultispectralMasker
+from core.specular_maskers import RGBSpecularMasker
 
 
 class DirectoryPicker(ttk.Frame):
@@ -47,10 +45,10 @@ class GlintMaskApp(ttk.Frame):
         self.LABEL_WIDTH = 16
         self.DEFAULT_WORKERS = os.cpu_count() * 5
         self.IMG_TYPES = {
-            # Map display names to names required by backend api
-            'RGB / CIR': 'rgb',
-            'Micasense RedEdge': 'micasense_re',
-            'DJI Multispectral': 'dji_ms'
+            # Map display names to class required to process the images
+            'RGB / CIR': RGBSpecularMasker,
+            'Micasense RedEdge': MicasenseRedEdgeMasker,
+            'DJI Multispectral': DJIMultispectralMasker
         }
 
         self.grid_columnconfigure(0, weight=1)
@@ -131,22 +129,13 @@ class GlintMaskApp(ttk.Frame):
         self.btn_process.state = tk.DISABLED
         self.picker_imgs_in.btn = tk.DISABLED
         self.picker_masks_out.btn = tk.DISABLED
-
-        img_type = self.IMG_TYPES[self.img_type.get()]
-        in_dir = self.imgs_in.get()
-        out_dir = self.masks_out.get()
-        img_files = get_img_paths(in_dir, out_dir, img_type=img_type)
-        max_workers = max(self.max_workers.get(), 1)
-
         self.progress_val.set(0)
-        self.progress['maximum'] = len(img_files)
 
-        if img_type == 'rgb':
-            f = partial(process_specular_f, mask_out_path=out_dir, img_type=img_type)
-        else:
-            f = partial(process_rgb_f, mask_out_path=out_dir, img_type=img_type)
-        process_imgs(f, img_files, max_workers=max_workers,
-                     callback=self._inc_progress, err_callback=self._err_callback)
+        masker = self.IMG_TYPES[self.img_type.get()](self.imgs_in.get(), self.masks_out.get())
+        self.progress['maximum'] = len(masker)
+
+        masker(max_workers=max(self.max_workers.get(), 1), callback=self._inc_progress,
+               err_callback=self._err_callback)
 
 
 if __name__ == '__main__':

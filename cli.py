@@ -7,41 +7,21 @@
 #
 # Description: Generate masks for glint regions in in RGB images using Tom Bell's blue-channel binning algorithm.
 import sys
-from functools import partial
-from typing import Callable, Iterable, Optional
+from typing import Optional
 
 import fire
-from PIL import Image
 from tqdm import tqdm
 
-from core.common import get_img_paths, process_imgs
-from core.glint_mask import make_and_save_single_mask as tom_make_and_save_single_mask
-from core.specular_mask import make_and_save_single_mask as specular_make_and_save_single_mask
-
-Image.MAX_IMAGE_PIXELS = None
-EPSILON = 1e-8
+from core.bin_maskers import BlueBinMasker, MicasenseRedEdgeMasker, DJIMultispectralMasker
+from core.specular_maskers import RGBSpecularMasker
 
 
 def _err_callback(path, exception):
     tqdm.write(f"{path} failed with err:\n{exception}", file=sys.stderr)
 
 
-def _process(img_paths: Iterable[str], mask_func: Callable, max_workers: Optional[int] = None) -> None:
-    with tqdm(total=len(list(img_paths))) as progress:
-        return process_imgs(mask_func, img_paths, max_workers=max_workers,
-                            callback=lambda _: progress.update(), err_callback=partial(_err_callback))
-
-
-def _helper_rgb_ms(img_path: str, mask_out_path: str, img_type: str, glint_threshold: float,
-                   mask_buffer_sigma: int, num_bins: int, max_workers: int) -> None:
-    img_paths = get_img_paths(img_path, mask_out_path, img_type=img_type)
-    mask_func = partial(tom_make_and_save_single_mask, mask_out_path=mask_out_path, img_type=img_type,
-                        glint_threshold=glint_threshold, mask_buffer_sigma=mask_buffer_sigma, num_bins=num_bins)
-    return _process(img_paths, mask_func, max_workers=max_workers)
-
-
-def dji_ms(img_path: str, mask_out_path: str, glint_threshold: float = 0.9,
-           mask_buffer_sigma: int = 20, num_bins: int = 8, max_workers: Optional[int] = None) -> None:
+def dji_ms(img_path: str, mask_out_path: str, glint_threshold: float = 0.9, mask_buffer_sigma: int = 0,
+           num_bins: int = 8, max_workers: Optional[int] = None) -> None:
     """Generate masks for glint regions in multispectral imagery from the DJI camera using Tom Bell's algorithm.
 
     Parameters
@@ -59,7 +39,7 @@ def dji_ms(img_path: str, mask_out_path: str, glint_threshold: float = 0.9,
         Play with this value. Default is 0.9.
 
     mask_buffer_sigma: Optional[int]
-        The sigma for the Gaussian kernel used to buffer the mask. Defaults to 20.
+        The sigma for the Gaussian kernel used to buffer the mask. Defaults to 0.
 
     num_bins: Optional[int]
         The number of bins the blue channel is slotted into. Defaults to 8 as in Tom's script.
@@ -73,12 +53,13 @@ def dji_ms(img_path: str, mask_out_path: str, glint_threshold: float = 0.9,
     None
         Side effects are that the mask is saved to the specified mask_out_path location.
     """
-    return _helper_rgb_ms(img_path, mask_out_path, 'dji_ms',
-                          glint_threshold, mask_buffer_sigma, num_bins, max_workers)
+    masker = DJIMultispectralMasker(img_path, mask_out_path, glint_threshold, mask_buffer_sigma, num_bins)
+    with tqdm(total=len(masker)) as progress:
+        return masker.process(max_workers=max_workers, callback=lambda _: progress.update(), err_callback=_err_callback)
 
 
-def micasense_re(img_path: str, mask_out_path: str, glint_threshold: float = 0.9,
-                 mask_buffer_sigma: int = 20, num_bins: int = 8, max_workers: Optional[int] = None) -> None:
+def micasense_re(img_path: str, mask_out_path: str, glint_threshold: float = 0.9, mask_buffer_sigma: int = 0,
+                 num_bins: int = 8, max_workers: Optional[int] = None) -> None:
     """Generate masks for glint regions in multispectral imagery from the Micasense camera using Tom Bell's algorithm.
 
     Parameters
@@ -96,7 +77,7 @@ def micasense_re(img_path: str, mask_out_path: str, glint_threshold: float = 0.9
         Play with this value. Default is 0.9.
 
     mask_buffer_sigma: Optional[int]
-        The sigma for the Gaussian kernel used to buffer the mask. Defaults to 20.
+        The sigma for the Gaussian kernel used to buffer the mask. Defaults to 0.
 
     num_bins: Optional[int]
         The number of bins the blue channel is slotted into. Defaults to 8 as in Tom's script.
@@ -110,8 +91,9 @@ def micasense_re(img_path: str, mask_out_path: str, glint_threshold: float = 0.9
     None
         Side effects are that the mask is saved to the specified mask_out_path location.
     """
-    return _helper_rgb_ms(img_path, mask_out_path, 'micasense_re',
-                          glint_threshold, mask_buffer_sigma, num_bins, max_workers)
+    masker = MicasenseRedEdgeMasker(img_path, mask_out_path, glint_threshold, mask_buffer_sigma, num_bins)
+    with tqdm(total=len(masker)) as progress:
+        return masker.process(max_workers=max_workers, callback=lambda _: progress.update(), err_callback=_err_callback)
 
 
 def rgb(img_path: str, mask_out_path: str, glint_threshold: float = 0.9, mask_buffer_sigma: int = 20,
@@ -147,8 +129,9 @@ def rgb(img_path: str, mask_out_path: str, glint_threshold: float = 0.9, mask_bu
     None
         Side effects are that the mask is saved to the specified mask_out_path location.
     """
-    return _helper_rgb_ms(img_path, mask_out_path, 'rgb',
-                          glint_threshold, mask_buffer_sigma, num_bins, max_workers)
+    masker = BlueBinMasker(img_path, mask_out_path, glint_threshold, mask_buffer_sigma, num_bins)
+    with tqdm(total=len(masker)) as progress:
+        return masker.process(max_workers=max_workers, callback=lambda _: progress.update(), err_callback=_err_callback)
 
 
 def specular(img_path: str, mask_out_path: str, percent_diffuse: float = 0.1, mask_thresh: float = 0.8,
@@ -190,16 +173,15 @@ def specular(img_path: str, mask_out_path: str, percent_diffuse: float = 0.1, ma
     None
         Side effects are that the mask is saved to the specified mask_out_path location.
     """
-    img_paths = get_img_paths(img_path, mask_out_path, img_type='rgb')
-    mask_func = partial(specular_make_and_save_single_mask, mask_out_path=mask_out_path,
-                        percent_diffuse=percent_diffuse, mask_thresh=mask_thresh, opening=opening, closing=closing)
-    return _process(img_paths, mask_func, max_workers=max_workers)
+    masker = RGBSpecularMasker(img_path, mask_out_path, percent_diffuse, mask_thresh, opening, closing)
+    with tqdm(total=len(masker)) as progress:
+        return masker.process(max_workers=max_workers, callback=lambda _: progress.update(), err_callback=_err_callback)
 
 
 if __name__ == '__main__':
     fire.Fire({
         'rgb': rgb,
         'specular': specular,
-        'micasense_re': micasense_re,
-        'dji_ms': dji_ms
+        'micasense': micasense_re,
+        'dji': dji_ms
     })
