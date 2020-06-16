@@ -7,7 +7,7 @@ import os
 import tkinter as tk
 from tkinter import filedialog, ttk, messagebox
 
-from core.bin_maskers import MicasenseRedEdgeMasker, DJIMultispectralMasker
+from core.bin_maskers import MicasenseRedEdgeMasker, DJIMultispectralMasker, BlueBinMasker
 from core.specular_maskers import RGBSpecularMasker
 
 
@@ -46,7 +46,8 @@ class GlintMaskApp(ttk.Frame):
         self.DEFAULT_WORKERS = os.cpu_count() * 5
         self.IMG_TYPES = {
             # Map display names to class required to process the images
-            'RGB / CIR': RGBSpecularMasker,
+            'RGB / CIR (specular method)': RGBSpecularMasker,
+            'RGB / CIR (Tom\'s method)': BlueBinMasker,
             'Micasense RedEdge': MicasenseRedEdgeMasker,
             'DJI Multispectral': DJIMultispectralMasker
         }
