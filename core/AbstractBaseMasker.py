@@ -85,7 +85,7 @@ class AbstractBaseMasker(ABC):
             List[str]
                 The list of files to be used for generating the masks.
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def process_one_file(self, img_path) -> Any:
@@ -96,7 +96,7 @@ class AbstractBaseMasker(ABC):
             Any
                 This function may return any type which will then be passed to the callback function in process.
         """
-        pass
+        raise NotImplementedError
 
     @staticmethod
     def list_img_files(img_dir: str) -> List[str]:

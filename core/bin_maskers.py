@@ -83,7 +83,7 @@ class AbstractBinMasker(AbstractBaseMasker):
             np.ndarray, shape=(H,W)
                 The single channel, normalized array with values in range [0,1]
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def get_out_paths(self, in_path: str) -> List[str]:
@@ -96,7 +96,7 @@ class AbstractBinMasker(AbstractBaseMasker):
             Union[str, List[str]]
                 A path or list of paths where the glint mask corresponding to the img at in_path are to be saved.
         """
-        pass
+        raise NotImplementedError
 
 
 class BlueBinMasker(AbstractBinMasker):
