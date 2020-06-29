@@ -27,7 +27,7 @@ class RGBSpecularMasker(AbstractBaseMasker):
 
             percent_diffuse: Optional[float]
                 An estimate of the percentage of pixels in an image that show pure diffuse reflectance, and
-                thus no specular reflectance (glint). Defaults to 0.1. Try playing with values, low ones typically work well.
+                thus no specular reflectance (glint). Defaults to 0.1. Low values typically work well.
 
             mask_thresh: Optional[float]
                 The threshold on the specular reflectance estimate image to convert into a mask.

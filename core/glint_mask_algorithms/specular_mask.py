@@ -22,7 +22,7 @@ def estimate_specular_reflection_component(img: np.ndarray, percent_diffuse: flo
 
     Based on method from:
         Wang, S., Yu, C., Sun, Y. et al. Specular reflection removal
-        of ocean surface remote sensing images from UAVs. Multimed Tools
+        of ocean surface remote sensing images from UAVs. Multimedia Tools
         Appl 77, 11363–11379 (2018). https://doi.org/10.1007/s11042-017-5551-7
 
     Parameters
