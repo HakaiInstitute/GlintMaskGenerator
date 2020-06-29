@@ -25,10 +25,7 @@ def case_insensitive_glob(dir_path: str, pattern: str) -> Generator:
 
 
 class AbstractBaseMasker(ABC):
-    def __init__(self) -> None:
-        super().__init__()
-
-    def __call__(self, max_workers, callback, err_callback) -> Any:
+    def __call__(self, max_workers, callback, err_callback) -> None:
         """Allows calling self.process by calling the object as a function."""
         return self.process(max_workers, callback, err_callback)
 
