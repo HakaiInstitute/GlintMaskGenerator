@@ -10,7 +10,7 @@ import os
 from abc import ABC, abstractmethod
 from concurrent.futures.thread import ThreadPoolExecutor
 from pathlib import Path
-from typing import Optional, Callable, List, Any, Generator, Tuple
+from typing import Optional, Callable, List, Generator, Tuple
 
 import numpy as np
 from PIL import Image
