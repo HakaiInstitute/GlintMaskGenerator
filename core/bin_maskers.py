@@ -61,9 +61,6 @@ class AbstractBinMasker(AbstractBaseMasker):
         mask = make_single_mask(img, self._glint_threshold, self._mask_buffer_sigma, self._num_bins)
 
         out_paths = self.get_out_paths(img_path)
-        if isinstance(out_paths, str):
-            out_paths = [out_paths]
-
         for path in out_paths:
             self.save_mask(mask, path)
 
@@ -129,7 +126,7 @@ class BlueBinMasker(AbstractBinMasker):
 
     def get_out_paths(self, in_path: str) -> List[str]:
         """Implement get_out_paths as required by AbstractBinMasker."""
-        return Path(self._out_dir).joinpath(f"{Path(in_path).stem}_mask.png")
+        return [str(Path(self._out_dir).joinpath(f"{Path(in_path).stem}_mask.png"))]
 
     @staticmethod
     def normalize_img(img: np.ndarray) -> np.ndarray:
@@ -167,7 +164,7 @@ class DJIMultispectralMasker(AbstractBinMasker):
             List[str]
                 A list of paths to save the masks to for the corresponding image at in_path.
         """
-        return [Path(self._out_dir).joinpath(f"{Path(in_path).stem[:-1]}{i}_mask.png") for i in range(6)]
+        return [str(Path(self._out_dir).joinpath(f"{Path(in_path).stem[:-1]}{i}_mask.png")) for i in range(6)]
 
     @staticmethod
     def is_dji_red_edge(filename: str) -> bool:
@@ -234,7 +231,7 @@ class MicasenseRedEdgeMasker(AbstractBinMasker):
             List[str]
                 A list of paths to save the masks to for the corresponding image at in_path.
         """
-        return [Path(self._out_dir).joinpath(f"{Path(in_path).stem[:-1]}{i}_mask.png") for i in range(1, 6)]
+        return [str(Path(self._out_dir).joinpath(f"{Path(in_path).stem[:-1]}{i}_mask.png")) for i in range(1, 6)]
 
     @staticmethod
     def is_micasense_red_edge(filename: Union[Path, str]) -> bool:

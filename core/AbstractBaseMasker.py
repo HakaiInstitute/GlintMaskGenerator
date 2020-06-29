@@ -88,7 +88,7 @@ class AbstractBaseMasker(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def process_one_file(self, img_path) -> Any:
+    def process_one_file(self, img_path: str) -> Any:
         """Abstract processor method. All subclasses must implement this method. Takes an image path and does the mask
             generation or saving logic. This method is called by the process function for each img_path in self._files.
 
@@ -133,3 +133,17 @@ class AbstractBaseMasker(ABC):
         """Convenience method to turn img paths into numpy arrays of type float."""
         img = Image.open(img_path)
         return np.array(img).astype(np.float)
+
+    @abstractmethod
+    def get_out_paths(self, in_path: str) -> List[str]:
+        """Get the out path for where to save the mask corresponding to image at in_path.
+
+        Args:
+            in_path: str
+                The image path for which a mask is generated. Used to generate an appropriate out path for the mask.
+
+        Returns:
+            List[str]
+                A list of paths where the mask for the image at location in_path should be saved.
+        """
+        raise NotImplementedError

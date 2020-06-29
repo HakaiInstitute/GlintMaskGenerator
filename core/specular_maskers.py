@@ -65,16 +65,17 @@ class RGBSpecularMasker(AbstractBaseMasker):
         img = self.normalize_img(img)
 
         mask = make_single_mask(img, self._percent_diffuse, self._mask_thresh, self._opening, self._closing)
-        out_path = self.get_out_paths(img_path)
-        self.save_mask(mask, out_path)
+        out_paths = self.get_out_paths(img_path)
+        for path in out_paths:
+            self.save_mask(mask, path)
 
-        return out_path, mask
+        return out_paths, mask
 
     def get_files(self) -> List[str]:
         """Implements abstract method required by AbstractBaseMasker."""
         return self.list_img_files(self._img_dir)
 
-    def get_out_paths(self, in_path: str) -> str:
+    def get_out_paths(self, in_path: str) -> List[str]:
         """Get the out path for where to save the mask corresponding to image at in_path.
 
         Args:
@@ -85,7 +86,7 @@ class RGBSpecularMasker(AbstractBaseMasker):
             str
                 The path where the mask for the image at location in_path should be saved.
         """
-        return Path(self._out_dir).joinpath(f"{Path(in_path).stem}_mask.png")
+        return [str(Path(self._out_dir).joinpath(f"{Path(in_path).stem}_mask.png"))]
 
     @staticmethod
     def normalize_img(img: np.ndarray) -> np.ndarray:
