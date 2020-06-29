@@ -5,7 +5,7 @@
 #     types of image files.
 
 from pathlib import Path
-from typing import List, Any
+from typing import List
 
 import numpy as np
 
@@ -41,6 +41,8 @@ class RGBSpecularMasker(AbstractBaseMasker):
                 The number of morphological closing iterations on the produced mask.
                 Useful for removing small bits of mask. 5 by default.
         """
+        super().__init__()
+
         self._img_dir = img_dir
         self._out_dir = out_dir
         self._percent_diffuse = percent_diffuse
@@ -48,47 +50,18 @@ class RGBSpecularMasker(AbstractBaseMasker):
         self._opening = opening
         self._closing = closing
 
-        super().__init__()
-
-    def process_one_file(self, img_path: str) -> Any:
-        """Generates and saves a glint mask for the image at path img_path.
-
-        Args:
-            img_path: str
-                The path to the image to generate a glint mask for.
-
-        Returns:
-            Tuple(str, np.ndarray)
-                The path to the generated glint mask and an ndarray containing the 8-bit mask.
-        """
-        img = self.read_img(img_path)
-        img = self.normalize_img(img)
-
-        mask = make_single_mask(img, self._percent_diffuse, self._mask_thresh, self._opening, self._closing)
-        out_paths = self.get_out_paths(img_path)
-        for path in out_paths:
-            self.save_mask(mask, path)
-
-        return out_paths, mask
-
-    def get_files(self) -> List[str]:
+    def get_img_paths(self) -> List[str]:
         """Implements abstract method required by AbstractBaseMasker."""
         return self.list_img_files(self._img_dir)
 
-    def get_out_paths(self, in_path: str) -> List[str]:
-        """Get the out path for where to save the mask corresponding to image at in_path.
-
-        Args:
-            in_path: str
-                The image path for which a mask is generated. Used to generate an appropriate out path for the mask.
-
-        Returns:
-            str
-                The path where the mask for the image at location in_path should be saved.
-        """
-        return [str(Path(self._out_dir).joinpath(f"{Path(in_path).stem}_mask.png"))]
-
-    @staticmethod
-    def normalize_img(img: np.ndarray) -> np.ndarray:
+    def normalize_img(self, img: np.ndarray) -> np.ndarray:
         """Normalizes 8-bit pixel values and select only the RGB channels."""
         return img[:, :, :3] / 255
+
+    def mask_img(self, img: np.ndarray) -> np.ndarray:
+        """Generates and saves a glint mask for the image at path img_path using the specular method."""
+        return make_single_mask(img, self._percent_diffuse, self._mask_thresh, self._opening, self._closing)
+
+    def get_mask_save_paths(self, in_path: str) -> List[str]:
+        """Get the out path for where to save the mask corresponding to image at in_path."""
+        return [str(Path(self._out_dir).joinpath(f"{Path(in_path).stem}_mask.png"))]

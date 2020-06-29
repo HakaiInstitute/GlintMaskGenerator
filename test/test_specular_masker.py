@@ -36,4 +36,4 @@ def test_dji_multispectral_masker(tmp_path):
     valid_paths = all_paths
     valid_paths = sorted([str(tmp_path.joinpath(n)) for n in valid_paths])
     assert len(masker) == len(valid_paths)
-    assert all(np.array(sorted(masker.file_paths)) == np.array(sorted(valid_paths)))
+    assert all(np.array(sorted(masker.img_paths)) == np.array(sorted(valid_paths)))

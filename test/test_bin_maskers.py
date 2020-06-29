@@ -39,7 +39,7 @@ def test_dji_multispectral_masker(tmp_path):
     valid_paths = ["DJI_1024.TIF", "DJI_2024.tif"]
     valid_paths = sorted([str(tmp_path.joinpath(n)) for n in valid_paths])
     assert len(masker) == len(valid_paths)
-    assert all(np.array(sorted(masker.file_paths)) == np.array(sorted(valid_paths)))
+    assert all(np.array(sorted(masker.img_paths)) == np.array(sorted(valid_paths)))
 
     assert masker.is_dji_red_edge("DJI_0014.TIF") is True
     assert masker.is_dji_red_edge("DJI_2224.TIF") is True
@@ -91,7 +91,7 @@ def test_micasense_red_edge_masker(tmp_path):
     valid_paths = ["IMG_1234_5.tif", "IMG_4321_5.TIF"]
     valid_paths = sorted([str(tmp_path.joinpath(n)) for n in valid_paths])
     assert len(masker) == len(valid_paths)
-    assert all(np.array(sorted(masker.file_paths)) == np.array(sorted(valid_paths)))
+    assert all(np.array(sorted(masker.img_paths)) == np.array(sorted(valid_paths)))
 
     assert masker.is_micasense_red_edge("DJI_0014.TIF") is False
     assert masker.is_micasense_red_edge("DJI_2224.TIF") is False
