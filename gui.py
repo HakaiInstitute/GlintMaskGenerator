@@ -110,7 +110,7 @@ class GlintMaskApp(ttk.Frame):
     @staticmethod
     def _err_callback(img_path, err):
         msg = '%r generated an exception: %s' % (img_path, err)
-        messagebox.showinfo(message=msg)
+        messagebox.showerror(message=msg)
 
     def _inc_progress(self, _):
         self.progress_val.set(self.progress_val.get() + 1)
@@ -133,6 +133,11 @@ class GlintMaskApp(ttk.Frame):
         self.progress_val.set(0)
 
         masker = self.IMG_TYPES[self.img_type.get()](self.imgs_in.get(), self.masks_out.get())
+
+        if len(masker) <= 1:
+            messagebox.showwarning(message="No files found in the given input directory.")
+            return
+
         self.progress['maximum'] = len(masker)
 
         masker(max_workers=max(self.max_workers.get(), 1), callback=self._inc_progress,
