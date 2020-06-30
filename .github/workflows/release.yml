@@ -27,13 +27,13 @@ jobs:
           pip install -r requirements.txt
       - name: Building GUI
         run: |
-          pyinstaller --name=GlintMaskGenerator -F --windowed --icon=resources/gmt.ico gui.py
+          pyinstaller --name=GlintMaskGenerator-${{ steps.tag.outputs.tag }} -F --windowed --icon=resources/gmt.ico gui.py
       - name: Building CLI
         run: |
-          pyinstaller --name=glint-mask -F cli.py
+          pyinstaller --name=glint-mask-${{ steps.tag.outputs.tag }} -F cli.py
       - name: Gzip release
         run: |
-          tar -czvf dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.tar.gz -C dist GlintMaskGenerator glint-mask
+          tar -czvf dist/GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux.tar.gz -C dist GlintMaskGenerator-${{ steps.tag.outputs.tag }} glint-mask-${{ steps.tag.outputs.tag }}
       - name: Upload Gzip artifact
         uses: actions/upload-artifact@v1
         with:
@@ -61,14 +61,14 @@ jobs:
           pip install -r requirements.txt
       - name: Building GUI
         run: |
-          pyinstaller --name=GlintMaskGenerator -F --windowed --icon=resources/gmt.ico gui.py
+          pyinstaller --name=GlintMaskGenerator-${{ steps.tag.outputs.tag }} -F --windowed --icon=resources/gmt.ico gui.py
       - name: Building CLI
         run: |
-          pyinstaller --name=glint-mask -F cli.py
+          pyinstaller --name=glint-mask-${{ steps.tag.outputs.tag }} -F cli.py
       - name: Zip release
         run: |
           cd dist
-          7z a GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.zip GlintMaskGenerator.exe glint-mask.exe
+          7z a GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.zip GlintMaskGenerator-${{ steps.tag.outputs.tag }}.exe glint-mask-${{ steps.tag.outputs.tag }}.exe
           cd -
       - name: Upload Zip artifact
         uses: actions/upload-artifact@v1
