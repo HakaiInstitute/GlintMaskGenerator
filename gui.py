@@ -46,10 +46,10 @@ class GlintMaskApp(ttk.Frame):
         self.DEFAULT_WORKERS = 5
         self.IMG_TYPES = {
             # Map display names to class required to process the images
-            'RGB / CIR (specular method)': RGBSpecularMasker,
             'RGB / CIR (Tom\'s method)': BlueBinMasker,
-            'Micasense RedEdge': MicasenseRedEdgeMasker,
-            'DJI Multispectral': DJIMultispectralMasker
+            'Micasense RedEdge (Tom\'s method)': MicasenseRedEdgeMasker,
+            'DJI Multispectral (Tom\'s method)': DJIMultispectralMasker,
+            'RGB / CIR (specular method)': RGBSpecularMasker
         }
 
         self.grid_columnconfigure(0, weight=1)
