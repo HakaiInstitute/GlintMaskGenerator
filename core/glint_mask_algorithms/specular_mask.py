@@ -93,7 +93,7 @@ def make_single_mask(img: np.ndarray, percent_diffuse: float = 0.95, mask_thresh
     spec_ref = estimate_specular_reflection_component(img, percent_diffuse)
 
     # Generate the mask
-    mask = (spec_ref >= mask_thresh)
+    mask = (spec_ref >= mask_thresh).astype(np.uint8)
 
     # Fill in small holes in the mask
     if opening > 0:
@@ -103,7 +103,7 @@ def make_single_mask(img: np.ndarray, percent_diffuse: float = 0.95, mask_thresh
     if closing > 0:
         mask = binary_closing(mask, iterations=closing).astype(np.uint8)
 
-    # Set to max of 8-bit values
-    mask = (1 - mask) * 255
+    # Save the mask
+    mask = mask * 255
 
     return mask
