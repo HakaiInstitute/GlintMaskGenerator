@@ -97,13 +97,13 @@ def make_single_mask(img: np.ndarray, percent_diffuse: float = 0.95, mask_thresh
 
     # Fill in small holes in the mask
     if opening > 0:
-        mask = binary_opening(mask.astype(np.uint8), iterations=opening).astype(np.bool)
+        mask = binary_opening(mask, iterations=opening).astype(np.uint8)
 
     # Remove small bits of mask
     if closing > 0:
-        mask = binary_closing(mask.astype(np.uint8), iterations=closing).astype(np.bool)
+        mask = binary_closing(mask, iterations=closing).astype(np.uint8)
 
-    # Save the mask
-    mask = mask.astype(np.uint8) * 255
+    # Set to max of 8-bit values
+    mask = (1 - mask) * 255
 
     return mask
