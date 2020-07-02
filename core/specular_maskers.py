@@ -16,8 +16,10 @@ from core.glint_mask_algorithms.specular_mask import make_single_mask
 
 
 class RGBSpecularMasker(AbstractBaseMasker):
-    def __init__(self, img_dir: str, out_dir: str, percent_diffuse: float = 0.1, mask_thresh: float = 0.8,
-                 opening: int = 5, closing: int = 5) -> None:
+    """Specular masker method for RGB imagery."""
+
+    def __init__(self, img_dir: str, out_dir: str, percent_diffuse: float = 0.95, mask_thresh: float = 0.99,
+                 opening: int = 15, closing: int = 15) -> None:
         """Create and return a glint mask for RGB imagery.
 
         Args:
@@ -29,19 +31,19 @@ class RGBSpecularMasker(AbstractBaseMasker):
 
             percent_diffuse: Optional[float]
                 An estimate of the percentage of pixels in an image that show pure diffuse reflectance, and
-                thus no specular reflectance (glint). Defaults to 0.1. Low values typically work well.
+                thus no specular reflectance (glint). Defaults to 0.95.
 
             mask_thresh: Optional[float]
                 The threshold on the specular reflectance estimate image to convert into a mask.
-                E.g. if more than 50% specular reflectance is unacceptable, use 0.5. Default is 0.8.
+                E.g. if more than 50% specular reflectance is unacceptable, use 0.5. Default is 0.99.
 
             opening: Optional[int]
                 The number of morphological opening iterations on the produced mask.
-                Useful for closing small holes in the mask. 5 by default.
+                Useful for closing small holes in the mask. 15 by default.
 
             closing: Optional[int]
                 The number of morphological closing iterations on the produced mask.
-                Useful for removing small bits of mask. 5 by default.
+                Useful for removing small bits of mask. 15 by default.
         """
         super().__init__()
 

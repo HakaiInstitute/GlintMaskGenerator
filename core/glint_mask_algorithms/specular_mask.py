@@ -60,8 +60,8 @@ def estimate_specular_reflection_component(img: np.ndarray, percent_diffuse: flo
     return spec_ref_est
 
 
-def make_single_mask(img: np.ndarray, percent_diffuse: float = 0.1, mask_thresh: float = 0.8,
-                     opening: int = 5, closing: int = 5) -> np.ndarray:
+def make_single_mask(img: np.ndarray, percent_diffuse: float = 0.95, mask_thresh: float = 0.99,
+                     opening: int = 15, closing: int = 15) -> np.ndarray:
     """Create and return a glint mask for RGB imagery.
 
     Parameters
@@ -71,19 +71,19 @@ def make_single_mask(img: np.ndarray, percent_diffuse: float = 0.1, mask_thresh:
 
     percent_diffuse: Optional[float]
         An estimate of the percentage of pixels in an image that show pure diffuse reflectance, and
-        thus no specular reflectance (glint). Defaults to 0.1. Try playing with values, low ones typically work well.
+        thus no specular reflectance (glint). Defaults to 0.95.
 
     mask_thresh: Optional[float]
         The threshold on the specular reflectance estimate image to convert into a mask.
-        E.g. if more than 50% specular reflectance is unacceptable, use 0.5. Default is 0.8.
+        E.g. if more than 50% specular reflectance is unacceptable, use 0.5. Default is 0.99.
 
     opening: Optional[int]
         The number of morphological opening iterations on the produced mask.
-        Useful for closing small holes in the mask. 5 by default.
+        Useful for closing small holes in the mask. 15 by default.
 
     closing: Optional[int]
         The number of morphological closing iterations on the produced mask.
-        Useful for removing small bits of mask. 5 by default.
+        Useful for removing small bits of mask. 15 by default.
 
     Returns
     -------
@@ -93,7 +93,7 @@ def make_single_mask(img: np.ndarray, percent_diffuse: float = 0.1, mask_thresh:
     spec_ref = estimate_specular_reflection_component(img, percent_diffuse)
 
     # Generate the mask
-    mask = (spec_ref <= mask_thresh)
+    mask = (spec_ref >= mask_thresh)
 
     # Fill in small holes in the mask
     if opening > 0:
