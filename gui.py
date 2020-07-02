@@ -4,7 +4,7 @@ Organization: Hakai Institute
 Date: 2020-05-30
 Description: Graphical interface to the glint mask tools.
 """
-
+import os
 import tkinter as tk
 from tkinter import filedialog, ttk, messagebox
 
@@ -49,6 +49,7 @@ class GlintMaskApp(ttk.Frame):
         super().__init__(master, **kwargs)
         self.LABEL_WIDTH = 16
         self.DEFAULT_WORKERS = 5
+        self.MAX_WORKERS = 5 * os.cpu_count()
         self.IMG_TYPES = {
             # Map display names to class required to process the images
             'RGB / CIR (Tom\'s method)': BlueBinMasker,
@@ -96,7 +97,7 @@ class GlintMaskApp(ttk.Frame):
         frm_max_workers.grid_columnconfigure(1, weight=2)
         ttk.Label(master=frm_max_workers, text="Max workers", width=self.LABEL_WIDTH) \
             .grid(row=0, column=0, sticky='e', padx=2)
-        self.spin_max_workers = ttk.Spinbox(master=frm_max_workers, from_=1, to=self.DEFAULT_WORKERS, increment=5,
+        self.spin_max_workers = ttk.Spinbox(master=frm_max_workers, from_=1, to=self.MAX_WORKERS, increment=5,
                                             textvariable=self.max_workers)
         self.spin_max_workers.grid(row=0, column=1, columnspan=2, sticky='ew')
 
