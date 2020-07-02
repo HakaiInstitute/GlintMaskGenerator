@@ -1,8 +1,10 @@
-# Created by: Taylor Denouden
-# Organization: Hakai Institute
-# Date: 2020-06-12
-# Description: Abstract Base Class for GlintMaskGenerators. Implements a number of functions that allows for
-#   multi-threaded processing of images and a simple interface for which the GUI and CLIs can be easily extended.
+"""
+Created by: Taylor Denouden
+Organization: Hakai Institute
+Date: 2020-06-12
+Description: Abstract Base Class for GlintMaskGenerators. Implements a number of functions that allows for
+  multi-threaded processing of images and a simple interface for which the GUI and CLIs can be easily extended.
+"""
 
 import concurrent.futures
 import itertools
@@ -25,6 +27,8 @@ def case_insensitive_glob(dir_path: str, pattern: str) -> Generator:
 
 
 class AbstractBaseMasker(ABC):
+    """Abstract class for image mask generators."""
+
     def __call__(self, max_workers, callback, err_callback) -> None:
         """Allows calling self.process by calling the object as a function."""
         return self.process(max_workers, callback, err_callback)

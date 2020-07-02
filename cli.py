@@ -1,7 +1,9 @@
-# Created by: Taylor Denouden
-# Organization: Hakai Institute
-# Date: 2020-05-30
-# Description: Command line interface to the glint-mask-tools.
+"""
+Created by: Taylor Denouden
+Organization: Hakai Institute
+Date: 2020-05-30
+Description: Command line interface to the glint-mask-tools.
+"""
 
 # Based on Matlab script by Tom Bell written 6/28/2019
 #
@@ -134,8 +136,8 @@ def rgb(img_path: str, mask_out_path: str, glint_threshold: float = 0.9, mask_bu
         return masker.process(max_workers=max_workers, callback=lambda _: progress.update(), err_callback=_err_callback)
 
 
-def specular(img_path: str, mask_out_path: str, percent_diffuse: float = 0.1, mask_thresh: float = 0.8,
-             opening: int = 5, closing: int = 5, max_workers: Optional[int] = None) -> None:
+def specular(img_path: str, mask_out_path: str, percent_diffuse: float = 0.95, mask_thresh: float = 0.99,
+             opening: int = 15, closing: int = 15, max_workers: Optional[int] = None) -> None:
     """Generate masks for glint regions in RGB imagery by setting a threshold on estimated specular reflectance.
 
     Parameters
@@ -150,19 +152,19 @@ def specular(img_path: str, mask_out_path: str, percent_diffuse: float = 0.1, ma
 
     percent_diffuse: Optional[float]
         An estimate of the percentage of pixels in an image that show pure diffuse reflectance, and
-        thus no specular reflectance (glint). Defaults to 0.1. Try playing with values, low ones typically work well.
+        thus no specular reflectance (glint). Defaults to 0.95.
 
     mask_thresh: Optional[float]
         The threshold on the specular reflectance estimate image to convert into a mask.
-        E.g. if more than 50% specular reflectance is unacceptable, use 0.5. Default is 0.4.
+        E.g. if more than 50% specular reflectance is unacceptable, use 0.5. Default is 0.99.
 
     opening: Optional[int]
         The number of morphological opening iterations on the produced mask.
-        Useful for closing small holes in the mask. Set to 0 by default (i.e. it's shut off).
+        Useful for closing small holes in the mask. Set to 15 by default.
 
     closing: Optional[int]
         The number of morphological closing iterations on the produced mask.
-        Useful for removing small bits of mask. Set to 0 by default (i.e. it's shut off).
+        Useful for removing small bits of mask. Set to 15 by default.
 
     max_workers: Optional[int]
         The maximum number of image processing workers. Useful for limiting memory usage.

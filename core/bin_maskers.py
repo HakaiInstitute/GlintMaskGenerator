@@ -1,8 +1,10 @@
-# Created by: Taylor Denouden
-# Organization: Hakai Institute
-# Date: 2020-06-12
-# Description: Classes for processing images using Tom's bin-based glint masking technique for various types of image
-#     files
+"""
+Created by: Taylor Denouden
+Organization: Hakai Institute
+Date: 2020-06-12
+Description: Classes for processing images using Tom's bin-based glint masking technique for various types of image
+    files
+"""
 
 import re
 from abc import abstractmethod
@@ -16,6 +18,9 @@ from core.glint_mask_algorithms.glint_mask import make_single_mask
 
 
 class AbstractBinMasker(AbstractBaseMasker):
+    """Abstract class for all maskers that use Tom Bell's binning algorithm.
+    Defines behaviour common to all Bin maskers."""
+
     def __init__(self, img_dir: str, out_dir: str, glint_threshold: float = 0.9, mask_buffer_sigma: int = 0,
                  num_bins: int = 8) -> None:
         """Create and return a glint mask for RGB imagery.
@@ -76,6 +81,8 @@ class AbstractBinMasker(AbstractBaseMasker):
 
 
 class BlueBinMasker(AbstractBinMasker):
+    """Tom Bell's method masker for RGB imagery."""
+
     def __init__(self, img_dir: str, out_dir: str, glint_threshold: float = 0.9, mask_buffer_sigma: int = 20,
                  num_bins: int = 8) -> None:
         """Create and return a glint mask for RGB imagery.
@@ -113,6 +120,8 @@ class BlueBinMasker(AbstractBinMasker):
 
 
 class DJIMultispectralMasker(AbstractBinMasker):
+    """Tom Bell method masker for DJI multi-spectral imagery."""
+
     def get_img_paths(self) -> List[str]:
         """Generates a list of files which should be used as input to generate glint masks. For DJI Multispectral
             masking, this is a list of paths that correspond to the RedEdge band of the files output from a DJI
@@ -137,6 +146,8 @@ class DJIMultispectralMasker(AbstractBinMasker):
 
 
 class MicasenseRedEdgeMasker(AbstractBinMasker):
+    """Tom Bell method masker for Micasense RedEdge Camera imagery."""
+
     def get_img_paths(self) -> List[str]:
         """Generates a list of files which should be used as input to generate glint masks. For Micasense Red Edge
             masking, this should be a list of paths that correspond to the RedEdge band of the files output from a
