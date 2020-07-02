@@ -1,8 +1,10 @@
-# Created by: Taylor Denouden
-# Organization: Hakai Institute
-# Date: 2020-06-12
-# Description: Classes for generating glint masks using the specular reflection estimation technique for various
-#     types of image files.
+"""
+Created by: Taylor Denouden
+Organization: Hakai Institute
+Date: 2020-06-12
+Description: Classes for generating glint masks using the specular reflection estimation technique for various
+    types of image files.
+"""
 
 from pathlib import Path
 from typing import List

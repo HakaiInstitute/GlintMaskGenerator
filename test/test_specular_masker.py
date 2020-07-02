@@ -1,7 +1,9 @@
-# Created by: Taylor Denouden
-# Organization: Hakai Institute
-# Date: 2020-06-12
-# Description:
+"""
+Created by: Taylor Denouden
+Organization: Hakai Institute
+Date: 2020-06-12
+"""
+
 from abc import ABC
 from pathlib import Path
 
@@ -15,11 +17,13 @@ IMG_CONTENT = Image.fromarray(np.ones((32, 32, 3)).astype(np.uint8) * 255)
 
 
 def test_class_inheritance():
+    """Test that the classes have the correct superclasses."""
     assert issubclass(AbstractBaseMasker, ABC)
     assert issubclass(RGBSpecularMasker, AbstractBaseMasker)
 
 
-def test_dji_multispectral_masker(tmp_path):
+def test_rgb_specular_masker(tmp_path):
+    """Test that the RGB specular masker finds the correct files."""
     # Create dummy files
     all_paths = ["1.jpg", "2.JPG", "3.tif", "4.tiff", "5.TIF", "6.TIFF", "7.png", "8.PNG", "9.jpeg", "10.JPEG",
                  "IMG_1234_1.tif", "IMG_1234_2.tif", "IMG_1234_3.tif", "IMG_1234_4.tif", "IMG_1234_5.tif",

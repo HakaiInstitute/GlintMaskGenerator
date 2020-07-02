@@ -1,9 +1,9 @@
-# Created by: Taylor Denouden
-# Organization: Hakai Institute
-# Date: 2020-05-22
-# Based on Matlab script by Tom Bell written 6/28/2019
-#
-# Description: Generate masks for glint regions in in RGB images using Tom Bell's blue-channel binning algorithm.
+"""
+Created by: Taylor Denouden
+Organization: Hakai Institute
+Date: 2020-05-22
+Description: Generate masks for glint regions in in RGB images using Tom Bell's blue-channel binning algorithm.
+"""
 
 import numpy as np
 from scipy.ndimage import gaussian_filter

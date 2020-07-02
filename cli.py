@@ -1,7 +1,9 @@
-# Created by: Taylor Denouden
-# Organization: Hakai Institute
-# Date: 2020-05-30
-# Description: Command line interface to the glint-mask-tools.
+"""
+Created by: Taylor Denouden
+Organization: Hakai Institute
+Date: 2020-05-30
+Description: Command line interface to the glint-mask-tools.
+"""
 
 # Based on Matlab script by Tom Bell written 6/28/2019
 #

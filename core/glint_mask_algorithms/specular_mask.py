@@ -1,9 +1,10 @@
-# Created by: Taylor Denouden
-# Organization: Hakai Institute
-# Date: 2020-05-22
-#
-# Description: Generate masks for glint regions in in RGB images using a thresholding on the estimated specular
-# component of reflection.
+"""
+Created by: Taylor Denouden
+Organization: Hakai Institute
+Date: 2020-05-22
+Description: Generate masks for glint regions in in RGB images using a thresholding on the estimated specular
+    component of reflection.
+"""
 
 import math
 

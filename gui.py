@@ -1,7 +1,9 @@
-# Created by: Taylor Denouden
-# Organization: Hakai Institute
-# Date: 2020-05-30
-# Description: Graphical interface to the glint mask tools.
+"""
+Created by: Taylor Denouden
+Organization: Hakai Institute
+Date: 2020-05-30
+Description: Graphical interface to the glint mask tools.
+"""
 
 import tkinter as tk
 from tkinter import filedialog, ttk, messagebox
@@ -11,6 +13,8 @@ from core.specular_maskers import RGBSpecularMasker
 
 
 class DirectoryPicker(ttk.Frame):
+    """tkinter directory picker widget."""
+
     def __init__(self, master, label, variable, callback=None, label_width=None):
         super().__init__(master)
         style = ttk.Style()
@@ -39,8 +43,10 @@ class DirectoryPicker(ttk.Frame):
 
 
 class GlintMaskApp(ttk.Frame):
-    def __init__(self, master, *args, **kwargs):
-        super().__init__(master, *args, **kwargs)
+    """Main widget for the Glint Mask Generator GUI."""
+
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
         self.LABEL_WIDTH = 16
         self.DEFAULT_WORKERS = 5
         self.IMG_TYPES = {
@@ -119,6 +125,7 @@ class GlintMaskApp(ttk.Frame):
             messagebox.showinfo(message='Processing complete')
 
     def reset(self):
+        """Reset the state of the GUI for processing a new directory of images."""
         self.progress_val.set(0)
         self.btn_process.state = tk.NORMAL
         self.picker_imgs_in.btn = tk.NORMAL
@@ -126,6 +133,7 @@ class GlintMaskApp(ttk.Frame):
         self.update_idletasks()
 
     def process(self):
+        """Process the images using the specified options and increment the progress bar."""
         self.btn_process.state = tk.DISABLED
         self.picker_imgs_in.btn = tk.DISABLED
         self.picker_masks_out.btn = tk.DISABLED
