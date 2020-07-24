@@ -12,7 +12,7 @@ from core.bin_maskers import MicasenseRedEdgeMasker, DJIMultispectralMasker, Blu
 from core.specular_maskers import RGBSpecularMasker
 
 
-class DirectoryPicker(ttk.Frame):
+class DirectorySelectWidget(ttk.Frame):
     """tkinter directory picker widget."""
 
     def __init__(self, master, label, variable, callback=None, label_width=None):
@@ -38,7 +38,7 @@ class DirectoryPicker(ttk.Frame):
         dir_name = filedialog.askdirectory()
         self.variable.set(dir_name)
 
-        if self.callback is not None:
+        if self.callback:
             self.callback(dir_name)
 
 
@@ -82,13 +82,13 @@ class GlintMaskApp(ttk.Frame):
             .grid(row=0, column=1, columnspan=3, sticky='ew', padx=5, ipady=5, pady=2)
 
         # IMG IN DIR
-        self.picker_imgs_in = DirectoryPicker(self, label="Input images dir", variable=self.imgs_in,
-                                              label_width=self.LABEL_WIDTH, callback=lambda _: self.reset())
+        self.picker_imgs_in = DirectorySelectWidget(self, label="Input images dir", variable=self.imgs_in,
+                                                    label_width=self.LABEL_WIDTH, callback=lambda _: self.reset())
         self.picker_imgs_in.grid(row=1, columnspan=3, sticky='ew')
 
         # MASK OUT DIR
-        self.picker_masks_out = DirectoryPicker(self, label="Output masks dir", variable=self.masks_out,
-                                                label_width=self.LABEL_WIDTH, callback=lambda _: self.reset())
+        self.picker_masks_out = DirectorySelectWidget(self, label="Output masks dir", variable=self.masks_out,
+                                                      label_width=self.LABEL_WIDTH, callback=lambda _: self.reset())
         self.picker_masks_out.grid(row=2, columnspan=3, sticky='ew')
 
         # MAX WORKERS
@@ -142,7 +142,7 @@ class GlintMaskApp(ttk.Frame):
 
         masker = self.IMG_TYPES[self.img_type.get()](self.imgs_in.get(), self.masks_out.get())
 
-        if len(masker) <= 1:
+        if len(masker) < 1:
             messagebox.showwarning(message="No files found in the given input directory.")
             return
 
