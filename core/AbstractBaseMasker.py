@@ -7,12 +7,11 @@ Description: Abstract Base Class for GlintMaskGenerators. Implements a number of
 """
 
 import concurrent.futures
-import itertools
 import os
 from abc import ABC, abstractmethod
 from concurrent.futures.thread import ThreadPoolExecutor
 from pathlib import Path
-from typing import Optional, Callable, List, Generator, Tuple
+from typing import Callable, List, Tuple, Iterator, Optional
 
 import numpy as np
 from PIL import Image
@@ -20,58 +19,58 @@ from PIL import Image
 Image.MAX_IMAGE_PIXELS = None
 
 
-def case_insensitive_glob(dir_path: str, pattern: str) -> Generator:
-    """Find files with a glob pattern while ignore upper/lower case."""
-    return Path(dir_path).glob(
-        ''.join('[%s%s]' % (char.lower(), char.upper()) if char.isalpha() else char for char in pattern))
-
-
 class AbstractBaseMasker(ABC):
-    """Abstract class for image mask generators."""
+    """ Abstract class for image mask generators."""
+
+    def __init__(self, img_dir, out_dir):
+        super().__init__()
+
+        self.img_dir = img_dir
+        self.out_dir = out_dir
 
     def __call__(self, max_workers, callback, err_callback) -> None:
-        """Allows calling self.process by calling the object as a function."""
+        """ Allows calling self.process by calling the object as a function."""
         return self.process(max_workers, callback, err_callback)
 
     def __len__(self) -> int:
-        """Get and return the number of files to process."""
-        return len(self.img_paths)
+        """ Get and return the number of files to process."""
+        return sum(1 for _ in self.img_paths)
 
     @property
-    def img_paths(self):
-        """Property that returns the list of detected files for the masker."""
-        return self.get_img_paths()
-
-    @abstractmethod
-    def get_img_paths(self) -> List[str]:
-        """Abstract file path getter method all subclasses must implement this method. Must return a list of files to
-            process. This method is called on class instantiation.
+    def img_paths(self) -> Iterator[str]:
+        """ File path getter method. Return a list of files to process. Subclasses may want to override this to return
+            specific image types or filter the result of this method/property.
 
         Returns:
             List[str]
                 The list of files to be used for generating the masks.
         """
-        raise NotImplemented
+        # Search for file types asynchronously to speed things up
+        extensions = (".png", ".jpg", ".jpeg", ".tif", ".tiff")
 
-    @abstractmethod
-    def normalize_img(self, img: np.ndarray) -> np.ndarray:
-        """Abstract processor method. All subclasses must implement this method. Takes an image path and does the mask
-            generation or saving logic. This method is called by the process function for each img_path in self._files.
+        paths = Path(self.img_dir).glob("**/*")
+        paths = filter(lambda p: p.is_file() and p.suffix.lower() in extensions, paths)
+
+        return map(lambda p: str(p), paths)
+
+    def preprocess_img(self, img: np.ndarray) -> np.ndarray:
+        """ Optional pre-processor hook. Subclasses may implement this method to do preprocessing step on image before
+            passing it to the actual masking function.
 
         Returns:
-            Any
-                This function may return any type which will then be passed to the callback function in process.
+            np.ndarray
+                This function must return the converted image which is next passed to the the masking function.
         """
-        raise NotImplemented
+        return img
 
     @abstractmethod
     def mask_img(self, img: np.ndarray) -> np.ndarray:
-        """Abstract mask img method. All subclasses must implement this method. Takes a numpy ndarray that has been
-        normalized and generate the glint mask.
+        """ Abstract mask img method. All subclasses must implement this method. Takes a numpy ndarray that has been
+            normalized and generates the glint mask.
 
         Args:
-            img: np.ndarray
-                The normalized image in numpy array format.
+            img: Any
+                The preprocessed image in numpy array format.
 
         Returns:
             np.ndarray
@@ -81,7 +80,7 @@ class AbstractBaseMasker(ABC):
 
     @abstractmethod
     def get_mask_save_paths(self, in_path: str) -> List[str]:
-        """Get the out path for where to save the mask corresponding to image at in_path.
+        """ Get the out path for where to save the mask corresponding to image at in_path.
 
         Args:
             in_path: str
@@ -93,12 +92,12 @@ class AbstractBaseMasker(ABC):
         """
         raise NotImplemented
 
-    def process(self, max_workers: Optional[int] = os.cpu_count() * 5, callback: Callable = None,
-                err_callback: Callable = None) -> None:
-        """Compute the glint masks for all images in img_paths using the process_func and save to the mask_out_paths.
+    def process(self, max_workers: int = os.cpu_count() * 5, callback: Optional[Callable] = None,
+                err_callback: Optional[Callable] = None) -> None:
+        """ Compute the glint masks for all images in img_paths using the process_func and save to the mask_out_paths.
 
         Args:
-            max_workers: Optional[int]
+            max_workers: int
                 The maximum number of image processing workers. Useful for limiting memory usage.
                 Defaults to the number of CPUs * 5.
 
@@ -128,7 +127,7 @@ class AbstractBaseMasker(ABC):
                     return
 
     def process_one_file(self, img_path: str) -> Tuple[List[str], np.ndarray]:
-        """Generates and saves a glint mask for the image at path img_path and save it to the mask out paths.
+        """ Generates and saves a glint mask for the image at path img_path and save it to the mask out paths.
 
         Args:
             img_path: str
@@ -139,7 +138,7 @@ class AbstractBaseMasker(ABC):
                 The list of masks saved and the np array containing the masks.
         """
         img = self.read_img(img_path)
-        img = self.normalize_img(img)
+        img = self.preprocess_img(img)
 
         mask = self.mask_img(img)
         out_paths = self.get_mask_save_paths(img_path)
@@ -150,7 +149,7 @@ class AbstractBaseMasker(ABC):
 
     @staticmethod
     def save_mask(mask: np.ndarray, out_path: str) -> None:
-        """Utility to save a mask to the location out_path.
+        """ Utility to save a mask to the location out_path.
 
         Args:
             mask : np.ndarray shape=(H,W)
@@ -164,22 +163,6 @@ class AbstractBaseMasker(ABC):
 
     @staticmethod
     def read_img(img_path: str):
-        """Convenience method to turn img paths into numpy arrays of type float."""
+        """ Convenience method to turn img paths into numpy arrays of type float."""
         img = Image.open(img_path)
         return np.array(img).astype(np.float)
-
-    @staticmethod
-    def list_img_files(img_dir: str) -> List[str]:
-        """Utility function to get the paths of all images in directory img_dir.
-
-        Args:
-            img_dir: str
-                The directory to search for images.
-
-        Returns:
-            List[str]
-                List of all image files in the directory
-        """
-        extensions = ("png", "jpg", "jpeg", "tif", "tiff")
-        img_dirs = itertools.chain.from_iterable(case_insensitive_glob(img_dir, f"*.{ext}") for ext in extensions)
-        return [str(p) for p in list(img_dirs)]
