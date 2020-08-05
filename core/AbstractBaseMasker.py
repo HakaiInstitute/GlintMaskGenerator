@@ -51,7 +51,7 @@ class AbstractBaseMasker(ABC):
             List[str]
                 The list of files to be used for generating the masks.
         """
-        raise NotImplementedError
+        raise NotImplemented
 
     @abstractmethod
     def normalize_img(self, img: np.ndarray) -> np.ndarray:
@@ -62,7 +62,7 @@ class AbstractBaseMasker(ABC):
             Any
                 This function may return any type which will then be passed to the callback function in process.
         """
-        raise NotImplementedError
+        raise NotImplemented
 
     @abstractmethod
     def mask_img(self, img: np.ndarray) -> np.ndarray:
@@ -75,9 +75,9 @@ class AbstractBaseMasker(ABC):
 
         Returns:
             np.ndarray
-                The calculated gint mask.
+                The calculated glint mask.
         """
-        raise NotImplementedError
+        raise NotImplemented
 
     @abstractmethod
     def get_mask_save_paths(self, in_path: str) -> List[str]:
@@ -91,7 +91,7 @@ class AbstractBaseMasker(ABC):
             List[str]
                 A list of paths where the mask for the image at location in_path should be saved.
         """
-        raise NotImplementedError
+        raise NotImplemented
 
     def process(self, max_workers: Optional[int] = os.cpu_count() * 5, callback: Callable = None,
                 err_callback: Callable = None) -> None:

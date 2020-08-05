@@ -57,7 +57,7 @@ class AbstractBinMasker(AbstractBaseMasker):
     @abstractmethod
     def get_img_paths(self) -> List[str]:
         """Implement get_files as required by AbstractBaseMasker."""
-        raise NotImplementedError
+        raise NotImplemented
 
     @abstractmethod
     def normalize_img(self, img: np.ndarray) -> np.ndarray:
@@ -72,12 +72,12 @@ class AbstractBinMasker(AbstractBaseMasker):
             np.ndarray, shape=(H,W)
                 The single channel, normalized array with values in range [0,1]
         """
-        raise NotImplementedError
+        raise NotImplemented
 
     @abstractmethod
     def get_mask_save_paths(self, in_path: str) -> List[str]:
         """Generate the list of file paths where the generate glint mask should be saved."""
-        raise NotImplementedError
+        raise NotImplemented
 
 
 class BlueBinMasker(AbstractBinMasker):
