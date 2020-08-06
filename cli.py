@@ -5,9 +5,6 @@ Date: 2020-05-30
 Description: Command line interface to the glint-mask-tools.
 """
 
-# Based on Matlab script by Tom Bell written 6/28/2019
-#
-# Description: Generate masks for glint regions in in RGB images using Tom Bell's blue-channel binning algorithm.
 import sys
 from typing import Optional
 
@@ -68,7 +65,7 @@ def micasense_re(img_path: str, mask_out_path: str, glint_threshold: float = 0.9
         ----------
         img_path: str
             The path to a named input image or directory containing images.
-            If img_path is a directory, all IMG_xxxx_6.tif files will be processed.
+            If img_path is a directory, all IMG_dddd_6.tif files will be processed.
 
         mask_out_path: str
             The path to send your out image including the file name and type. e.g. "/path/to/mask.png".

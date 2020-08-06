@@ -4,6 +4,7 @@ Organization: Hakai Institute
 Date: 2020-05-30
 Description: Graphical interface to the glint mask tools.
 """
+
 import os
 import tkinter as tk
 from tkinter import filedialog, ttk, messagebox
