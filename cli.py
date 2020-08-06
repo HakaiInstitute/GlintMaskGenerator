@@ -25,25 +25,25 @@ def dji_ms(img_path: str, mask_out_path: str, glint_threshold: float = 0.9, mask
 
     Parameters
     ----------
-    img_path: str
+    img_path
         The path to a named input image or directory containing images. If img_path is a directory, all DJI_***4.TIF
         files will be processed.
 
-    mask_out_path: str
+    mask_out_path
         The path to send your out image including the file name and type. e.g. "/path/to/mask.png".
         mask_out_path must be a directory if img_path is specified as a directory.
 
-    glint_threshold: Optional[float]
+    glint_threshold
         The amount of binned "blueness" that should be glint. Domain for values is (0.0, 1.0).
         Play with this value. Default is 0.9.
 
-    mask_buffer_sigma: Optional[int]
+    mask_buffer_sigma
         The sigma for the Gaussian kernel used to buffer the mask. Defaults to 0.
 
-    num_bins: Optional[int]
+    num_bins
         The number of bins the blue channel is slotted into. Defaults to 8 as in Tom's script.
 
-    max_workers: Optional[int]
+    max_workers
         The maximum number of image processing workers. Useful for limiting memory usage.
         Defaults to the number of CPUs * 5.
 
@@ -63,25 +63,20 @@ def micasense_re(img_path: str, mask_out_path: str, glint_threshold: float = 0.9
 
     Parameters
     ----------
-    img_path: str
+    img_path
         The path to a named input image or directory containing images.
         If img_path is a directory, all IMG_dddd_6.tif files will be processed.
-
-    mask_out_path: str
+    mask_out_path
         The path to send your out image including the file name and type. e.g. "/path/to/mask.png".
         mask_out_path must be a directory if img_path is specified as a directory.
-
-    glint_threshold: Optional[float]
+    glint_threshold
         The amount of binned "blueness" that should be glint. Domain for values is (0.0, 1.0).
         Play with this value. Default is 0.9.
-
-    mask_buffer_sigma: Optional[int]
+    mask_buffer_sigma
         The sigma for the Gaussian kernel used to buffer the mask. Defaults to 0.
-
-    num_bins: Optional[int]
+    num_bins
         The number of bins the blue channel is slotted into. Defaults to 8 as in Tom's script.
-
-    max_workers: Optional[int]
+    max_workers
         The maximum number of image processing workers. Useful for limiting memory usage.
         Defaults to the number of CPUs * 5.
 
@@ -101,25 +96,20 @@ def rgb(img_path: str, mask_out_path: str, glint_threshold: float = 0.9, mask_bu
 
     Parameters
     ----------
-    img_path: str
+    img_path
         The path to a named input image or directory containing images. If img_path is a directory, all tif, jpg, jpeg,
         and png images in that directory will be processed.
-
-    mask_out_path: str
+    mask_out_path
         The path to send your out image including the file name and type. e.g. "/path/to/mask.png".
         mask_out_path must be a directory if img_path is specified as a directory.
-
-    glint_threshold: Optional[float]
+    glint_threshold
         The amount of binned "blueness" that should be glint. Domain for values is (0.0, 1.0).
         Play with this value. Default is 0.9.
-
-    mask_buffer_sigma: Optional[int]
+    mask_buffer_sigma
         The sigma for the Gaussian kernel used to buffer the mask. Defaults to 20.
-
-    num_bins: Optional[int]
+    num_bins
         The number of bins the blue channel is slotted into. Defaults to 8 as in Tom's script.
-
-    max_workers: Optional[int]
+    max_workers
         The maximum number of image processing workers. Useful for limiting memory usage.
         Defaults to the number of CPUs * 5.
 
@@ -139,31 +129,25 @@ def specular(img_path: str, mask_out_path: str, percent_diffuse: float = 0.95, m
 
     Parameters
     ----------
-    img_path: str
+    img_path
         The path to a named input image or directory containing images. If img_path is a directory, all tif, jpg, jpeg,
         and png images in that directory will be processed.
-
-    mask_out_path: str
+    mask_out_path
         The path to send your out image including the file name and type. e.g. "/path/to/mask.png".
         mask_out_path must be a directory if img_path is specified as a directory.
-
-    percent_diffuse: Optional[float]
+    percent_diffuse
         An estimate of the percentage of pixels in an image that show pure diffuse reflectance, and
         thus no specular reflectance (glint). Defaults to 0.95.
-
-    mask_thresh: Optional[float]
+    mask_thresh
         The threshold on the specular reflectance estimate image to convert into a mask.
         E.g. if more than 50% specular reflectance is unacceptable, use 0.5. Default is 0.99.
-
-    opening: Optional[int]
+    opening
         The number of morphological opening iterations on the produced mask.
         Useful for closing small holes in the mask. Set to 15 by default.
-
-    closing: Optional[int]
+    closing
         The number of morphological closing iterations on the produced mask.
         Useful for removing small bits of mask. Set to 15 by default.
-
-    max_workers: Optional[int]
+    max_workers
         The maximum number of image processing workers. Useful for limiting memory usage.
         Defaults to the number of CPUs * 5.
 

@@ -25,21 +25,22 @@ class RGBSpecularMasker(AbstractBaseMasker):
 
         Parameters
         ----------
-        img_dir: str
+        img_dir
             The path to a directory containing images to process.
-        out_dir: str
+        out_dir
             Path to the directory where the image masks should be saved.
-        percent_diffuse: float
+        percent_diffuse
             An estimate of the percentage of pixels in an image that show pure diffuse reflectance, and thus no specular
             reflectance (glint).
-        mask_thresh: float
-            The threshold on the specular reflectance estimate image to convert into a mask. E.g. if more than 50%
-            specular reflectance is unacceptable, use 0.5.
-        opening: int
-            The number of morphological opening iterations on the produced mask. Useful for closing small holes in the
-            mask.
-        closing: int
-            The number of morphological closing iterations on the produced mask. Useful for removing small bits of mask.
+        mask_thresh
+            The threshold on the specular reflectance estimate image to convert into a mask.
+            e.g. if more than 50% specular reflectance is unacceptable, use 0.5.
+        opening
+            The number of morphological opening iterations on the produced mask.
+            Useful for closing small holes in the mask.
+        closing
+            The number of morphological closing iterations on the produced mask.
+            Useful for removing small bits of mask.
         """
         super().__init__(img_dir, out_dir)
 

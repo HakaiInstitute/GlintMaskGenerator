@@ -27,9 +27,9 @@ class AbstractBaseMasker(ABC):
 
         Parameters
         ----------
-        img_dir: str
+        img_dir
             The path to the directory where the images to process are located.
-        out_dir: str
+        out_dir
             The path to the directory where the produced masks should be saved.
         """
         super().__init__()
@@ -45,11 +45,11 @@ class AbstractBaseMasker(ABC):
 
         Parameters
         ----------
-        max_workers: int
+        max_workers
             The number of threads to use during processing. Useful for limiting memory consumption.
-        callback: Optional[Callable[[str], None]]
+        callback
             Optional callback that receives the img_path as an arg after it is successfully processed.
-        err_callback: Optional[Callable[[str, Exception], None]]
+        err_callback
             Optional callback that receives the img_path and an Exception as args after a processing failure.
         """
         return self.process(max_workers, callback, err_callback)
@@ -93,7 +93,7 @@ class AbstractBaseMasker(ABC):
 
         Parameters
         ----------
-        img: np.ndarray
+        img
             The image data as a numpy array with dtype=float32.
 
         Returns
@@ -113,7 +113,7 @@ class AbstractBaseMasker(ABC):
 
         Parameters
         ----------
-        mask: np.ndarray
+        mask
             The mask created by the glint masking algorithm.
 
         Returns
@@ -132,7 +132,7 @@ class AbstractBaseMasker(ABC):
 
         Parameters
         ----------
-        img: np.ndarray
+        img
             The preprocessed image in numpy array format.
 
         Returns
@@ -148,8 +148,9 @@ class AbstractBaseMasker(ABC):
 
         Parameters
         ----------
-        in_path: str
-            The image path for which a mask is generated. Used to generate an appropriate out path for the mask.
+        in_path
+            The image path for which a mask is generated.
+            Used to generate an appropriate out path for the mask.
 
         Returns
         -------
@@ -168,12 +169,13 @@ class AbstractBaseMasker(ABC):
 
         Parameters
         ----------
-        max_workers: int
-            The maximum number of image processing workers. Useful for limiting memory usage.
-        callback: Optional[Callable[[str], None]])
+        max_workers
+            The maximum number of image processing workers.
+            Useful for limiting memory usage.
+        callback
             Optional callback function passed the name of each input and output mask files after processing it.
             Will receive img_path: str as arg.
-        err_callback: Optional[Callable[[str, Exception], None]]
+        err_callback
             Optional callback function passed exception object on processing failure.
             Will receive img_path: str, and the Exception as args.
         """
@@ -199,7 +201,7 @@ class AbstractBaseMasker(ABC):
 
         Parameters
         ----------
-        img_path: str
+        img_path
             The path to the image to generate a glint mask for.
         """
         img = self.read_img(img_path)
@@ -217,9 +219,9 @@ class AbstractBaseMasker(ABC):
 
         Parameters
         ----------
-        mask: np.ndarray, shape=(H,W)
+        mask
             2D image mask to save into the image format specified in the out_path.
-        out_path: str
+        out_path
             The path where the file should be saved, including img extension.
         """
         mask_img = Image.fromarray(mask, mode='L')
@@ -231,7 +233,7 @@ class AbstractBaseMasker(ABC):
 
         Parameters
         ----------
-        img_path: str
+        img_path
             The path to the image to open.
 
         Returns

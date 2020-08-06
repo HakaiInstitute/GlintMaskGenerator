@@ -31,7 +31,7 @@ def estimate_specular_reflection_component(img: np.ndarray, percent_diffuse: flo
         ----------
         img: numpy.ndarray, shape=(H,W,C)
             A numpy ndarray of an RGB image.
-        percent_diffuse: float
+        percent_diffuse
             An estimate of the % of pixels that show purely diffuse reflection.
 
         Returns
@@ -69,22 +69,18 @@ def make_single_mask(img: np.ndarray, percent_diffuse: float = 0.95, mask_thresh
     ----------
     img: np.ndarray shape=(H,W,3)
         Path to a 3-channel RGB numpy image normalized to values in [0,1].
-
-    percent_diffuse: Optional[float]
+    percent_diffuse
         An estimate of the percentage of pixels in an image that show pure diffuse reflectance, and
-        thus no specular reflectance (glint). Defaults to 0.95.
-
-    mask_thresh: Optional[float]
+        thus no specular reflectance (glint).
+    mask_thresh
         The threshold on the specular reflectance estimate image to convert into a mask.
-        E.g. if more than 50% specular reflectance is unacceptable, use 0.5. Default is 0.99.
-
-    opening: Optional[int]
+        e.g. if more than 50% specular reflectance is unacceptable, use 0.5.
+    opening
         The number of morphological opening iterations on the produced mask.
-        Useful for closing small holes in the mask. 15 by default.
-
-    closing: Optional[int]
+        Useful for closing small holes in the mask.
+    closing
         The number of morphological closing iterations on the produced mask.
-        Useful for removing small bits of mask. 15 by default.
+        Useful for removing small bits of mask.
 
     Returns
     -------

@@ -13,10 +13,11 @@ def normalize_img(img: np.ndarray, bit_depth: int) -> np.ndarray:
 
     Parameters
     ----------
-    img: np.ndarray
+    img
         The image data
-    bit_depth: int
-        The bit depth of the image, e.g. 8 for 8-bit, 16 for 16-bit, 32 for 32-bit.
+    bit_depth
+        The bit depth of the image.
+        e.g. 8 for 8-bit, 16 for 16-bit, 32 for 32-bit.
 
     Returns
     -------

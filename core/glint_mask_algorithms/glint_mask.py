@@ -19,16 +19,14 @@ def make_single_mask(img: np.ndarray, glint_threshold: float = 0.9, mask_buffer_
     ----------
     img: np.ndarray shape=(H,W)
         Path to a single channel numpy image normalized to values in [0,1].
-
-    glint_threshold: Optional[float]
-        The amount of binned "blueness" that should be glint. Domain for values is (0.0, 1.0).
-        Play with this value. Default is 0.9.
-
-    mask_buffer_sigma: Optional[int]
-        The sigma for the Gaussian kernel used to buffer the mask. Defaults to 20.
-
-    num_bins: Optional[int]
-        The number of bins the blue channel is slotted into. Defaults to 8 as in Tom's script.
+    glint_threshold
+        The amount of binned "blueness" that should be glint.
+        Domain for values is (0.0, 1.0).
+    mask_buffer_sigma
+        The sigma for the Gaussian kernel used to buffer the mask.
+    num_bins
+        The number of bins the blue channel is slotted into.
+        Defaults to 8 as in Tom's script.
 
     Returns
     -------

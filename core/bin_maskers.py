@@ -28,16 +28,18 @@ class AbstractBinMasker(AbstractBaseMasker, metaclass=ABCMeta):
 
         Parameters
         ----------
-        img_dir: str
+        img_dir
             The path to a directory containing images to process.
-        out_dir: str
+        out_dir
             Path to the directory where the image masks should be saved.
-        glint_threshold: float
-            The amount of binned "blueness" that should be glint. Domain for values is (0.0, 1.0).
-        mask_buffer_sigma: int
-            The sigma for the Gaussian kernel used to buffer the mask. Defaults to 0.
-        num_bins: int
-            The number of bins the blue channel is slotted into. Defaults to 8 as in Tom's script.
+        glint_threshold
+            The amount of binned "blueness" that should be glint.
+            Domain for values is (0.0, 1.0).
+        mask_buffer_sigma
+            The sigma for the Gaussian kernel used to buffer the mask.
+        num_bins
+            The number of bins the blue channel is slotted into.
+            Defaults to 8 as in Tom's script.
         """
         super().__init__(img_dir, out_dir)
 
@@ -50,7 +52,7 @@ class AbstractBinMasker(AbstractBaseMasker, metaclass=ABCMeta):
 
         Parameters
         ----------
-        img: np.ndarray
+        img
             The image data normalized to range [0,1].
 
         Returns
