@@ -11,7 +11,7 @@ from typing import Optional
 import fire
 from tqdm import tqdm
 
-from core.bin_maskers import BlueBinMasker, MicasenseRedEdgeMasker, DJIMultispectralMasker
+from core.bin_maskers import BlueBinMasker, DJIMultispectralMasker, MicasenseRedEdgeMasker
 from core.specular_maskers import RGBSpecularMasker
 
 
@@ -61,35 +61,35 @@ def micasense_re(img_path: str, mask_out_path: str, glint_threshold: float = 0.9
                  num_bins: int = 8, max_workers: Optional[int] = None) -> None:
     """Generate masks for glint regions in multispectral imagery from the Micasense camera using Tom Bell's algorithm.
 
-        Parameters
-        ----------
-        img_path: str
-            The path to a named input image or directory containing images.
-            If img_path is a directory, all IMG_dddd_6.tif files will be processed.
+    Parameters
+    ----------
+    img_path: str
+        The path to a named input image or directory containing images.
+        If img_path is a directory, all IMG_dddd_6.tif files will be processed.
 
-        mask_out_path: str
-            The path to send your out image including the file name and type. e.g. "/path/to/mask.png".
-            mask_out_path must be a directory if img_path is specified as a directory.
+    mask_out_path: str
+        The path to send your out image including the file name and type. e.g. "/path/to/mask.png".
+        mask_out_path must be a directory if img_path is specified as a directory.
 
-        glint_threshold: Optional[float]
-            The amount of binned "blueness" that should be glint. Domain for values is (0.0, 1.0).
-            Play with this value. Default is 0.9.
+    glint_threshold: Optional[float]
+        The amount of binned "blueness" that should be glint. Domain for values is (0.0, 1.0).
+        Play with this value. Default is 0.9.
 
-        mask_buffer_sigma: Optional[int]
-            The sigma for the Gaussian kernel used to buffer the mask. Defaults to 0.
+    mask_buffer_sigma: Optional[int]
+        The sigma for the Gaussian kernel used to buffer the mask. Defaults to 0.
 
-        num_bins: Optional[int]
-            The number of bins the blue channel is slotted into. Defaults to 8 as in Tom's script.
+    num_bins: Optional[int]
+        The number of bins the blue channel is slotted into. Defaults to 8 as in Tom's script.
 
-        max_workers: Optional[int]
-            The maximum number of image processing workers. Useful for limiting memory usage.
-            Defaults to the number of CPUs * 5.
+    max_workers: Optional[int]
+        The maximum number of image processing workers. Useful for limiting memory usage.
+        Defaults to the number of CPUs * 5.
 
-        Returns
-        -------
-        None
-            Side effects are that the mask is saved to the specified mask_out_path location.
-        """
+    Returns
+    -------
+    None
+        Side effects are that the mask is saved to the specified mask_out_path location.
+    """
     masker = MicasenseRedEdgeMasker(img_path, mask_out_path, glint_threshold, mask_buffer_sigma, num_bins)
     with tqdm(total=len(masker)) as progress:
         return masker.process(max_workers=max_workers, callback=lambda _: progress.update(), err_callback=_err_callback)

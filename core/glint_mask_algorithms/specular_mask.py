@@ -10,7 +10,7 @@ import math
 
 import numpy as np
 from PIL import Image
-from scipy.ndimage.morphology import binary_opening, binary_closing
+from scipy.ndimage.morphology import binary_closing, binary_opening
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -19,25 +19,26 @@ EPSILON = 1e-8
 
 
 def estimate_specular_reflection_component(img: np.ndarray, percent_diffuse: float) -> np.ndarray:
+    # noinspection SpellCheckingInspection
     """Estimate the specular reflection component of pixels in an image.
 
-    Based on method from:
-        Wang, S., Yu, C., Sun, Y. et al. Specular reflection removal
-        of ocean surface remote sensing images from UAVs. Multimedia Tools
-        Appl 77, 11363–11379 (2018). https://doi.org/10.1007/s11042-017-5551-7
+        Based on method from:
+            Wang, S., Yu, C., Sun, Y. et al. Specular reflection removal
+            of ocean surface remote sensing images from UAVs. Multimedia Tools
+            Appl 77, 11363–11379 (2018). https://doi.org/10.1007/s11042-017-5551-7
 
-    Parameters
-    ----------
-    img: numpy.ndarray, shape=(H,W,C)
-        A numpy ndarray of an RGB image.
-    percent_diffuse: float
-        An estimate of the % of pixels that show purely diffuse reflection.
+        Parameters
+        ----------
+        img: numpy.ndarray, shape=(H,W,C)
+            A numpy ndarray of an RGB image.
+        percent_diffuse: float
+            An estimate of the % of pixels that show purely diffuse reflection.
 
-    Returns
-    -------
-    numpy.ndarray, shape=(H,W)
-        An 1D image where values are an estimate of the component of specular reflectance.
-    """
+        Returns
+        -------
+        numpy.ndarray, shape=(H,W)
+            An 1D image where values are an estimate of the component of specular reflectance.
+        """
     # Calculate the pixel-wise max intensity and intensity range over RGB channels
     i_max = np.amax(img, axis=2)
     i_min = np.amin(img, axis=2)

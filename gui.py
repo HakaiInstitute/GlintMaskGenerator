@@ -7,9 +7,9 @@ Description: Graphical interface to the glint mask tools.
 
 import os
 import tkinter as tk
-from tkinter import filedialog, ttk, messagebox
+from tkinter import filedialog, messagebox, ttk
 
-from core.bin_maskers import MicasenseRedEdgeMasker, DJIMultispectralMasker, BlueBinMasker
+from core.bin_maskers import BlueBinMasker, DJIMultispectralMasker, MicasenseRedEdgeMasker
 from core.specular_maskers import RGBSpecularMasker
 
 
