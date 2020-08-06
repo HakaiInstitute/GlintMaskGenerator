@@ -49,7 +49,7 @@ class GlintMaskApp(ttk.Frame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
         self.LABEL_WIDTH = 16
-        self.DEFAULT_WORKERS = 5
+        self.DEFAULT_WORKERS = 5 * os.cpu_count()
         self.MAX_WORKERS = 5 * os.cpu_count()
         self.IMG_TYPES = {
             # Map display names to class required to process the images
