@@ -13,12 +13,11 @@ from typing import Iterator, List, Union
 
 import numpy as np
 
-from core.AbstractBaseMasker import AbstractBaseMasker
 from core.glint_mask_algorithms.glint_mask import make_single_mask
-from core.utils import normalize_img
+from core.abstract_masker import Masker
 
 
-class AbstractBinMasker(AbstractBaseMasker, metaclass=ABCMeta):
+class BinMasker(Masker, metaclass=ABCMeta):
     """ Abstract class for all maskers that use Tom Bell's binning algorithm.
         Defines behaviour common to all Bin maskers."""
 
@@ -63,7 +62,7 @@ class AbstractBinMasker(AbstractBaseMasker, metaclass=ABCMeta):
         return make_single_mask(img, self.glint_threshold, self.mask_buffer_sigma, self.num_bins)
 
 
-class BlueBinMasker(AbstractBinMasker):
+class RGBBinMasker(BinMasker):
     """Tom Bell's method masker for RGB imagery."""
 
     def __init__(self, *args, mask_buffer_sigma=20, **kwargs) -> None:
@@ -72,17 +71,22 @@ class BlueBinMasker(AbstractBinMasker):
 
     def preprocess_img(self, img: np.ndarray) -> np.ndarray:
         """Selects the blue channel and normalize to [0, 1]."""
-        return normalize_img(img[:, :, 2], bit_depth=8)
+        return self.normalize_img(img[:, :, 2], bit_depth=8)
 
     def get_mask_save_paths(self, in_path: str) -> List[str]:
         """Implement get_out_paths as required by AbstractBinMasker."""
         return [str(Path(self.out_dir).joinpath(f"{Path(in_path).stem}_mask.png"))]
 
 
-class DJIMultispectralMasker(AbstractBinMasker):
+class DJIMultispectralBinMasker(BinMasker):
     """ Tom Bell method masker for DJI multi-spectral imagery."""
 
     _filename_matcher = re.compile("(.*[\\\\/])?DJI_[0-9]{2}[1-9]4.TIF", flags=re.IGNORECASE)
+
+    @classmethod
+    def is_dji_red_edge(cls, filename: str) -> bool:
+        """Determine if the filename belongs to a DJI multispectral red edge image."""
+        return cls._filename_matcher.match(str(filename)) is not None
 
     @property
     def img_paths(self) -> Iterator[str]:
@@ -93,13 +97,9 @@ class DJIMultispectralMasker(AbstractBinMasker):
         """
         return filter(self.is_dji_red_edge, super().img_paths)
 
-    def is_dji_red_edge(self, filename: str) -> bool:
-        """Determine if the filename belongs to a DJI multispectral red edge image."""
-        return self._filename_matcher.match(str(filename)) is not None
-
     def preprocess_img(self, img: np.ndarray) -> np.ndarray:
         """Normalize 16-bit images to range [0,1]."""
-        return normalize_img(img, bit_depth=16)
+        return self.normalize_img(img, bit_depth=16)
 
     def get_mask_save_paths(self, in_path: str) -> List[str]:
         """Generates a list of output mask paths for each input image file path.
@@ -112,10 +112,15 @@ class DJIMultispectralMasker(AbstractBinMasker):
         return [str(out_dir.joinpath(f"{in_path_root}{i}_mask.png")) for i in range(6)]
 
 
-class MicasenseRedEdgeMasker(AbstractBinMasker):
+class MicasenseRedEdgeBinMasker(BinMasker):
     """Tom Bell method masker for Micasense RedEdge Camera imagery."""
 
     _filename_matcher = re.compile("(.*[\\\\/])?IMG_[0-9]{4}_5.tif", flags=re.IGNORECASE)
+
+    @classmethod
+    def is_micasense_red_edge(cls, filename: Union[Path, str]) -> bool:
+        """Determine if the filename belongs to a Micasense red edge image."""
+        return cls._filename_matcher.match(str(filename)) is not None
 
     @property
     def img_paths(self) -> Iterator[str]:
@@ -127,13 +132,9 @@ class MicasenseRedEdgeMasker(AbstractBinMasker):
         # Filter out all but the red edge band files
         return filter(self.is_micasense_red_edge, super().img_paths)
 
-    def is_micasense_red_edge(self, filename: Union[Path, str]) -> bool:
-        """Determine if the filename belongs to a Micasense red edge image."""
-        return self._filename_matcher.match(str(filename)) is not None
-
     def preprocess_img(self, img: np.ndarray) -> np.ndarray:
         """Normalize 16-bit imagery to have values in the range [0,1]."""
-        return normalize_img(img, bit_depth=16)
+        return self.normalize_img(img, bit_depth=16)
 
     def get_mask_save_paths(self, in_path: str) -> List[str]:
         """Generates a list of output mask paths for each input image file path.

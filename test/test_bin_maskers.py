@@ -10,19 +10,19 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from core.AbstractBaseMasker import AbstractBaseMasker
-from core.bin_maskers import DJIMultispectralMasker, MicasenseRedEdgeMasker, AbstractBinMasker, BlueBinMasker
+from core.abstract_masker import Masker
+from core.bin_maskers import DJIMultispectralBinMasker, MicasenseRedEdgeBinMasker, BinMasker, RGBBinMasker
 
 IMG_CONTENT = Image.fromarray(np.ones((32, 32, 3)).astype(np.uint8) * 255)
 
 
 def test_class_inheritance():
     """Ensure that the maskers have the correct superclasses."""
-    assert issubclass(AbstractBaseMasker, ABC)
-    assert issubclass(AbstractBinMasker, AbstractBaseMasker)
-    assert issubclass(DJIMultispectralMasker, AbstractBinMasker)
-    assert issubclass(MicasenseRedEdgeMasker, AbstractBinMasker)
-    assert issubclass(BlueBinMasker, AbstractBinMasker)
+    assert issubclass(Masker, ABC)
+    assert issubclass(BinMasker, Masker)
+    assert issubclass(DJIMultispectralBinMasker, BinMasker)
+    assert issubclass(MicasenseRedEdgeBinMasker, BinMasker)
+    assert issubclass(RGBBinMasker, BinMasker)
 
 
 def test_dji_multispectral_masker(tmp_path):
@@ -38,7 +38,7 @@ def test_dji_multispectral_masker(tmp_path):
         IMG_CONTENT.save(name)
 
     # Test the class methods
-    masker = DJIMultispectralMasker(tmp_path, Path(tmp_path).joinpath("masks"))
+    masker = DJIMultispectralBinMasker(tmp_path, Path(tmp_path).joinpath("masks"))
 
     valid_paths = ["DJI_1024.TIF", "DJI_2024.tif"]
     valid_paths = sorted([str(tmp_path.joinpath(n)) for n in valid_paths])
@@ -91,7 +91,7 @@ def test_micasense_red_edge_masker(tmp_path):
         IMG_CONTENT.save(name)
 
     # Test the class methods
-    masker = MicasenseRedEdgeMasker(tmp_path, Path(tmp_path).joinpath("masks"))
+    masker = MicasenseRedEdgeBinMasker(tmp_path, Path(tmp_path).joinpath("masks"))
 
     valid_paths = ["IMG_1234_5.tif", "IMG_4321_5.TIF"]
     valid_paths = sorted([str(tmp_path.joinpath(n)) for n in valid_paths])

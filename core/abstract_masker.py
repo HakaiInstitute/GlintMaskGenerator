@@ -19,7 +19,7 @@ from PIL import Image
 Image.MAX_IMAGE_PIXELS = None
 
 
-class AbstractBaseMasker(ABC):
+class Masker(ABC):
     """Abstract class for image mask generators."""
 
     def __init__(self, img_dir: str, out_dir: str):
@@ -243,3 +243,22 @@ class AbstractBaseMasker(ABC):
         """
         img = Image.open(img_path)
         return np.array(img).astype(np.float)
+
+    @staticmethod
+    def normalize_img(img: np.ndarray, bit_depth: int) -> np.ndarray:
+        """Utility function to normalize the values of an image with arbitrary bit_depth to range [0, 1].
+
+        Parameters
+        ----------
+        img
+            The image data
+        bit_depth
+            The bit depth of the image.
+            e.g. 8 for 8-bit, 16 for 16-bit, 32 for 32-bit.
+
+        Returns
+        -------
+        np.ndarray
+            The image normalized to range [0,1].
+        """
+        return img / ((1 << bit_depth) - 1)

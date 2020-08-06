@@ -10,7 +10,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from core.AbstractBaseMasker import AbstractBaseMasker
+from core.abstract_masker import Masker
 from core.specular_maskers import RGBSpecularMasker
 
 IMG_CONTENT = Image.fromarray(np.ones((32, 32, 3)).astype(np.uint8) * 255)
@@ -18,8 +18,8 @@ IMG_CONTENT = Image.fromarray(np.ones((32, 32, 3)).astype(np.uint8) * 255)
 
 def test_class_inheritance():
     """Test that the classes have the correct superclasses."""
-    assert issubclass(AbstractBaseMasker, ABC)
-    assert issubclass(RGBSpecularMasker, AbstractBaseMasker)
+    assert issubclass(Masker, ABC)
+    assert issubclass(RGBSpecularMasker, Masker)
 
 
 def test_rgb_specular_masker(tmp_path):

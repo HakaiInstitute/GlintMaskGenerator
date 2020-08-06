@@ -5,18 +5,17 @@ Date: 2020-06-12
 Description: Classes for generating glint masks using the specular reflection estimation technique for various
     types of image files.
 """
-
+from abc import ABCMeta
 from pathlib import Path
 from typing import List
 
 import numpy as np
 
-from core.AbstractBaseMasker import AbstractBaseMasker
 from core.glint_mask_algorithms.specular_mask import make_single_mask
-from core.utils import normalize_img
+from core.abstract_masker import Masker
 
 
-class RGBSpecularMasker(AbstractBaseMasker):
+class SpecularMasker(Masker, metaclass=ABCMeta):
     """ Specular masker method for RGB imagery."""
 
     def __init__(self, img_dir: str, out_dir: str, percent_diffuse: float = 0.95, mask_thresh: float = 0.99,
@@ -49,13 +48,17 @@ class RGBSpecularMasker(AbstractBaseMasker):
         self.opening = opening
         self.closing = closing
 
-    def preprocess_img(self, img: np.ndarray) -> np.ndarray:
-        """Normalizes 8-bit pixel values and select only the RGB channels."""
-        return normalize_img(img[:, :, :3], bit_depth=8)
-
     def mask_img(self, img: np.ndarray) -> np.ndarray:
         """Generates and saves a glint mask for the image at path img_path using the specular method."""
         return make_single_mask(img, self.percent_diffuse, self.mask_thresh, self.opening, self.closing)
+
+
+class RGBSpecularMasker(SpecularMasker):
+    """ Specular masker method for RGB imagery."""
+
+    def preprocess_img(self, img: np.ndarray) -> np.ndarray:
+        """Normalizes 8-bit pixel values and select only the RGB channels."""
+        return self.normalize_img(img[:, :, :3], bit_depth=8)
 
     def get_mask_save_paths(self, in_path: str) -> List[str]:
         """Get the out path for where to save the mask corresponding to image at in_path."""
