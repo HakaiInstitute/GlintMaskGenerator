@@ -10,7 +10,8 @@ import sys
 import fire
 from tqdm import tqdm
 
-from core.bin_maskers import RGBBinMasker, DJIMultispectralBinMasker, MicasenseRedEdgeBinMasker
+from core.abstract_masker import Masker
+from core.bin_maskers import DJIMultispectralBinMasker, MicasenseRedEdgeBinMasker, RGBBinMasker
 from core.specular_maskers import RGBSpecularMasker
 
 
@@ -24,16 +25,15 @@ class CLI(object):
             The maximum number of threads to use for processing.
         """
         self.max_workers = max_workers
-        self.masker = None
 
     @staticmethod
     def _err_callback(path, exception):
         tqdm.write(f"{path} failed with err:\n{exception}", file=sys.stderr)
 
-    def __call__(self):
-        with tqdm(total=len(self.masker)) as progress:
-            return self.masker.process(max_workers=self.max_workers, callback=lambda _: progress.update(),
-                                       err_callback=self._err_callback)
+    def process(self, masker: Masker):
+        with tqdm(total=len(masker)) as progress:
+            return masker.process(max_workers=self.max_workers, callback=lambda _: progress.update(),
+                                  err_callback=self._err_callback)
 
     def rgb(self, img_dir: str, out_dir: str, glint_threshold: float = 0.9, mask_buffer_sigma: int = 20,
             num_bins: int = 8) -> None:
@@ -60,7 +60,7 @@ class CLI(object):
         None
             Side effects are that the mask is saved to the specified out_dir location.
         """
-        self.masker = RGBBinMasker(img_dir, out_dir, glint_threshold, mask_buffer_sigma, num_bins)
+        self.process(RGBBinMasker(img_dir, out_dir, glint_threshold, mask_buffer_sigma, num_bins))
 
     def dji(self, img_dir: str, out_dir: str, glint_threshold: float = 0.9, mask_buffer_sigma: int = 0,
             num_bins: int = 8) -> None:
@@ -91,7 +91,7 @@ class CLI(object):
         None
             Side effects are that the mask is saved to the specified out_dir location.
         """
-        self.masker = DJIMultispectralBinMasker(img_dir, out_dir, glint_threshold, mask_buffer_sigma, num_bins)
+        self.process(DJIMultispectralBinMasker(img_dir, out_dir, glint_threshold, mask_buffer_sigma, num_bins))
 
     def micasense(self, img_dir: str, out_dir: str, glint_threshold: float = 0.9, mask_buffer_sigma: int = 0,
                   num_bins: int = 8) -> None:
@@ -118,7 +118,7 @@ class CLI(object):
         None
             Side effects are that the mask is saved to the specified out_dir location.
         """
-        self.masker = MicasenseRedEdgeBinMasker(img_dir, out_dir, glint_threshold, mask_buffer_sigma, num_bins)
+        self.process(MicasenseRedEdgeBinMasker(img_dir, out_dir, glint_threshold, mask_buffer_sigma, num_bins))
 
     def specular(self, img_dir: str, out_dir: str, percent_diffuse: float = 0.95, mask_thresh: float = 0.99,
                  opening: int = 15, closing: int = 15) -> None:
@@ -150,7 +150,7 @@ class CLI(object):
         None
             Side effects are that the mask is saved to the specified out_dir location.
         """
-        self.masker = RGBSpecularMasker(img_dir, out_dir, percent_diffuse, mask_thresh, opening, closing)
+        self.process(RGBSpecularMasker(img_dir, out_dir, percent_diffuse, mask_thresh, opening, closing))
 
 
 if __name__ == '__main__':
