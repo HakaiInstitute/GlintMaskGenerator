@@ -32,8 +32,8 @@ All the functionality of the CLI is documented there.
 ```bash
 # Process a directory of files
 glint-mask rgb /path/to/dir/with/images/ /path/to/out_masks/dir/
-glint-mask micasense /path/to/dir/with/images/ /path/to/out_masks/dir/
-glint-mask dji /path/to/dir/with/images/ /path/to/out_masks/dir/
+glint-mask micasense_rededge /path/to/dir/with/images/ /path/to/out_masks/dir/
+glint-mask dji_rededge /path/to/dir/with/images/ /path/to/out_masks/dir/
 glint-mask specular /path/to/dir/with/images/ /path/to/out_masks/dir/
 ```
 

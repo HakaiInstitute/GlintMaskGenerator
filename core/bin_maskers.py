@@ -7,14 +7,14 @@ Description: Classes for processing images using Tom's bin-based glint masking t
 """
 
 import re
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 from pathlib import Path
 from typing import Iterator, List, Union
 
 import numpy as np
 
-from core.glint_mask_algorithms.glint_mask import make_single_mask
 from core.abstract_masker import Masker
+from core.glint_mask_algorithms.glint_mask import make_single_mask
 
 
 class BinMasker(Masker, metaclass=ABCMeta):
@@ -78,15 +78,17 @@ class RGBBinMasker(BinMasker):
         return [str(Path(self.out_dir).joinpath(f"{Path(in_path).stem}_mask.png"))]
 
 
-class DJIMultispectralBinMasker(BinMasker):
+class _DJIMultispectralBinMasker(BinMasker):
     """ Tom Bell method masker for DJI multi-spectral imagery."""
 
-    _filename_matcher = re.compile("(.*[\\\\/])?DJI_[0-9]{2}[1-9]4.TIF", flags=re.IGNORECASE)
+    @property
+    @abstractmethod
+    def filename_matcher(self):
+        raise NotImplemented
 
-    @classmethod
-    def is_dji_red_edge(cls, filename: str) -> bool:
+    def is_dji_red_edge(self, filename: str) -> bool:
         """Determine if the filename belongs to a DJI multispectral red edge image."""
-        return cls._filename_matcher.match(str(filename)) is not None
+        return self.filename_matcher.match(str(filename)) is not None
 
     @property
     def img_paths(self) -> Iterator[str]:
@@ -112,15 +114,37 @@ class DJIMultispectralBinMasker(BinMasker):
         return [str(out_dir.joinpath(f"{in_path_root}{i}_mask.png")) for i in range(6)]
 
 
-class MicasenseRedEdgeBinMasker(BinMasker):
+class DJIMultispectralRedEdgeBinMasker(_DJIMultispectralBinMasker):
+    """ Tom Bell method masker for DJI multi-spectral imagery."""
+
+    @property
+    def filename_matcher(self):
+        return re.compile("(.*[\\\\/])?DJI_[0-9]{2}[1-9]4.TIF", flags=re.IGNORECASE)
+
+
+class DJIMultispectralBlueBinMasker(_DJIMultispectralBinMasker):
+    """ Tom Bell method masker for DJI multi-spectral imagery."""
+
+    def __init__(self, *args, mask_buffer_sigma=20, **kwargs) -> None:
+        # This method is only different from the base class in terms of mask_buffer_sigma default value
+        super().__init__(*args, mask_buffer_sigma=mask_buffer_sigma, **kwargs)
+
+    @property
+    def filename_matcher(self):
+        return re.compile("(.*[\\\\/])?DJI_[0-9]{2}[1-9]1.TIF", flags=re.IGNORECASE)
+
+
+class _MicasenseRedEdgeBinMasker(BinMasker):
     """Tom Bell method masker for Micasense RedEdge Camera imagery."""
 
-    _filename_matcher = re.compile("(.*[\\\\/])?IMG_[0-9]{4}_5.tif", flags=re.IGNORECASE)
+    @property
+    @abstractmethod
+    def filename_matcher(self):
+        raise NotImplemented
 
-    @classmethod
-    def is_micasense_red_edge(cls, filename: Union[Path, str]) -> bool:
+    def is_micasense_red_edge(self, filename: Union[Path, str]) -> bool:
         """Determine if the filename belongs to a Micasense red edge image."""
-        return cls._filename_matcher.match(str(filename)) is not None
+        return self.filename_matcher.match(str(filename)) is not None
 
     @property
     def img_paths(self) -> Iterator[str]:
@@ -144,3 +168,23 @@ class MicasenseRedEdgeBinMasker(BinMasker):
         in_path_root = Path(in_path).stem[:-1]
         out_dir = Path(self.out_dir)
         return [str(out_dir.joinpath(f"{in_path_root}{i}_mask.png")) for i in range(1, 6)]
+
+
+class MicasenseRedEdgeBinMasker(_MicasenseRedEdgeBinMasker):
+    """Tom Bell method masker for Micasense RedEdge Camera imagery."""
+
+    @property
+    def filename_matcher(self):
+        return re.compile("(.*[\\\\/])?IMG_[0-9]{4}_5.tif", flags=re.IGNORECASE)
+
+
+class MicasenseBlueBinMasker(_MicasenseRedEdgeBinMasker):
+    """Tom Bell method masker for Micasense RedEdge Camera imagery."""
+
+    def __init__(self, *args, mask_buffer_sigma=20, **kwargs) -> None:
+        # This method is only different from the base class in terms of mask_buffer_sigma default value
+        super().__init__(*args, mask_buffer_sigma=mask_buffer_sigma, **kwargs)
+
+    @property
+    def filename_matcher(self):
+        return re.compile("(.*[\\\\/])?IMG_[0-9]{4}_1.tif", flags=re.IGNORECASE)
