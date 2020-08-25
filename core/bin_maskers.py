@@ -65,10 +65,6 @@ class BinMasker(Masker, metaclass=ABCMeta):
 class RGBBinMasker(BinMasker):
     """Tom Bell's method masker for RGB imagery."""
 
-    def __init__(self, *args, mask_buffer_sigma=20, **kwargs) -> None:
-        # This method is only different from the base class in terms of mask_buffer_sigma default value
-        super().__init__(*args, mask_buffer_sigma=mask_buffer_sigma, **kwargs)
-
     def preprocess_img(self, img: np.ndarray) -> np.ndarray:
         """Selects the blue channel and normalize to [0, 1]."""
         return self.normalize_img(img[:, :, 2], bit_depth=8)
@@ -78,7 +74,7 @@ class RGBBinMasker(BinMasker):
         return [str(Path(self.out_dir).joinpath(f"{Path(in_path).stem}_mask.png"))]
 
 
-class _DJIMultispectralBinMasker(BinMasker):
+class _DJIMultispectralBinMasker(BinMasker, metaclass=ABCMeta):
     """ Tom Bell method masker for DJI multi-spectral imagery."""
 
     @property
@@ -125,16 +121,12 @@ class DJIMultispectralRedEdgeBinMasker(_DJIMultispectralBinMasker):
 class DJIMultispectralBlueBinMasker(_DJIMultispectralBinMasker):
     """ Tom Bell method masker for DJI multi-spectral imagery."""
 
-    def __init__(self, *args, mask_buffer_sigma=20, **kwargs) -> None:
-        # This method is only different from the base class in terms of mask_buffer_sigma default value
-        super().__init__(*args, mask_buffer_sigma=mask_buffer_sigma, **kwargs)
-
     @property
     def filename_matcher(self):
         return re.compile("(.*[\\\\/])?DJI_[0-9]{2}[1-9]1.TIF", flags=re.IGNORECASE)
 
 
-class _MicasenseRedEdgeBinMasker(BinMasker):
+class _MicasenseRedEdgeBinMasker(BinMasker, metaclass=ABCMeta):
     """Tom Bell method masker for Micasense RedEdge Camera imagery."""
 
     @property
@@ -180,10 +172,6 @@ class MicasenseRedEdgeBinMasker(_MicasenseRedEdgeBinMasker):
 
 class MicasenseBlueBinMasker(_MicasenseRedEdgeBinMasker):
     """Tom Bell method masker for Micasense RedEdge Camera imagery."""
-
-    def __init__(self, *args, mask_buffer_sigma=20, **kwargs) -> None:
-        # This method is only different from the base class in terms of mask_buffer_sigma default value
-        super().__init__(*args, mask_buffer_sigma=mask_buffer_sigma, **kwargs)
 
     @property
     def filename_matcher(self):

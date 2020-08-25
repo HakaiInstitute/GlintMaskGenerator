@@ -11,7 +11,7 @@ from scipy.ndimage import gaussian_filter
 EPSILON = 1e-8
 
 
-def make_single_mask(img: np.ndarray, glint_threshold: float = 0.9, mask_buffer_sigma: int = 20,
+def make_single_mask(img: np.ndarray, glint_threshold: float = 0.9, mask_buffer_sigma: int = 0,
                      num_bins: int = 8) -> np.ndarray:
     """Create and return a glint mask for RGB imagery.
 
@@ -42,8 +42,9 @@ def make_single_mask(img: np.ndarray, glint_threshold: float = 0.9, mask_buffer_
     mask = (sis <= glint_threshold)
 
     # Buffer the mask
-    mask_buffered = gaussian_filter(mask.astype(np.float), mask_buffer_sigma)
-    mask = mask_buffered >= 0.99
+    if mask_buffer_sigma > 0:
+        mask_buffered = gaussian_filter(mask.astype(np.float), mask_buffer_sigma)
+        mask = mask_buffered >= 0.99
 
     # Save the mask
     mask = mask.astype(np.uint8) * 255

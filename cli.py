@@ -36,7 +36,7 @@ class CLI(object):
             return masker.process(max_workers=self.max_workers, callback=lambda _: progress.update(),
                                   err_callback=self._err_callback)
 
-    def rgb(self, img_dir: str, out_dir: str, glint_threshold: float = 0.9, mask_buffer_sigma: int = 20,
+    def rgb(self, img_dir: str, out_dir: str, glint_threshold: float = 0.9, mask_buffer_sigma: int = 0,
             num_bins: int = 8) -> None:
         """Generate masks for glint regions in RGB imagery using Tom Bell's binning algorithm.
 
