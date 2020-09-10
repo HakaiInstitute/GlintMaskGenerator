@@ -12,17 +12,18 @@ from pathlib import Path
 from typing import Iterator, List, Union
 
 import numpy as np
+from scipy.ndimage import gaussian_filter
 
 from core.abstract_masker import Masker
-from core.glint_mask_algorithms.glint_mask import make_single_mask
+
+EPSILON = 1e-8
 
 
 class BinMasker(Masker, metaclass=ABCMeta):
     """ Abstract class for all maskers that use Tom Bell's binning algorithm.
         Defines behaviour common to all Bin maskers."""
 
-    def __init__(self, img_dir: str, out_dir: str, glint_threshold: float = 0.9, mask_buffer_sigma: int = 0,
-                 num_bins: int = 8) -> None:
+    def __init__(self, img_dir: str, out_dir: str, glint_threshold: float = 0.875, mask_buffer_sigma: int = 0) -> None:
         """Create and return a glint mask for RGB imagery.
 
         Parameters
@@ -32,19 +33,14 @@ class BinMasker(Masker, metaclass=ABCMeta):
         out_dir
             Path to the directory where the image masks should be saved.
         glint_threshold
-            The amount of binned "blueness" that should be glint.
-            Domain for values is (0.0, 1.0).
+            The amount of binned "blueness" that should be glint. Domain for values is (0.0, 1.0).
         mask_buffer_sigma
             The sigma for the Gaussian kernel used to buffer the mask.
-        num_bins
-            The number of bins the blue channel is slotted into.
-            Defaults to 8 as in Tom's script.
         """
         super().__init__(img_dir, out_dir)
 
         self.glint_threshold = glint_threshold
         self.mask_buffer_sigma = mask_buffer_sigma
-        self.num_bins = num_bins
 
     def mask_img(self, img: np.ndarray) -> np.ndarray:
         """Generates and saves a glint mask for the image at path img_path using Tom's method.
@@ -59,7 +55,25 @@ class BinMasker(Masker, metaclass=ABCMeta):
         np.ndarray
             The calculated mask.
         """
-        return make_single_mask(img, self.glint_threshold, self.mask_buffer_sigma, self.num_bins)
+        # TOM's method:
+        # bins = np.linspace(0., 1., num_bins, endpoint=False)
+        # si = np.digitize(img, bins)
+        # sis = (si.astype(np.float) - si.min(initial=0)) / ((si.max(initial=0) - si.min(initial=0)) + EPSILON)
+        #
+        # # Find Glint Threshold and Set those Pixels to 1
+        # mask = (sis <= glint_threshold)
+
+        # Much more efficient method.
+        # With glint_threshold=0.875, it is equivalent to the above with num_bins=8 and glint_threshold=0.9
+        mask = img < self.glint_threshold
+
+        # Buffer the mask
+        if self.mask_buffer_sigma > 0:
+            mask_buffered = gaussian_filter(mask.astype(np.float), self.mask_buffer_sigma)
+            mask = mask_buffered >= 0.99
+
+        # Convert to format required by Metashape
+        return mask.astype(np.uint8) * 255
 
 
 class RGBBinMasker(BinMasker):

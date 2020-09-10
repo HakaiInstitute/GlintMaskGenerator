@@ -36,8 +36,7 @@ class CLI(object):
             return masker.process(max_workers=self.max_workers, callback=lambda _: progress.update(),
                                   err_callback=self._err_callback)
 
-    def rgb(self, img_dir: str, out_dir: str, glint_threshold: float = 0.9, mask_buffer_sigma: int = 0,
-            num_bins: int = 8) -> None:
+    def rgb(self, img_dir: str, out_dir: str, glint_threshold: float = 0.875, mask_buffer_sigma: int = 0) -> None:
         """Generate masks for glint regions in RGB imagery using Tom Bell's binning algorithm.
 
         Parameters
@@ -49,139 +48,115 @@ class CLI(object):
             The path to send your out image including the file name and type. e.g. "/path/to/mask.png".
             out_dir must be a directory if img_dir is specified as a directory.
         glint_threshold
-            The amount of binned "blueness" that should be glint. Domain for values is (0.0, 1.0).
-            Play with this value. Default is 0.9.
+            The pixel band threshold indicating glint. Domain for values is (0.0, 1.0). Default is 0.875.
         mask_buffer_sigma
-            The sigma for the Gaussian kernel used to buffer the mask. Defaults to 20.
-        num_bins
-            The number of bins the blue channel is slotted into. Defaults to 8 as in Tom's script.
+            The sigma for the Gaussian kernel used to buffer the mask. Defaults to 0 (off).
 
         Returns
         -------
         None
             Side effects are that the mask is saved to the specified out_dir location.
         """
-        self.process(RGBBinMasker(img_dir, out_dir, glint_threshold, mask_buffer_sigma, num_bins))
+        self.process(RGBBinMasker(img_dir, out_dir, glint_threshold, mask_buffer_sigma))
 
-    def dji_blue(self, img_dir: str, out_dir: str, glint_threshold: float = 0.9, mask_buffer_sigma: int = 0,
-                 num_bins: int = 8) -> None:
+    def dji_blue(self, img_dir: str, out_dir: str, glint_threshold: float = 0.875, mask_buffer_sigma: int = 0) -> None:
         """Generate masks for glint regions in multispectral imagery from the DJI camera using Tom Bell's algorithm on
             the Blue image band.
 
         Parameters
         ----------
         img_dir
-            The path to a named input image or directory containing images. If img_dir is a directory, all DJI_***4.TIF
-            files will be processed.
-
+            The path to a named input image or directory containing images. If img_dir is a directory, all tif, jpg, jpeg,
+            and png images in that directory will be processed.
         out_dir
             The path to send your out image including the file name and type. e.g. "/path/to/mask.png".
             out_dir must be a directory if img_dir is specified as a directory.
-
         glint_threshold
-            The amount of binned "blueness" that should be glint. Domain for values is (0.0, 1.0).
-            Play with this value. Default is 0.9.
-
+            The pixel band threshold indicating glint. Domain for values is (0.0, 1.0). Default is 0.875.
         mask_buffer_sigma
-            The sigma for the Gaussian kernel used to buffer the mask. Defaults to 0.
-
-        num_bins
-            The number of bins the blue channel is slotted into. Defaults to 8 as in Tom's script.
+            The sigma for the Gaussian kernel used to buffer the mask. Defaults to 0 (off).
 
         Returns
         -------
         None
             Side effects are that the mask is saved to the specified out_dir location.
         """
-        self.process(DJIMultispectralBlueBinMasker(img_dir, out_dir, glint_threshold, mask_buffer_sigma, num_bins))
+        self.process(DJIMultispectralBlueBinMasker(img_dir, out_dir, glint_threshold, mask_buffer_sigma))
 
-    def dji_rededge(self, img_dir: str, out_dir: str, glint_threshold: float = 0.9, mask_buffer_sigma: int = 0,
-                    num_bins: int = 8) -> None:
+    def dji_rededge(self, img_dir: str, out_dir: str, glint_threshold: float = 0.875,
+                    mask_buffer_sigma: int = 0) -> None:
         """Generate masks for glint regions in multispectral imagery from the DJI camera using Tom Bell's algorithm on
             the red edge image band.
 
         Parameters
         ----------
         img_dir
-            The path to a named input image or directory containing images. If img_dir is a directory, all DJI_***4.TIF
-            files will be processed.
-
+            The path to a named input image or directory containing images. If img_dir is a directory, all tif, jpg,
+            jpeg, and png images in that directory will be processed.
         out_dir
             The path to send your out image including the file name and type. e.g. "/path/to/mask.png".
             out_dir must be a directory if img_dir is specified as a directory.
-
         glint_threshold
-            The amount of binned "blueness" that should be glint. Domain for values is (0.0, 1.0).
-            Play with this value. Default is 0.9.
-
+            The pixel band threshold indicating glint. Domain for values is (0.0, 1.0). Default is 0.875.
         mask_buffer_sigma
-            The sigma for the Gaussian kernel used to buffer the mask. Defaults to 0.
-
-        num_bins
-            The number of bins the blue channel is slotted into. Defaults to 8 as in Tom's script.
+            The sigma for the Gaussian kernel used to buffer the mask. Defaults to 0 (off).
 
         Returns
         -------
         None
             Side effects are that the mask is saved to the specified out_dir location.
         """
-        self.process(DJIMultispectralRedEdgeBinMasker(img_dir, out_dir, glint_threshold, mask_buffer_sigma, num_bins))
+        self.process(DJIMultispectralRedEdgeBinMasker(img_dir, out_dir, glint_threshold, mask_buffer_sigma))
 
-    def micasense_blue(self, img_dir: str, out_dir: str, glint_threshold: float = 0.9, mask_buffer_sigma: int = 0,
-                       num_bins: int = 8) -> None:
+    def micasense_blue(self, img_dir: str, out_dir: str, glint_threshold: float = 0.875,
+                       mask_buffer_sigma: int = 0) -> None:
         """Generate masks for glint regions in multispectral imagery from the Micasense camera using Tom Bell's
             algorithm on the blue image band.
 
         Parameters
         ----------
         img_dir
-            The path to a named input image or directory containing images.
-            If img_dir is a directory, all IMG_dddd_6.tif files will be processed.
+            The path to a named input image or directory containing images. If img_dir is a directory, all tif, jpg,
+            jpeg, and png images in that directory will be processed.
         out_dir
             The path to send your out image including the file name and type. e.g. "/path/to/mask.png".
             out_dir must be a directory if img_dir is specified as a directory.
         glint_threshold
-            The amount of binned "blueness" that should be glint. Domain for values is (0.0, 1.0).
-            Play with this value. Default is 0.9.
+            The pixel band threshold indicating glint. Domain for values is (0.0, 1.0). Default is 0.875.
         mask_buffer_sigma
-            The sigma for the Gaussian kernel used to buffer the mask. Defaults to 0.
-        num_bins
-            The number of bins the blue channel is slotted into. Defaults to 8 as in Tom's script.
+            The sigma for the Gaussian kernel used to buffer the mask. Defaults to 0 (off).
 
         Returns
         -------
         None
             Side effects are that the mask is saved to the specified out_dir location.
         """
-        self.process(MicasenseBlueBinMasker(img_dir, out_dir, glint_threshold, mask_buffer_sigma, num_bins))
+        self.process(MicasenseBlueBinMasker(img_dir, out_dir, glint_threshold, mask_buffer_sigma))
 
-    def micasense_rededge(self, img_dir: str, out_dir: str, glint_threshold: float = 0.9, mask_buffer_sigma: int = 0,
-                          num_bins: int = 8) -> None:
+    def micasense_rededge(self, img_dir: str, out_dir: str, glint_threshold: float = 0.875,
+                          mask_buffer_sigma: int = 0) -> None:
         """Generate masks for glint regions in multispectral imagery from the Micasense camera using Tom Bell's
             algorithm on the red edge image band.
 
         Parameters
         ----------
         img_dir
-            The path to a named input image or directory containing images.
-            If img_dir is a directory, all IMG_dddd_6.tif files will be processed.
+            The path to a named input image or directory containing images. If img_dir is a directory, all tif, jpg,
+            jpeg, and png images in that directory will be processed.
         out_dir
             The path to send your out image including the file name and type. e.g. "/path/to/mask.png".
             out_dir must be a directory if img_dir is specified as a directory.
         glint_threshold
-            The amount of binned "blueness" that should be glint. Domain for values is (0.0, 1.0).
-            Play with this value. Default is 0.9.
+            The pixel band threshold indicating glint. Domain for values is (0.0, 1.0). Default is 0.875.
         mask_buffer_sigma
-            The sigma for the Gaussian kernel used to buffer the mask. Defaults to 0.
-        num_bins
-            The number of bins the blue channel is slotted into. Defaults to 8 as in Tom's script.
+            The sigma for the Gaussian kernel used to buffer the mask. Defaults to 0 (off).
 
         Returns
         -------
         None
             Side effects are that the mask is saved to the specified out_dir location.
         """
-        self.process(MicasenseRedEdgeBinMasker(img_dir, out_dir, glint_threshold, mask_buffer_sigma, num_bins))
+        self.process(MicasenseRedEdgeBinMasker(img_dir, out_dir, glint_threshold, mask_buffer_sigma))
 
     def specular(self, img_dir: str, out_dir: str, percent_diffuse: float = 0.95, mask_thresh: float = 0.99,
                  opening: int = 15, closing: int = 15) -> None:
@@ -190,8 +165,8 @@ class CLI(object):
         Parameters
         ----------
         img_dir
-            The path to a named input image or directory containing images. If img_dir is a directory, all tif, jpg, jpeg,
-            and png images in that directory will be processed.
+            The path to a named input image or directory containing images. If img_dir is a directory, all tif, jpg,
+            jpeg, and png images in that directory will be processed.
         out_dir
             The path to send your out image including the file name and type. e.g. "/path/to/mask.png".
             out_dir must be a directory if img_dir is specified as a directory.
