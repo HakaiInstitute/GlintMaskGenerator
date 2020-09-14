@@ -121,7 +121,7 @@ class _DJIMultispectralBinMasker(BinMasker, metaclass=ABCMeta):
         """
         in_path_root = Path(in_path).stem[:-1]
         out_dir = Path(self.out_dir)
-        return [str(out_dir.joinpath(f"{in_path_root}{i}_mask.png")) for i in range(6)]
+        return [str(out_dir.joinpath(f"{in_path_root}{i}_mask.png")) for i in range(1, 6)]
 
 
 class DJIMultispectralRedEdgeBinMasker(_DJIMultispectralBinMasker):
