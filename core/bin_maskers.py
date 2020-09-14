@@ -121,7 +121,7 @@ class _DJIMultispectralBinMasker(BinMasker, metaclass=ABCMeta):
         """
         in_path_root = Path(in_path).stem[:-1]
         out_dir = Path(self.out_dir)
-        return [str(out_dir.joinpath(f"{in_path_root}{i}_mask.png")) for i in range(6)]
+        return [str(out_dir.joinpath(f"{in_path_root}{i}_mask.png")) for i in range(1, 6)]
 
 
 class DJIMultispectralRedEdgeBinMasker(_DJIMultispectralBinMasker):
@@ -129,7 +129,7 @@ class DJIMultispectralRedEdgeBinMasker(_DJIMultispectralBinMasker):
 
     @property
     def filename_matcher(self):
-        return re.compile("(.*[\\\\/])?DJI_[0-9]{2}[1-9]4.TIF", flags=re.IGNORECASE)
+        return re.compile("(.*[\\\\/])?DJI_[0-9]{3}4.TIF", flags=re.IGNORECASE)
 
 
 class DJIMultispectralBlueBinMasker(_DJIMultispectralBinMasker):
@@ -137,7 +137,7 @@ class DJIMultispectralBlueBinMasker(_DJIMultispectralBinMasker):
 
     @property
     def filename_matcher(self):
-        return re.compile("(.*[\\\\/])?DJI_[0-9]{2}[1-9]1.TIF", flags=re.IGNORECASE)
+        return re.compile("(.*[\\\\/])?DJI_[0-9]{3}1.TIF", flags=re.IGNORECASE)
 
 
 class _MicasenseRedEdgeBinMasker(BinMasker, metaclass=ABCMeta):
