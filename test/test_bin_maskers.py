@@ -59,6 +59,7 @@ def test_dji_multispectral_masker(tmp_path):
     assert masker.is_dji_red_edge(Path("DJI_0014.TIF")) is True
     assert masker.is_dji_red_edge(Path("DJI_2224.TIF")) is True
     assert masker.is_dji_red_edge(Path("dji_0014.tif")) is True
+    assert masker.is_dji_red_edge(Path("dji_0104.tif")) is True
     assert masker.is_dji_red_edge(Path("DJI_0013.TIF")) is False
     assert masker.is_dji_red_edge(Path("DJI_0015.TIF")) is False
     assert masker.is_dji_red_edge(Path("DJI_00014.TIF")) is False
