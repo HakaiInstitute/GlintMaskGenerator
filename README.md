@@ -15,6 +15,10 @@ Generate masks for glint regions in RGB and multispectral image files.
     5. On Windows, you'll probably want to copy the GUI interface to your Desktop.
     5. On Linux, copying glint-mask to `user/local/bin` will allow you to call the CLI from anywhere by typing `glint-mask`.
 
+#### Pypi package
+1. `pip install glint-mask-tools` to install the tools.
+2. Then, `import glint_mask_tools` in your Python script.
+
 ### Usage
 #### GUI
 In Windows, launch the GUI by double clicking the executable file. In Linux, you'll have to launch from the terminal `GlintMaskGenerator`.
@@ -87,9 +91,9 @@ This is done automatically via some *Fancy-Pants GitHub Actions* logic. The work
     1. Ideally, use a Pull-Request workflow. Make a pull-request to the master branch from some other branch on GitHub.
     1. By doing this, you can see if tests pass and make changes as necessary to get them to pass before merging the updates to master.
     1. See the Actions tab on GitHub for some clues as to why the tests might not be passing.
-2. Once the tests are passing, tag the master branch on your copy locally with `git checkout master && git pull && git tag a.b.c` 
-    using an appropriate version number instead of `a.b.c`, e.g. `1.2.1`. Use semantic version numbers as much as possible.
-3. Push the tag to GitHub with `git push --tags`. Pushing a tag of the format `*.*.*` triggers an action where the code is 
+2. Once the tests are passing, tag the master branch on your copy locally with `git checkout master && git pull && git tag va.b.c` 
+    using an appropriate version number instead of `va.b.c`, e.g. `v1.2.1`. Use semantic version numbers as much as possible.
+3. Push the tag to GitHub with `git push --tags`. Pushing a tag of the format `v*.*.*` triggers an action where the code is 
     checked to see tests are passing, then executables for Linux and Windows are built and uploaded to the GitHub release page.
 
 ---
