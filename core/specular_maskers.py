@@ -13,7 +13,7 @@ from typing import List
 import numpy as np
 from scipy.ndimage.morphology import binary_closing, binary_opening
 
-from core.abstract_masker import Masker
+from .abstract_masker import Masker
 
 # For numerical stability in division ops
 EPSILON = 1e-8
