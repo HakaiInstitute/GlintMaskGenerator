@@ -14,7 +14,7 @@ from typing import Iterator, List, Union
 import numpy as np
 from scipy.ndimage import gaussian_filter
 
-from core.abstract_masker import Masker
+from .abstract_masker import Masker
 
 EPSILON = 1e-8
 
