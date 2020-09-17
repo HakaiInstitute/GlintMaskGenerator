@@ -9,7 +9,8 @@ import os
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
-from core.bin_maskers import DJIMultispectralRedEdgeBinMasker, DJIMultispectralBlueBinMasker, MicasenseRedEdgeBinMasker, MicasenseBlueBinMasker, RGBBinMasker
+from core.bin_maskers import P4MSRedEdgeBinMasker, P4MSBlueBinMasker, \
+    MicasenseRedEdgeBinMasker, MicasenseBlueBinMasker, RGBBinMasker
 from core.specular_maskers import RGBSpecularMasker
 
 
@@ -56,8 +57,8 @@ class GlintMaskApp(ttk.Frame):
             'RGB / CIR Imagery [Blue Band w. Tom\'s method]': RGBBinMasker,
             'Micasense Imagery [Blue Band w. Tom\'s method]': MicasenseBlueBinMasker,
             'Micasense Imagery [Red Edge Band w.Tom\'s method]': MicasenseRedEdgeBinMasker,
-            'DJI Multispectral Imagery [Blue Band w. Tom\'s method]': DJIMultispectralBlueBinMasker,
-            'DJI Multispectral Imagery [Red Edge Band w. Tom\'s method]': DJIMultispectralRedEdgeBinMasker,
+            'DJI Multispectral Imagery [Blue Band w. Tom\'s method]': P4MSBlueBinMasker,
+            'DJI Multispectral Imagery [Red Edge Band w. Tom\'s method]': P4MSRedEdgeBinMasker,
             'RGB / CIR Imagery [RGB bands w. specular method]': RGBSpecularMasker
         }
 

@@ -11,7 +11,7 @@ import numpy as np
 from PIL import Image
 
 from core.abstract_masker import Masker
-from core.bin_maskers import DJIMultispectralRedEdgeBinMasker, MicasenseRedEdgeBinMasker, BinMasker, RGBBinMasker
+from core.bin_maskers import P4MSRedEdgeBinMasker, MicasenseRedEdgeBinMasker, BinMasker, RGBBinMasker
 
 IMG_CONTENT = Image.fromarray(np.ones((32, 32, 3)).astype(np.uint8) * 255)
 
@@ -20,7 +20,7 @@ def test_class_inheritance():
     """Ensure that the maskers have the correct superclasses."""
     assert issubclass(Masker, ABC)
     assert issubclass(BinMasker, Masker)
-    assert issubclass(DJIMultispectralRedEdgeBinMasker, BinMasker)
+    assert issubclass(P4MSRedEdgeBinMasker, BinMasker)
     assert issubclass(MicasenseRedEdgeBinMasker, BinMasker)
     assert issubclass(RGBBinMasker, BinMasker)
 
@@ -38,7 +38,7 @@ def test_dji_multispectral_masker(tmp_path):
         IMG_CONTENT.save(name)
 
     # Test the class methods
-    masker = DJIMultispectralRedEdgeBinMasker(tmp_path, Path(tmp_path).joinpath("masks"))
+    masker = P4MSRedEdgeBinMasker(tmp_path, Path(tmp_path).joinpath("masks"))
 
     valid_paths = ["DJI_1024.TIF", "DJI_2024.tif"]
     valid_paths = sorted([str(tmp_path.joinpath(n)) for n in valid_paths])

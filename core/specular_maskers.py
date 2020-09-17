@@ -8,7 +8,7 @@ Description: Classes for generating glint masks using the specular reflection es
 import math
 from abc import ABCMeta
 from pathlib import Path
-from typing import List
+from typing import Tuple
 
 import numpy as np
 from scipy.ndimage.morphology import binary_closing, binary_opening
@@ -131,6 +131,6 @@ class RGBSpecularMasker(SpecularMasker):
         """Normalizes 8-bit pixel values and select only the RGB channels."""
         return self.normalize_img(img[:, :, :3], bit_depth=8)
 
-    def get_mask_save_paths(self, in_path: str) -> List[str]:
+    def get_mask_save_paths(self, in_path: str) -> Tuple[str]:
         """Get the out path for where to save the mask corresponding to image at in_path."""
-        return [str(Path(self.out_dir).joinpath(f"{Path(in_path).stem}_mask.png"))]
+        return tuple([str(Path(self.out_dir).joinpath(f"{Path(in_path).stem}_mask.png"))])

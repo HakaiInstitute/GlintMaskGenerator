@@ -11,7 +11,7 @@ import os
 from abc import ABC, abstractmethod
 from concurrent.futures.thread import ThreadPoolExecutor
 from pathlib import Path
-from typing import Callable, Iterator, List, Optional
+from typing import Callable, Iterable, Optional, Tuple
 
 import numpy as np
 from PIL import Image
@@ -65,7 +65,7 @@ class Masker(ABC):
         return sum(1 for _ in self.img_paths)
 
     @property
-    def img_paths(self) -> Iterator[str]:
+    def img_paths(self) -> Iterable[str]:
         """Property that lists the file paths to process in self.img_dir.
 
         Returns an iterator that lists the files to process. Subclasses may want to override this to return specific
@@ -74,7 +74,7 @@ class Masker(ABC):
 
         Returns
         -------
-        List[str]
+        Iterable[str]
             The list of files to be used for generating the masks.
         """
         extensions = (".png", ".jpg", ".jpeg", ".tif", ".tiff")
@@ -143,7 +143,7 @@ class Masker(ABC):
         raise NotImplemented
 
     @abstractmethod
-    def get_mask_save_paths(self, in_path: str) -> List[str]:
+    def get_mask_save_paths(self, in_path: str) -> Tuple[str]:
         """Get the out paths where the mask corresponding to the image at in_path should be saved.
 
         Parameters
@@ -154,7 +154,7 @@ class Masker(ABC):
 
         Returns
         -------
-        List[str]
+        Tuple[str]
             A list of paths where the mask for the image at location in_path should be saved.
         """
         raise NotImplemented

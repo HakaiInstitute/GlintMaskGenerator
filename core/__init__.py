@@ -3,9 +3,9 @@
 __all__ = [
     'BinMasker',
     'RGBBinMasker',
-    'DJIMultispectralBlueBinMasker',
+    'P4MSBlueBinMasker',
     'MicasenseBlueBinMasker',
-    'DJIMultispectralRedEdgeBinMasker',
+    'P4MSRedEdgeBinMasker',
     'MicasenseRedEdgeBinMasker',
     'SpecularMasker',
     'RGBSpecularMasker',

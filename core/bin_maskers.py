@@ -9,7 +9,7 @@ Description: Classes for processing images using Tom's bin-based glint masking t
 import re
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import Iterator, List, Union
+from typing import Iterable, List, Union
 
 import numpy as np
 from scipy.ndimage import gaussian_filter
@@ -88,7 +88,7 @@ class RGBBinMasker(BinMasker):
         return [str(Path(self.out_dir).joinpath(f"{Path(in_path).stem}_mask.png"))]
 
 
-class _DJIMultispectralBinMasker(BinMasker, metaclass=ABCMeta):
+class _P4MSBinMasker(BinMasker, metaclass=ABCMeta):
     """ Tom Bell method masker for DJI multi-spectral imagery."""
 
     @property
@@ -101,7 +101,7 @@ class _DJIMultispectralBinMasker(BinMasker, metaclass=ABCMeta):
         return self.filename_matcher.match(str(filename)) is not None
 
     @property
-    def img_paths(self) -> Iterator[str]:
+    def img_paths(self) -> Iterable[str]:
         """Generates an iterator with the files to process.
 
         For DJI Multispectral masking, this is a list of paths that correspond to the RedEdge band of the files output
@@ -124,7 +124,7 @@ class _DJIMultispectralBinMasker(BinMasker, metaclass=ABCMeta):
         return [str(out_dir.joinpath(f"{in_path_root}{i}_mask.png")) for i in range(1, 6)]
 
 
-class DJIMultispectralRedEdgeBinMasker(_DJIMultispectralBinMasker):
+class P4MSRedEdgeBinMasker(_P4MSBinMasker):
     """ Tom Bell method masker for DJI multi-spectral imagery."""
 
     @property
@@ -132,7 +132,7 @@ class DJIMultispectralRedEdgeBinMasker(_DJIMultispectralBinMasker):
         return re.compile("(.*[\\\\/])?DJI_[0-9]{3}4.TIF", flags=re.IGNORECASE)
 
 
-class DJIMultispectralBlueBinMasker(_DJIMultispectralBinMasker):
+class P4MSBlueBinMasker(_P4MSBinMasker):
     """ Tom Bell method masker for DJI multi-spectral imagery."""
 
     @property
@@ -153,7 +153,7 @@ class _MicasenseRedEdgeBinMasker(BinMasker, metaclass=ABCMeta):
         return self.filename_matcher.match(str(filename)) is not None
 
     @property
-    def img_paths(self) -> Iterator[str]:
+    def img_paths(self) -> Iterable[str]:
         """Generates the list of files to process.
 
         For Micasense Red Edge masking, this should be a list of paths that correspond to the RedEdge band of the files

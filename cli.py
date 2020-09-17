@@ -11,7 +11,7 @@ import fire
 from tqdm import tqdm
 
 from core.abstract_masker import Masker
-from core.bin_maskers import DJIMultispectralBlueBinMasker, DJIMultispectralRedEdgeBinMasker, MicasenseBlueBinMasker, \
+from core.bin_maskers import P4MSBlueBinMasker, P4MSRedEdgeBinMasker, MicasenseBlueBinMasker, \
     MicasenseRedEdgeBinMasker, RGBBinMasker
 from core.specular_maskers import RGBSpecularMasker
 
@@ -81,7 +81,7 @@ class CLI(object):
         None
             Side effects are that the mask is saved to the specified out_dir location.
         """
-        self.process(DJIMultispectralBlueBinMasker(img_dir, out_dir, glint_threshold, mask_buffer_sigma))
+        self.process(P4MSBlueBinMasker(img_dir, out_dir, glint_threshold, mask_buffer_sigma))
 
     def dji_rededge(self, img_dir: str, out_dir: str, glint_threshold: float = 0.875,
                     mask_buffer_sigma: int = 0) -> None:
@@ -106,7 +106,7 @@ class CLI(object):
         None
             Side effects are that the mask is saved to the specified out_dir location.
         """
-        self.process(DJIMultispectralRedEdgeBinMasker(img_dir, out_dir, glint_threshold, mask_buffer_sigma))
+        self.process(P4MSRedEdgeBinMasker(img_dir, out_dir, glint_threshold, mask_buffer_sigma))
 
     def micasense_blue(self, img_dir: str, out_dir: str, glint_threshold: float = 0.875,
                        mask_buffer_sigma: int = 0) -> None:
