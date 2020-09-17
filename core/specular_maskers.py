@@ -8,7 +8,7 @@ Description: Classes for generating glint masks using the specular reflection es
 import math
 from abc import ABCMeta
 from pathlib import Path
-from typing import Tuple
+from typing import Iterable
 
 import numpy as np
 from scipy.ndimage.morphology import binary_closing, binary_opening
@@ -65,11 +65,9 @@ class SpecularMasker(Masker, metaclass=ABCMeta):
         numpy.ndarray, shape=(H,W)
             Numpy array of glint mask for img at input_path.
         """
-        spec_ref = self.estimate_specular_reflection_component(img, self.percent_diffuse)
+        return self.estimate_specular_reflection_component(img, self.percent_diffuse) >= self.mask_thresh
 
-        # Generate the mask
-        mask = (spec_ref >= self.mask_thresh).astype(np.uint8)
-
+    def postprocess_mask(self, mask: np.ndarray) -> np.ndarray:
         # Fill in small holes in the mask
         if self.opening > 0:
             mask = binary_opening(mask, iterations=self.opening).astype(np.uint8)
@@ -131,6 +129,6 @@ class RGBSpecularMasker(SpecularMasker):
         """Normalizes 8-bit pixel values and select only the RGB channels."""
         return self.normalize_img(img[:, :, :3], bit_depth=8)
 
-    def get_mask_save_paths(self, in_path: str) -> Tuple[str]:
+    def get_mask_save_paths(self, in_path: str) -> Iterable[str]:
         """Get the out path for where to save the mask corresponding to image at in_path."""
-        return tuple([str(Path(self.out_dir).joinpath(f"{Path(in_path).stem}_mask.png"))])
+        return [str(Path(self.out_dir).joinpath(f"{Path(in_path).stem}_mask.png"))]

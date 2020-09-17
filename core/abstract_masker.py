@@ -11,7 +11,7 @@ import os
 from abc import ABC, abstractmethod
 from concurrent.futures.thread import ThreadPoolExecutor
 from pathlib import Path
-from typing import Callable, Iterable, Optional, Tuple
+from typing import Callable, Iterable, Optional
 
 import numpy as np
 from PIL import Image
@@ -143,7 +143,7 @@ class Masker(ABC):
         raise NotImplemented
 
     @abstractmethod
-    def get_mask_save_paths(self, in_path: str) -> Tuple[str]:
+    def get_mask_save_paths(self, in_path: str) -> Iterable[str]:
         """Get the out paths where the mask corresponding to the image at in_path should be saved.
 
         Parameters
@@ -154,7 +154,7 @@ class Masker(ABC):
 
         Returns
         -------
-        Tuple[str]
+        Iterable[str]
             A list of paths where the mask for the image at location in_path should be saved.
         """
         raise NotImplemented

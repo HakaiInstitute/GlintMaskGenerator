@@ -9,7 +9,13 @@ __all__ = [
     'MicasenseRedEdgeBinMasker',
     'SpecularMasker',
     'RGBSpecularMasker',
+    'GenericThresholdMasker',
+    'P4MSThresholdMasker',
+    'MicasenseRedEdgeThresholdMasker',
+    'Masker'
 ]
 
+from .abstract_masker import *
 from .bin_maskers import *
 from .specular_maskers import *
+from .threshold_maskers import *

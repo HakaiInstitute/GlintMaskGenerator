@@ -9,7 +9,7 @@ Description: Classes for processing images using Tom's bin-based glint masking t
 import re
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import Iterable, List, Union
+from typing import Iterable, Union
 
 import numpy as np
 from scipy.ndimage import gaussian_filter
@@ -65,8 +65,9 @@ class BinMasker(Masker, metaclass=ABCMeta):
 
         # Much more efficient method.
         # With glint_threshold=0.875, it is equivalent to the above with num_bins=8 and glint_threshold=0.9
-        mask = img < self.glint_threshold
+        return img < self.glint_threshold
 
+    def postprocess_mask(self, mask: np.ndarray) -> np.ndarray:
         # Buffer the mask
         if self.mask_buffer_sigma > 0:
             mask_buffered = gaussian_filter(mask.astype(np.float), self.mask_buffer_sigma)
@@ -83,7 +84,7 @@ class RGBBinMasker(BinMasker):
         """Selects the blue channel and normalize to [0, 1]."""
         return self.normalize_img(img[:, :, 2], bit_depth=8)
 
-    def get_mask_save_paths(self, in_path: str) -> List[str]:
+    def get_mask_save_paths(self, in_path: str) -> Iterable[str]:
         """Implement get_out_paths as required by AbstractBinMasker."""
         return [str(Path(self.out_dir).joinpath(f"{Path(in_path).stem}_mask.png"))]
 
@@ -113,7 +114,7 @@ class _P4MSBinMasker(BinMasker, metaclass=ABCMeta):
         """Normalize 16-bit images to range [0,1]."""
         return self.normalize_img(img, bit_depth=16)
 
-    def get_mask_save_paths(self, in_path: str) -> List[str]:
+    def get_mask_save_paths(self, in_path: str) -> Iterable[str]:
         """Generates a list of output mask paths for each input image file path.
 
         For DJI multispectral, we save a mask file for each of the bands even though only the red edge band was used to
@@ -166,7 +167,7 @@ class _MicasenseRedEdgeBinMasker(BinMasker, metaclass=ABCMeta):
         """Normalize 16-bit imagery to have values in the range [0,1]."""
         return self.normalize_img(img, bit_depth=16)
 
-    def get_mask_save_paths(self, in_path: str) -> List[str]:
+    def get_mask_save_paths(self, in_path: str) -> Iterable[str]:
         """Generates a list of output mask paths for each input image file path.
 
         For Micasense, we wants a mask file for each of the bands even though only the red edge band was used to
