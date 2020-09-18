@@ -3,5 +3,6 @@ numpy~=1.19.2
 pillow~=7.2.0
 scipy~=1.5.2
 tqdm~=4.49.0
-future~=0.18.2
 setuptools~=50.3.0
+PyQt5
+loguru

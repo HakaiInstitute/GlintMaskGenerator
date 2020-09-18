@@ -8,3 +8,5 @@ dependencies:
   - scipy
   - fire
   - tqdm
+  - pyqt
+  - loguru
