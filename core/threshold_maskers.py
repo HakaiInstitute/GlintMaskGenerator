@@ -55,9 +55,9 @@ class ThresholdMasker(Masker, metaclass=ABCMeta):
         Returns
         -------
         np.ndarray
-            The calculated mask.
+            The calculated mask. 1 is masked, 0 is unmasked.
         """
-        return np.any(img < self.glint_thresholds, axis=2)
+        return np.any(img > self.glint_thresholds, axis=2)
 
     def postprocess_mask(self, mask: np.ndarray) -> np.ndarray:
         """Buffer the mask and convert to format required by Agisoft."""
@@ -67,7 +67,7 @@ class ThresholdMasker(Masker, metaclass=ABCMeta):
             mask = mask_buffered >= 0.99
 
         # Convert to format required by Metashape
-        return mask.astype(np.uint8) * 255
+        return np.logical_not(mask).astype(np.uint8) * 255
 
 
 class GenericThresholdMasker(ThresholdMasker):
