@@ -18,6 +18,6 @@ def resource_path(relative_path):
         # PyInstaller creates a temp folder and stores path in _MEIPASS
         base_path = sys._MEIPASS
     else:
-        base_path = os.path.abspath("./resources")
+        base_path = os.path.abspath("gui/resources")
 
     return os.path.join(base_path, relative_path)

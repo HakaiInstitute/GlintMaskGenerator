@@ -7,7 +7,7 @@ Description:
 
 from PyQt5 import QtWidgets, uic
 
-from utils import resource_path
+from gui.utils import resource_path
 
 
 class BufferCtrl(QtWidgets.QWidget):

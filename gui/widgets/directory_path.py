@@ -8,7 +8,7 @@ Description:
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtWidgets import QFileDialog
 
-from utils import resource_path
+from gui.utils import resource_path
 
 
 class DirectoryPath(QtWidgets.QWidget):

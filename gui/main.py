@@ -11,9 +11,9 @@ from typing import List, Sequence
 from PyQt5 import QtWidgets, uic
 from loguru import logger
 
-from constants import *
+from gui.constants import *
 from core import GenericThresholdMasker, Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker
-from utils import resource_path
+from gui.utils import resource_path
 
 
 class MessageBox(QtWidgets.QMessageBox):
