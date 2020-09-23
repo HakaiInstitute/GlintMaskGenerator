@@ -70,7 +70,7 @@ class BinMasker(Masker, metaclass=ABCMeta):
     def postprocess_mask(self, mask: np.ndarray) -> np.ndarray:
         # Buffer the mask
         if self.mask_buffer_sigma > 0:
-            mask_buffered = gaussian_filter(mask.astype(np.float), self.mask_buffer_sigma)
+            mask_buffered = gaussian_filter(mask.astype(np.float), self.mask_buffer_sigma, mode='constant', cval=0)
             mask = mask_buffered >= 0.99
 
         # Convert to format required by Metashape

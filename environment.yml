@@ -1,4 +1,4 @@
-name: glint
+name: glint-mask-tools
 channels:
   - conda-forge
 dependencies:
