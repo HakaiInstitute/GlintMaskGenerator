@@ -12,8 +12,8 @@ from typing import Callable, List, Optional, Sequence, Union
 import numpy as np
 from PIL import Image
 
-from core2.glint_algorithms import GlintAlgorithm, IntensityRatioAlgorithm, ThresholdAlgorithm
-from core2.image_loaders import ImageLoader, MicasenseRedEdgeLoader, P4MSLoader, RGB8BitLoader
+from core.glint_algorithms import GlintAlgorithm, IntensityRatioAlgorithm, ThresholdAlgorithm
+from core.image_loaders import ImageLoader, MicasenseRedEdgeLoader, P4MSLoader, RGB8BitLoader
 
 
 class Masker(object):

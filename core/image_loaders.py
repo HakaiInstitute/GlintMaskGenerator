@@ -13,7 +13,7 @@ from typing import Iterable, List, Union
 import numpy as np
 from PIL import Image
 
-from core2.utils import list_images, normalize_img
+from core.utils import list_images, normalize_img
 
 Image.MAX_IMAGE_PIXELS = None
 

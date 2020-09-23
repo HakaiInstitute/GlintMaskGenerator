@@ -11,7 +11,7 @@ from typing import List, Sequence
 from PyQt5 import QtWidgets, uic
 from loguru import logger
 
-from core2.maskers import Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, RGBThresholdMasker
+from core.maskers import Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, RGBThresholdMasker
 from gui.constants import *
 from gui.utils import resource_path
 

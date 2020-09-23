@@ -11,7 +11,7 @@ from typing import List
 import fire
 from tqdm import tqdm
 
-from core2.maskers import Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, RGBIntensityRatioMasker, \
+from core.maskers import Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, RGBIntensityRatioMasker, \
     RGBThresholdMasker
 
 
