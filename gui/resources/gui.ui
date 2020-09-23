@@ -316,11 +316,11 @@
         <item>
          <widget class="QGroupBox" name="groupBox_12">
           <property name="title">
-           <string>Mask buffer sigma</string>
+           <string>Pixel buffer radius</string>
           </property>
           <layout class="QHBoxLayout" name="horizontalLayout_19">
            <item>
-            <widget class="BufferCtrl" name="buffer_sigma_w" native="true"/>
+            <widget class="BufferCtrl" name="pixel_buffer_w" native="true"/>
            </item>
           </layout>
          </widget>

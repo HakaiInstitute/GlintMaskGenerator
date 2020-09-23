@@ -11,8 +11,8 @@ from typing import List, Sequence
 from PyQt5 import QtWidgets, uic
 from loguru import logger
 
+from core2.maskers import Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, RGBThresholdMasker
 from gui.constants import *
-from core import GenericThresholdMasker, Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker
 from gui.utils import resource_path
 
 
@@ -46,7 +46,7 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
 
         # Set default values
         self.reset_thresholds()
-        self.buffer_sigma_w.value = DEFAULT_BUFFER_SIGMA
+        self.pixel_buffer_w.value = DEFAULT_PIXEL_BUFFER
         self.max_workers_spinbox.setValue(DEFAULT_MAX_WORKERS)
 
         # Select the correct set of method parameters in the UI
@@ -120,13 +120,6 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
             return BLUE, GREEN, RED, NIR, REDEDGE
 
     @property
-    def bit_depth(self) -> int:
-        if self.img_type == IMG_TYPE_P4MS or self.img_type == IMG_TYPE_MICASENSE_REDEDGE:
-            return 16
-        else:  # RGB or ACO
-            return 8
-
-    @property
     def threshold_values(self) -> Sequence[float]:
         """Returns the thresholds in the order corresponding to the imagery type band order."""
         thresholds: List[float] = [
@@ -143,13 +136,13 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         if self.mask_method == METHOD_THRESHOLD:
             threshold_params = dict(
                 img_dir=self.img_dir_w.value,
-                out_dir=self.mask_dir_w.value,
-                glint_thresholds=self.threshold_values,
-                mask_buffer_sigma=self.buffer_sigma_w.value
+                mask_dir=self.mask_dir_w.value,
+                thresholds=self.threshold_values,
+                pixel_buffer=self.pixel_buffer_w.value
             )
 
             if self.img_type == IMG_TYPE_RGB or self.img_type == IMG_TYPE_ACO:
-                return GenericThresholdMasker(**threshold_params)
+                return RGBThresholdMasker(**threshold_params)
             elif self.img_type == IMG_TYPE_P4MS:
                 return P4MSThresholdMasker(**threshold_params)
             elif self.img_type == IMG_TYPE_MICASENSE_REDEDGE:
@@ -209,3 +202,5 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     main_window = GlintMaskGenerator()
     app.exec_()
+
+# /media/taylor/Samsung_T5/Datasets/ExampleImages/P4MS
