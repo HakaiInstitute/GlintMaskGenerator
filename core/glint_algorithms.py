@@ -1,58 +1,55 @@
 """
 Created by: Taylor Denouden
 Organization: Hakai Institute
-Date: 2020-06-12
-Description: Classes for generating glint masks using the specular reflection estimation technique for various
-    types of image files.
+Date: 2020-09-18
+Description: 
 """
 import math
-from abc import ABCMeta
-from pathlib import Path
-from typing import List
+from abc import ABC, abstractmethod
+from typing import Sequence
 
 import numpy as np
-from scipy.ndimage.morphology import binary_closing, binary_opening
 
-from .abstract_masker import Masker
-
-# For numerical stability in division ops
 EPSILON = 1e-8
 
 
-class SpecularMasker(Masker, metaclass=ABCMeta):
-    """ Specular masker method for RGB imagery."""
+class GlintAlgorithm(ABC):
+    def __init__(self):
+        super().__init__()
 
-    def __init__(self, img_dir: str, out_dir: str, percent_diffuse: float = 0.95, mask_thresh: float = 0.99,
-                 opening: int = 15, closing: int = 15) -> None:
+    @abstractmethod
+    def __call__(self, img: np.ndarray) -> np.ndarray:
+        """Return a boolean glint mask for a given image. Output mask should have 1 for masked, 0 for unmasked."""
+        raise NotImplementedError
+
+
+class ThresholdAlgorithm(GlintAlgorithm):
+    def __init__(self, thresholds: Sequence[float]):
+        super().__init__()
+        self.thresholds = thresholds
+
+    def __call__(self, img: np.ndarray) -> np.ndarray:
+        return np.any(img > self.thresholds, axis=2)
+
+
+class IntensityRatioAlgorithm(GlintAlgorithm):
+    def __init__(self, percent_diffuse: float = 0.95, threshold: float = 0.99):
         """Create and return a glint mask for RGB imagery.
 
         Parameters
         ----------
-        img_dir
-            The path to a directory containing images to process.
-        out_dir
-            Path to the directory where the image masks should be saved.
         percent_diffuse
             An estimate of the percentage of pixels in an image that show pure diffuse reflectance, and thus no specular
             reflectance (glint).
-        mask_thresh
+        threshold
             The threshold on the specular reflectance estimate image to convert into a mask.
             e.g. if more than 50% specular reflectance is unacceptable, use 0.5.
-        opening
-            The number of morphological opening iterations on the produced mask.
-            Useful for closing small holes in the mask.
-        closing
-            The number of morphological closing iterations on the produced mask.
-            Useful for removing small bits of mask.
         """
-        super().__init__(img_dir, out_dir)
-
+        super().__init__()
         self.percent_diffuse = percent_diffuse
-        self.mask_thresh = mask_thresh
-        self.opening = opening
-        self.closing = closing
+        self.threshold = threshold
 
-    def mask_img(self, img: np.ndarray) -> np.ndarray:
+    def __call__(self, img: np.ndarray) -> np.ndarray:
         """Create and return a glint mask for RGB imagery.
 
         Parameters
@@ -65,24 +62,10 @@ class SpecularMasker(Masker, metaclass=ABCMeta):
         numpy.ndarray, shape=(H,W)
             Numpy array of glint mask for img at input_path.
         """
-        spec_ref = self.estimate_specular_reflection_component(img, self.percent_diffuse)
-
-        # Generate the mask
-        mask = (spec_ref >= self.mask_thresh).astype(np.uint8)
-
-        # Fill in small holes in the mask
-        if self.opening > 0:
-            mask = binary_opening(mask, iterations=self.opening).astype(np.uint8)
-
-        # Remove small bits of mask
-        if self.closing > 0:
-            mask = binary_closing(mask, iterations=self.closing).astype(np.uint8)
-
-        # Save the mask
-        return mask * 255
+        return self._estimate_specular_reflection_component(img, self.percent_diffuse) > self.threshold
 
     @staticmethod
-    def estimate_specular_reflection_component(img: np.ndarray, percent_diffuse: float) -> np.ndarray:
+    def _estimate_specular_reflection_component(img: np.ndarray, percent_diffuse: float) -> np.ndarray:
         """Estimate the specular reflection component of pixels in an image.
 
             Based on method from:
@@ -122,15 +105,3 @@ class SpecularMasker(Masker, metaclass=ABCMeta):
         spec_ref_est = np.clip(i_max - (q_x_hat * i_range), 0, None)
 
         return spec_ref_est
-
-
-class RGBSpecularMasker(SpecularMasker):
-    """ Specular masker method for RGB imagery."""
-
-    def preprocess_img(self, img: np.ndarray) -> np.ndarray:
-        """Normalizes 8-bit pixel values and select only the RGB channels."""
-        return self.normalize_img(img[:, :, :3], bit_depth=8)
-
-    def get_mask_save_paths(self, in_path: str) -> List[str]:
-        """Get the out path for where to save the mask corresponding to image at in_path."""
-        return [str(Path(self.out_dir).joinpath(f"{Path(in_path).stem}_mask.png"))]

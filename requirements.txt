@@ -1,5 +1,7 @@
-fire
-numpy
-pillow
-scipy
-tqdm
+fire~=0.3.1
+numpy~=1.19.1
+pillow~=7.2.0
+scipy~=1.5.2
+tqdm~=4.49.0
+pyqt5~=5.12.3
+loguru~=0.5.0

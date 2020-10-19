@@ -1,4 +1,4 @@
-name: glint
+name: glint-mask-tools
 channels:
   - conda-forge
 dependencies:
@@ -8,3 +8,5 @@ dependencies:
   - scipy
   - fire
   - tqdm
+  - pyqt
+  - loguru

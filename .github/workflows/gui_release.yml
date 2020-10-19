@@ -3,12 +3,10 @@ name: Build GUI
 on:
   push:
     branches-ignore:
-      - '*'
+      - '**'
     tags:
-      - '*.*.*'
-      - '*.*.*rc*'
-      - 'v*.*.*'
-      - 'v*.*.*rc*'
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+rc[0-9]+'
 jobs:
 
   Linux:
@@ -31,7 +29,13 @@ jobs:
           pip install -r requirements.txt
       - name: Building GUI
         run: |
-          pyinstaller --name=GlintMaskGenerator-${{ steps.tag.outputs.tag }} -F --windowed --icon=resources/gmt.ico gui.py
+          pyinstaller --name=GlintMaskGenerator-${{ steps.tag.outputs.tag }} \
+            --onefile \
+            --hidden-import="gui.widgets.buffer_ctrl" \
+            --hidden-import="gui.widgets.threshold_ctrl" \
+            --hidden-import="gui.widgets.directory_path" \
+            --add-data="gui/resources/*.ui:." \
+            gui/main.py
       - name: Building CLI
         run: |
           pyinstaller --name=glint-mask-${{ steps.tag.outputs.tag }} -F cli.py
@@ -65,7 +69,7 @@ jobs:
           pip install -r requirements.txt
       - name: Building GUI
         run: |
-          pyinstaller --name=GlintMaskGenerator-${{ steps.tag.outputs.tag }} -F --windowed --icon=resources/gmt.ico gui.py
+          pyinstaller --name=GlintMaskGenerator-${{ steps.tag.outputs.tag }} --onefile --windowed --icon="gui/resources/gmt.ico" --hidden-import="gui.widgets.buffer_ctrl" --hidden-import="gui.widgets.threshold_ctrl" --hidden-import="gui.widgets.directory_path" --add-data="gui/resources/*.ui;." gui/main.py
       - name: Building CLI
         run: |
           pyinstaller --name=glint-mask-${{ steps.tag.outputs.tag }} -F cli.py
