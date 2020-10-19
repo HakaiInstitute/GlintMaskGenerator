@@ -11,6 +11,7 @@ from typing import Callable, List, Optional, Sequence, Union
 
 import numpy as np
 from PIL import Image
+from scipy.ndimage import convolve
 
 from core.glint_algorithms import GlintAlgorithm, IntensityRatioAlgorithm, ThresholdAlgorithm
 from core.image_loaders import ImageLoader, MicasenseRedEdgeLoader, P4MSLoader, RGB8BitLoader
@@ -146,11 +147,9 @@ class PixelBufferMixin:
         dist_m: np.ndarray = x ** 2 + y ** 2
         return dist_m <= self.pixel_buffer ** 2
 
-    # cpu version
     def postprocess_mask(self, mask: np.ndarray) -> np.ndarray:
         if self.pixel_buffer <= 0:
             return mask
-        from scipy.ndimage import convolve
         return (convolve(mask, self.kernel, mode='constant', cval=0) > 0).astype(np.int)
 
 
