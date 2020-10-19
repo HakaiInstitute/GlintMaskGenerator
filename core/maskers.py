@@ -13,8 +13,8 @@ import numpy as np
 from PIL import Image
 from scipy.ndimage import convolve
 
-from core.glint_algorithms import GlintAlgorithm, IntensityRatioAlgorithm, ThresholdAlgorithm
-from core.image_loaders import ImageLoader, MicasenseRedEdgeLoader, P4MSLoader, RGB8BitLoader
+from .glint_algorithms import GlintAlgorithm, IntensityRatioAlgorithm, ThresholdAlgorithm
+from .image_loaders import ImageLoader, MicasenseRedEdgeLoader, P4MSLoader, RGB8BitLoader
 
 
 class Masker(object):
@@ -199,16 +199,3 @@ class MicasenseRedEdgeIntensityRatioMasker(PixelBufferMixin, Masker):
         super().__init__(algorithm=IntensityRatioAlgorithm(percent_diffuse, threshold),
                          image_loader=MicasenseRedEdgeLoader(img_dir, mask_dir),
                          pixel_buffer=pixel_buffer)
-
-
-if __name__ == '__main__':
-    masker = MicasenseRedEdgeThresholdMasker("/media/taylor/Samsung_T5/Datasets/ExampleImages/MicasenseRededge", "/tmp",
-                                             thresholds=(0.7, 0.7, 0.7, 0.7, 0.7))
-    masker.process(callback=lambda paths: print(paths))
-
-    masker = P4MSThresholdMasker("/media/taylor/Samsung_T5/Datasets/ExampleImages/P4MS", "/tmp",
-                                 thresholds=(0.7, 0.7, 0.7, 0.7, 0.7))
-    masker.process(callback=lambda paths: print(paths))
-
-    masker = RGBThresholdMasker("/media/taylor/Samsung_T5/Datasets/ExampleImages/RGB", "/tmp")
-    masker.process(callback=lambda paths: print(paths))

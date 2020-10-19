@@ -35,7 +35,8 @@ class CLI(object):
             return masker.process(max_workers=self.max_workers, callback=lambda _: progress.update(),
                                   err_callback=self._err_callback)
 
-    def rgb(self, img_dir: str, out_dir: str, thresholds: List[float] = (1, 1, 0.875), pixel_buffer: int = 0) -> None:
+    def rgb_threshold(self, img_dir: str, out_dir: str, thresholds: List[float] = (1, 1, 0.875),
+                      pixel_buffer: int = 0) -> None:
         """Generate masks for glint regions in RGB imagery using Tom Bell's binning algorithm.
 
         Parameters
@@ -58,8 +59,8 @@ class CLI(object):
         """
         self.process(RGBThresholdMasker(img_dir, out_dir, thresholds, pixel_buffer))
 
-    def dji_p4ms(self, img_dir: str, out_dir: str, thresholds: List[float] = (0.875, 1, 1, 1, 1),
-                 pixel_buffer: int = 0) -> None:
+    def p4ms_threshold(self, img_dir: str, out_dir: str, thresholds: List[float] = (0.875, 1, 1, 1, 1),
+                       pixel_buffer: int = 0) -> None:
         """Generate masks for glint regions in multispectral imagery from the DJI camera using Tom Bell's algorithm on
             the Blue image band.
 
@@ -83,8 +84,8 @@ class CLI(object):
         """
         self.process(P4MSThresholdMasker(img_dir, out_dir, thresholds, pixel_buffer))
 
-    def micasense_rededge(self, img_dir: str, out_dir: str, thresholds: List[float] = (0.875, 1, 1, 1, 1),
-                          pixel_buffer: int = 0) -> None:
+    def micasense_threshold(self, img_dir: str, out_dir: str, thresholds: List[float] = (0.875, 1, 1, 1, 1),
+                            pixel_buffer: int = 0) -> None:
         """Generate masks for glint regions in multispectral imagery from the Micasense camera using Tom Bell's
             algorithm on the blue image band.
 
@@ -139,3 +140,14 @@ class CLI(object):
 
 if __name__ == '__main__':
     fire.Fire(CLI)
+
+    # masker = MicasenseRedEdgeThresholdMasker("/media/taylor/Samsung_T5/Datasets/ExampleImages/MicasenseRededge", "/tmp",
+    #                                          thresholds=(0.7, 0.7, 0.7, 0.7, 0.7))
+    # masker.process(callback=lambda paths: print(paths))
+    #
+    # masker = P4MSThresholdMasker("/media/taylor/Samsung_T5/Datasets/ExampleImages/P4MS", "/tmp",
+    #                              thresholds=(0.7, 0.7, 0.7, 0.7, 0.7))
+    # masker.process(callback=lambda paths: print(paths))
+    #
+    # masker = RGBThresholdMasker("/media/taylor/Samsung_T5/Datasets/ExampleImages/RGB", "/tmp")
+    # masker.process(callback=lambda paths: print(paths))
