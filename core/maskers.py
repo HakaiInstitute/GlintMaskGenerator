@@ -202,11 +202,13 @@ class MicasenseRedEdgeIntensityRatioMasker(PixelBufferMixin, Masker):
 
 
 if __name__ == '__main__':
-    masker = MicasenseRedEdgeThresholdMasker("/media/taylor/Samsung_T5/Datasets/ExampleImages/MicasenseRededge", "/tmp")
-    masker.process_unthreaded(callback=lambda paths: print(paths))
+    masker = MicasenseRedEdgeThresholdMasker("/media/taylor/Samsung_T5/Datasets/ExampleImages/MicasenseRededge", "/tmp",
+                                             thresholds=(0.7, 0.7, 0.7, 0.7, 0.7))
+    masker.process(callback=lambda paths: print(paths))
 
-    masker = P4MSThresholdMasker("/media/taylor/Samsung_T5/Datasets/ExampleImages/P4MS", "/tmp")
-    masker.process_unthreaded(callback=lambda paths: print(paths))
+    masker = P4MSThresholdMasker("/media/taylor/Samsung_T5/Datasets/ExampleImages/P4MS", "/tmp",
+                                 thresholds=(0.7, 0.7, 0.7, 0.7, 0.7))
+    masker.process(callback=lambda paths: print(paths))
 
-    masker = RGBThresholdMasker("/media/taylor/Samsung_T5/Datasets/ExampleImages/RGB", "/tmp", pixel_buffer=5)
-    masker.process_unthreaded(callback=lambda paths: print(paths))
+    masker = RGBThresholdMasker("/media/taylor/Samsung_T5/Datasets/ExampleImages/RGB", "/tmp")
+    masker.process(callback=lambda paths: print(paths))
