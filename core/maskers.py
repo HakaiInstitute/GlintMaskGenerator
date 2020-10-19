@@ -11,6 +11,7 @@ from typing import Callable, List, Optional, Sequence, Union
 
 import numpy as np
 from PIL import Image
+from scipy.ndimage import convolve
 
 from core.glint_algorithms import GlintAlgorithm, IntensityRatioAlgorithm, ThresholdAlgorithm
 from core.image_loaders import ImageLoader, MicasenseRedEdgeLoader, P4MSLoader, RGB8BitLoader
@@ -72,18 +73,11 @@ class Masker(object):
         return self.process(max_workers, callback, err_callback)
 
     # noinspection SpellCheckingInspection
-    def process_unthreaded(self, callback: Optional[Callable[[List[str]], None]] = None,
-                           err_callback: Optional[Callable[[List[str], Exception], None]] = None) -> None:
+    def process_unthreaded(self, callback: Optional[Callable[[List[str]], None]] = None) -> None:
         for img, paths in zip(self.image_loader.images, self.image_loader.paths):
-            try:
-                self._process_one(img, paths)
-                if callback is not None:
-                    callback(paths)
-
-            except Exception as exc:
-                if err_callback is not None:
-                    err_callback(paths, exc)
-                return
+            self._process_one(img, paths)
+            if callback is not None:
+                callback(paths)
 
     def process(self, max_workers: int = os.cpu_count() * 5, callback: Optional[Callable[[List[str]], None]] = None,
                 err_callback: Optional[Callable[[List[str], Exception], None]] = None) -> None:
@@ -153,11 +147,9 @@ class PixelBufferMixin:
         dist_m: np.ndarray = x ** 2 + y ** 2
         return dist_m <= self.pixel_buffer ** 2
 
-    # cpu version
     def postprocess_mask(self, mask: np.ndarray) -> np.ndarray:
         if self.pixel_buffer <= 0:
             return mask
-        from scipy.ndimage import convolve
         return (convolve(mask, self.kernel, mode='constant', cval=0) > 0).astype(np.int)
 
 
@@ -210,11 +202,13 @@ class MicasenseRedEdgeIntensityRatioMasker(PixelBufferMixin, Masker):
 
 
 if __name__ == '__main__':
-    masker = MicasenseRedEdgeThresholdMasker("/media/taylor/Samsung_T5/Datasets/ExampleImages/MicasenseRededge", "/tmp")
-    masker.process_unthreaded(callback=lambda paths: print(paths))
+    masker = MicasenseRedEdgeThresholdMasker("/media/taylor/Samsung_T5/Datasets/ExampleImages/MicasenseRededge", "/tmp",
+                                             thresholds=(0.7, 0.7, 0.7, 0.7, 0.7))
+    masker.process(callback=lambda paths: print(paths))
 
-    masker = P4MSThresholdMasker("/media/taylor/Samsung_T5/Datasets/ExampleImages/P4MS", "/tmp")
-    masker.process_unthreaded(callback=lambda paths: print(paths))
+    masker = P4MSThresholdMasker("/media/taylor/Samsung_T5/Datasets/ExampleImages/P4MS", "/tmp",
+                                 thresholds=(0.7, 0.7, 0.7, 0.7, 0.7))
+    masker.process(callback=lambda paths: print(paths))
 
-    masker = RGBThresholdMasker("/media/taylor/Samsung_T5/Datasets/ExampleImages/RGB", "/tmp", pixel_buffer=5)
-    masker.process_unthreaded(callback=lambda paths: print(paths))
+    masker = RGBThresholdMasker("/media/taylor/Samsung_T5/Datasets/ExampleImages/RGB", "/tmp")
+    masker.process(callback=lambda paths: print(paths))
