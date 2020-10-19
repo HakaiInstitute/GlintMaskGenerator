@@ -16,6 +16,8 @@ Generate masks for glint regions in RGB and multispectral image files.
     5. On Linux, copying glint-mask to `user/local/bin` will allow you to call the CLI from anywhere by typing `glint-mask`.
 
 #### Pypi package
+There is a PYPI package available for Python >= 3.8
+
 1. `pip install glint-mask-tools` to install the tools.
 2. Then, `import glint_mask_tools` in your Python script.
 
