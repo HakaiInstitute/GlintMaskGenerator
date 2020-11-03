@@ -70,14 +70,24 @@ class Masker(object):
         err_callback
             Optional callback that receives the img_path and an Exception as args after a processing failure.
         """
-        return self.process(max_workers, callback, err_callback)
+        if max_workers == 0:
+            return self.process_unthreaded(callback, err_callback)
+        else:
+            return self.process(max_workers, callback, err_callback)
 
     # noinspection SpellCheckingInspection
-    def process_unthreaded(self, callback: Optional[Callable[[List[str]], None]] = None) -> None:
+    def process_unthreaded(self, callback: Optional[Callable[[List[str]], None]] = None,
+                           err_callback: Optional[Callable[[List[str], Exception], None]] = None) -> None:
         for img, paths in zip(self.image_loader.images, self.image_loader.paths):
-            self._process_one(img, paths)
-            if callback is not None:
-                callback(paths)
+            try:
+                self._process_one(img, paths)
+                if callback is not None:
+                    callback(paths)
+
+            except Exception as exc:
+                if err_callback is not None:
+                    err_callback(paths, exc)
+                return
 
     def process(self, max_workers: int = os.cpu_count() * 5, callback: Optional[Callable[[List[str]], None]] = None,
                 err_callback: Optional[Callable[[List[str], Exception], None]] = None) -> None:

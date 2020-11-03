@@ -396,13 +396,13 @@
        <item>
         <widget class="QSpinBox" name="max_workers_spinbox">
          <property name="minimum">
-          <number>1</number>
+          <number>0</number>
          </property>
          <property name="maximum">
           <number>100</number>
          </property>
          <property name="singleStep">
-          <number>4</number>
+          <number>1</number>
          </property>
         </widget>
        </item>
