@@ -4,6 +4,7 @@ Organization: Hakai Institute
 Date: 2020-09-18
 Description: 
 """
+import os
 import re
 from abc import ABC, ABCMeta, abstractmethod
 from functools import singledispatchmethod
@@ -64,7 +65,8 @@ class SingleFileImageLoader(ImageLoader, metaclass=ABCMeta):
 class RGB8BitLoader(SingleFileImageLoader):
     @property
     def paths(self) -> Iterable[str]:
-        return list_images(self.image_directory)
+        # Filter anything smaller than 1kb, since it's probably corrupt
+        return filter(lambda p: os.stat(p).st_size > (1 << 20), list_images(self.image_directory))
 
     def preprocess_image(self, img: np.ndarray) -> np.ndarray:
         return normalize_img(img, bit_depth=8)
