@@ -95,7 +95,7 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
 
     @property
     def max_workers(self) -> int:
-        return max(self.max_workers_spinbox.value(), 1)
+        return max(self.max_workers_spinbox.value(), 0)
 
     @property
     def mask_method(self) -> str:
