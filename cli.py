@@ -60,6 +60,30 @@ class CLI(object):
         """
         self.process(RGBThresholdMasker(img_dir, out_dir, thresholds, pixel_buffer))
 
+    def aco_threshold(self, img_dir: str, out_dir: str, thresholds: List[float] = (1, 1, 0.875, 1),
+                      pixel_buffer: int = 0) -> None:
+        """Generate masks for glint regions in ACO imagery using Tom Bell's binning algorithm.
+
+        Parameters
+        ----------
+        img_dir
+            The path to a named input image or directory containing images. If img_dir is a directory, all tif, jpg, jpeg,
+            and png images in that directory will be processed.
+        out_dir
+            The path to send your out image including the file name and type. e.g. "/path/to/mask.png".
+            out_dir must be a directory if img_dir is specified as a directory.
+        thresholds
+            The pixel band thresholds indicating glint. Domain for values is (0.0, 1.0). Default is [1, 1, 0.875].
+        pixel_buffer
+            The pixel distance to buffer out the mask. Defaults to 0 (off).
+
+        Returns
+        -------
+        None
+            Side effects are that the mask is saved to the specified out_dir location.
+        """
+        self.process(RGBThresholdMasker(img_dir, out_dir, thresholds, pixel_buffer))
+
     def p4ms_threshold(self, img_dir: str, out_dir: str, thresholds: List[float] = (0.875, 1, 1, 1, 1),
                        pixel_buffer: int = 0) -> None:
         """Generate masks for glint regions in multispectral imagery from the DJI camera using Tom Bell's algorithm on
