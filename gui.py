@@ -4,16 +4,41 @@ Organization: Hakai Institute
 Date: 2020-09-16
 Description: 
 """
-
 import sys
+from os import path
 from typing import List, Sequence
 
 from PyQt5 import QtWidgets, uic
 from loguru import logger
 
 from core.maskers import Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, RGBThresholdMasker
-from gui.constants import *
-from gui.utils import resource_path
+
+# String constants reduce occurrence of silent errors due to typos when doing comparisons
+BLUE = "BLUE"
+GREEN = "GREEN"
+RED = "RED"
+REDEDGE = "REDEDGE"
+NIR = "NIR"
+
+METHOD_THRESHOLD = "METHOD_THRESHOLD"
+METHOD_RATIO = "METHOD_RATIO"
+
+IMG_TYPE_RGB = "IMG_TYPE_RGB"
+IMG_TYPE_ACO = "IMG_TYPE_ACO"
+IMG_TYPE_P4MS = "IMG_TYPE_P4MS"
+IMG_TYPE_MICASENSE_REDEDGE = "IMG_TYPE_MICASENSE_REDEDGE"
+
+# Default slider values in GUI
+DEFAULT_BLUE_THRESH = 0.875
+DEFAULT_GREEN_THRESH = 1.000
+DEFAULT_RED_THRESH = 1.000
+DEFAULT_REDEDGE_THRESH = 1.000
+DEFAULT_NIR_THRESH = 1.000
+DEFAULT_PIXEL_BUFFER = 0
+DEFAULT_MAX_WORKERS = 0
+
+bundle_dir = getattr(sys, '_MEIPASS', path.abspath(path.dirname(__file__)))
+UI_PATH = path.abspath(path.join(bundle_dir, 'gui.ui'))
 
 
 class MessageBox(QtWidgets.QMessageBox):
@@ -40,8 +65,7 @@ class ErrorMessageBox(MessageBox):
 class GlintMaskGenerator(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
-
-        uic.loadUi(resource_path('gui.ui'), self)
+        uic.loadUi(UI_PATH, self)
         self.show()
 
         # Set default values
@@ -202,5 +226,3 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     main_window = GlintMaskGenerator()
     app.exec_()
-
-# /media/taylor/Samsung_T5/Datasets/ExampleImages/P4MS

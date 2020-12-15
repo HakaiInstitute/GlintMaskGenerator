@@ -450,19 +450,19 @@
   <customwidget>
    <class>ThresholdCtrl</class>
    <extends>QWidget</extends>
-   <header>gui/widgets/threshold_ctrl.h</header>
+   <header>widgets/threshold_ctrl.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>DirectoryPath</class>
    <extends>QWidget</extends>
-   <header>gui/widgets/directory_path.h</header>
+   <header>widgets/directory_path.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>BufferCtrl</class>
    <extends>QWidget</extends>
-   <header>gui/widgets/buffer_ctrl.h</header>
+   <header>widgets/buffer_ctrl.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
