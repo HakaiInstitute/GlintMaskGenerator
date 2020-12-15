@@ -5,11 +5,13 @@ Date: 2020-09-17
 Description: 
 """
 
-import os
+import sys
+from os import path
 
 from PyQt5 import QtWidgets, uic
 
-UI_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '../resources/threshold_ctrl.ui'))
+bundle_dir = getattr(sys, '_MEIPASS', path.abspath(path.dirname(__file__)))
+UI_PATH = path.abspath(path.join(bundle_dir, 'threshold_ctrl.ui'))
 
 
 class ThresholdCtrl(QtWidgets.QWidget):

@@ -34,7 +34,8 @@ jobs:
             --hidden-import="widgets.buffer_ctrl" \
             --hidden-import="widgets.threshold_ctrl" \
             --hidden-import="widgets.directory_path" \
-            --add-data="resources/*.ui:resources" \
+            --add-data="widgets/*.ui:." \
+            --add-data="*.ui:." \
             gui.py
       - name: Building CLI
         run: |
@@ -69,7 +70,7 @@ jobs:
           pip install -r requirements.txt
       - name: Building GUI
         run: |
-          pyinstaller --name=GlintMaskGenerator-${{ steps.tag.outputs.tag }} --onefile --windowed --icon="resources\gmt.ico" --hidden-import="widgets.buffer_ctrl" --hidden-import="widgets.threshold_ctrl" --hidden-import="widgets.directory_path" --add-data="resources\*.ui;resources" gui.py
+          pyinstaller --name=GlintMaskGenerator-${{ steps.tag.outputs.tag }} --onefile --windowed --icon="resources\gmt.ico" --hidden-import="widgets.buffer_ctrl" --hidden-import="widgets.threshold_ctrl" --hidden-import="widgets.directory_path" --add-data="widgets\*.ui;." --add-data="*.ui;." gui.py
       - name: Building CLI
         run: |
           pyinstaller --name=glint-mask-${{ steps.tag.outputs.tag }} -F cli.py

@@ -4,13 +4,15 @@ Organization: Hakai Institute
 Date: 2020-09-17
 Description: 
 """
-
 import os
+import sys
+from os import path
 
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtWidgets import QFileDialog
 
-UI_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '../resources/directory_path.ui'))
+bundle_dir = getattr(sys, '_MEIPASS', path.abspath(path.dirname(__file__)))
+UI_PATH = path.abspath(path.join(bundle_dir, 'directory_path.ui'))
 
 
 class DirectoryPath(QtWidgets.QWidget):

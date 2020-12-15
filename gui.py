@@ -4,9 +4,8 @@ Organization: Hakai Institute
 Date: 2020-09-16
 Description: 
 """
-
-import os
 import sys
+from os import path
 from typing import List, Sequence
 
 from PyQt5 import QtWidgets, uic
@@ -38,7 +37,8 @@ DEFAULT_NIR_THRESH = 1.000
 DEFAULT_PIXEL_BUFFER = 0
 DEFAULT_MAX_WORKERS = 0
 
-UI_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), 'resources/gui.ui'))
+bundle_dir = getattr(sys, '_MEIPASS', path.abspath(path.dirname(__file__)))
+UI_PATH = path.abspath(path.join(bundle_dir, 'gui.ui'))
 
 
 class MessageBox(QtWidgets.QMessageBox):

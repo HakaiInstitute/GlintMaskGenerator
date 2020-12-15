@@ -5,11 +5,13 @@ Date: 2020-09-17
 Description: 
 """
 
-import os
+import sys
+from os import path
 
 from PyQt5 import QtWidgets, uic
 
-UI_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '../resources/buffer_ctrl.ui'))
+bundle_dir = getattr(sys, '_MEIPASS', path.abspath(path.dirname(__file__)))
+UI_PATH = path.abspath(path.join(bundle_dir, 'buffer_ctrl.ui'))
 
 
 class BufferCtrl(QtWidgets.QWidget):
