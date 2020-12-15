@@ -5,16 +5,18 @@ Date: 2020-09-17
 Description: 
 """
 
+import os
+
 from PyQt5 import QtWidgets, uic
 
-from gui.utils import resource_path
+UI_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '../resources/buffer_ctrl.ui'))
 
 
 class BufferCtrl(QtWidgets.QWidget):
     def __init__(self, parent):
         super().__init__(parent)
 
-        uic.loadUi(resource_path('buffer_ctrl.ui'), self)
+        uic.loadUi(UI_PATH, self)
         self.show()
 
         self.slider.valueChanged.connect(lambda value: self.spinbox.setValue(int(value)))
