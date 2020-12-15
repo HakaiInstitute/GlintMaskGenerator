@@ -5,16 +5,20 @@ Date: 2020-09-17
 Description: 
 """
 
+import sys
+from os import path
+
 from PyQt5 import QtWidgets, uic
 
-from gui.utils import resource_path
+bundle_dir = getattr(sys, '_MEIPASS', path.abspath(path.dirname(__file__)))
+UI_PATH = path.abspath(path.join(bundle_dir, 'threshold_ctrl.ui'))
 
 
 class ThresholdCtrl(QtWidgets.QWidget):
     def __init__(self, parent):
         super().__init__(parent)
 
-        uic.loadUi(resource_path('threshold_ctrl.ui'), self)
+        uic.loadUi(UI_PATH, self)
         self.show()
 
         self.slider.valueChanged.connect(lambda value: self.spinbox.setValue(value / 1000.))
