@@ -97,8 +97,7 @@ masker.process(max_workers=5, callback=print, err_callback=print)
 
 ## History
 
-#### TODO:
-##### Reference Kate and Toms work and give a brief history of the tool and it's development
+TODO: Reference Kate and Toms work and give a brief history of the tool and it's development
 
 ## Bugs
 
@@ -112,7 +111,7 @@ See [DEVELOPMENT.md](DEVELOPMENT.md) for development and software maintenance in
 
 Research using these tools or code should cite the following resources
 
-#### TODO: bibtex citation for Kate's paper
+TODO: bibtex citation for Kate's paper
 
 ```bibtext
 @misc{Denouden2020,
