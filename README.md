@@ -116,7 +116,7 @@ TODO: bibtex citation for Kate's paper
 ```bibtext
 @misc{Denouden2020,
   author = {Denouden, T.},
-  title = {Glint Mask Generator},
+  title = {GlintMaskGenerator},
   year = {2020},
   publisher = {GitHub},
   journal = {GitHub repository},
