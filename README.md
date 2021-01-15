@@ -189,7 +189,7 @@ TODO: bibtex citation for Kate's paper
   journal = {GitHub repository},
   howpublished = {\url{https://github.com/HakaiInstitute/GlintMaskGenerator}},
   commit = {8cb19e55f128da86bf0dbd312bc360ac89fe71c3},
-  doi = {TODO}
+  doi = {10.21966/3cpa-2e10}
 }
 ```
 
