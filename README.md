@@ -182,7 +182,7 @@ TODO: bibtex citation for Kate's paper
 }
 
 @misc{Denouden2021,
-  author = {Denouden, T., Reshitnyk, L., Timmer, B.},
+  author = {Denouden, T., Timmer, B., Reshitnyk, L.},
   title = {GlintMaskGenerator},
   year = {2021},
   publisher = {GitHub},
@@ -197,4 +197,4 @@ TODO: bibtex citation for Kate's paper
 GlintMaskGenerator is released under a MIT license, as found in the [LICENSE](LICENSE) file.
 
 ---
-*Created by Taylor Denouden, Luba Reshitnyk (both Hakai Institute) and Brian Timmer (University of Victoria) 2021*
+*Created by Taylor Denouden (Hakai Institute), Brian Timmer (University of Victoria), and Luba Reshitnyk (Hakai Institute) 2021*
