@@ -170,16 +170,28 @@ See [DEVELOPMENT.md](DEVELOPMENT.md) for development and software maintenance in
 Research using these tools or code should cite the following resources
 
 TODO: bibtex citation for Kate's paper
+```bibtext
+@article{TODO2021
+    author = {},
+    title = {},
+    year = {2021},
+    publisher = {},
+    journal = {},
+    howpublished = {},
+    doi = {}
+}
+```
 
 ```bibtext
-@misc{Denouden2020,
-  author = {Denouden, T.},
+@misc{Denouden2021,
+  author = {Denouden, T., Reshitnyk, L., Timmer, B.},
   title = {GlintMaskGenerator},
-  year = {2020},
+  year = {2021},
   publisher = {GitHub},
   journal = {GitHub repository},
   howpublished = {\url{https://github.com/HakaiInstitute/GlintMaskGenerator}},
-  commit = {8cb19e55f128da86bf0dbd312bc360ac89fe71c3}
+  commit = {8cb19e55f128da86bf0dbd312bc360ac89fe71c3},
+  doi = {TODO}
 }
 ```
 
@@ -187,4 +199,4 @@ TODO: bibtex citation for Kate's paper
 GlintMaskGenerator is released under a MIT license, as found in the [LICENSE](LICENSE) file.
 
 ---
-*Created by Taylor Denouden @ Hakai Institute 2020*
+*Created by Taylor Denouden, Luba Reshitnyk (both Hakai Institute) and Brian Timmer (University of Victoria) 2021*
