@@ -180,9 +180,7 @@ TODO: bibtex citation for Kate's paper
     howpublished = {},
     doi = {}
 }
-```
 
-```bibtext
 @misc{Denouden2021,
   author = {Denouden, T., Reshitnyk, L., Timmer, B.},
   title = {GlintMaskGenerator},
