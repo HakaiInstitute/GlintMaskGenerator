@@ -157,10 +157,6 @@ masker.process(max_workers=5, callback=print, err_callback=print)
 
 This software is under active development. Bugs and feature requests can be filed on the [GitHub repository issues page](https://github.com/HakaiInstitute/glint-mask-tools/issues).
 
-## Development
-
-See [DEVELOPMENT.md](DEVELOPMENT.md) for development and software maintenance instructions.
-
 ## Citation
 
 Research using these tools or code should cite the following resources
@@ -185,6 +181,10 @@ Research using these tools or code should cite the following resources
 	commit       = {8cb19e55f128da86bf0dbd312bc360ac89fe71c3}
 }
 ```
+
+## Development
+
+See [DEVELOPMENT.md](DEVELOPMENT.md) for development and software maintenance instructions.
 
 ## License
 GlintMaskGenerator is released under a MIT license, as found in the [LICENSE](LICENSE) file.
