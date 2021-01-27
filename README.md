@@ -153,9 +153,9 @@ masker.process(max_workers=5, callback=print, err_callback=print)
     - For example, if a mask is generated using a threshold on the blue band image, identical masks are saved for sibling red, green, blue, nir, and red_edge bands as well.
     - If thresholds are passed for multiple bands, these mask outputs combined with a union operator before being saved for all the sibling bands associated with that capture event.
 
-## Bugs
+## Bugs and Feature Requests
 
-This software is under active development. Bugs and feature requests can be filed on the [GitHub repository issues page](https://github.com/HakaiInstitute/glint-mask-tools/issues).
+This software is under active development. Bugs and feature requests can be filed using issues page located [here](https://github.com/HakaiInstitute/glint-mask-tools/issues).
 
 ## Citation
 
