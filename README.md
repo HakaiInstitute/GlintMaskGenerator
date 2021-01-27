@@ -153,10 +153,6 @@ masker.process(max_workers=5, callback=print, err_callback=print)
     - For example, if a mask is generated using a threshold on the blue band image, identical masks are saved for sibling red, green, blue, nir, and red_edge bands as well.
     - If thresholds are passed for multiple bands, these mask outputs combined with a union operator before being saved for all the sibling bands associated with that capture event.
 
-## History
-
-TODO: Reference Kate and Toms work and give a brief history of the tool and it's development
-
 ## Bugs
 
 This software is under active development. Bugs and feature requests can be filed on the [GitHub repository issues page](https://github.com/HakaiInstitute/glint-mask-tools/issues).
@@ -169,32 +165,26 @@ See [DEVELOPMENT.md](DEVELOPMENT.md) for development and software maintenance in
 
 Research using these tools or code should cite the following resources
 
-TODO: bibtex citation for Kate's paper
 ```bibtext
-@article{TODO2021
-    author = {},
-    title = {},
-    year = {2021},
-    publisher = {},
-    journal = {},
-    howpublished = {},
-    doi = {}
+@article{Cavanaugh2021,
+	title        = {An Automated Method for Mapping Giant Kelp Canopy Dynamics from UAV},
+	author       = {Cavanaugh, K.C. and Cavanaugh, K.C. and Bell, T.W. and Hockridge, E.G.},
+	year         = 2021,
+	journal      = {Front. Environ. Sci.},
+	volume       = {8:587354},
+	doi          = {10.3389/fenvs.2020.587354}
 }
-
 @misc{Denouden2021,
-  author = {Denouden, T., Timmer, B., Reshitnyk, L.},
-  title = {GlintMaskGenerator},
-  year = {2021},
-  publisher = {GitHub},
-  journal = {GitHub repository},
-  howpublished = {\url{https://github.com/HakaiInstitute/GlintMaskGenerator}},
-  commit = {8cb19e55f128da86bf0dbd312bc360ac89fe71c3},
-  doi = {10.21966/3cpa-2e10}
+	title        = {GlintMaskGenerator},
+	author       = {Denouden, T. and Timmer, B. and Reshitnyk, L.},
+	year         = 2021,
+	journal      = {GitHub repository},
+	publisher    = {GitHub},
+	doi          = {10.21966/3cpa-2e10},
+	howpublished = {\url{https://github.com/HakaiInstitute/GlintMaskGenerator}},
+	commit       = {8cb19e55f128da86bf0dbd312bc360ac89fe71c3}
 }
 ```
 
 ## License
 GlintMaskGenerator is released under a MIT license, as found in the [LICENSE](LICENSE) file.
-
----
-*Created by Taylor Denouden (Hakai Institute), Brian Timmer (University of Victoria), and Luba Reshitnyk (Hakai Institute) 2021*
