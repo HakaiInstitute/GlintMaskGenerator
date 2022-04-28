@@ -3,7 +3,7 @@ message: "If you use this software, please cite it as below."
 authors:
 - family-names: "Denouden"
   given-names: "Taylor"
-  orcid: " https://orcid.org/0000-0003-0457-1022
+  orcid: https://orcid.org/0000-0003-0457-1022
 - family-names: "Timmer"
   given-names: "Brian"
 - family-names: "Reshitnyk"
