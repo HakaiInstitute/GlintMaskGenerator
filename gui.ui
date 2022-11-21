@@ -74,6 +74,32 @@
          </property>
         </widget>
        </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_3">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Image directory</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_4">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Output directory</string>
+         </property>
+        </widget>
+       </item>
        <item row="3" column="1">
         <widget class="DirectoryPath" name="mask_dir_w" native="true">
          <property name="sizePolicy">
@@ -91,89 +117,6 @@
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="label_4">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>Output directory</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_3">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>Image directory</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="1">
-        <widget class="QFrame" name="frame_4">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_13">
-          <item>
-           <widget class="QRadioButton" name="method_threshold_radio">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Band threshold</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="method_ratio_radio">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Intensity ratio</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item row="4" column="0">
-        <widget class="QLabel" name="label">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>Mask method</string>
          </property>
         </widget>
        </item>
@@ -470,8 +413,6 @@
   <tabstop>img_type_rgb_radio</tabstop>
   <tabstop>img_type_p4ms_radio</tabstop>
   <tabstop>img_type_micasense_radio</tabstop>
-  <tabstop>method_threshold_radio</tabstop>
-  <tabstop>method_ratio_radio</tabstop>
   <tabstop>preview_btn</tabstop>
   <tabstop>run_btn</tabstop>
  </tabstops>
@@ -506,38 +447,6 @@
     <hint type="destinationlabel">
      <x>806</x>
      <y>614</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>method_threshold_radio</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>update_method_params()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>452</x>
-     <y>144</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>182</x>
-     <y>224</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>method_ratio_radio</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>update_method_params()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>974</x>
-     <y>144</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>671</x>
-     <y>225</y>
     </hint>
    </hints>
   </connection>
