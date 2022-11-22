@@ -9,6 +9,7 @@ from os import path
 from typing import List, Sequence
 
 from PyQt5 import QtWidgets, uic
+from PyQt5.QtCore import QThread, pyqtSignal
 from loguru import logger
 
 from core.maskers import Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, RGBThresholdMasker
@@ -82,6 +83,8 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         self.err_msg = ErrorMessageBox(self)
         self.info_msg = InfoMessageBox(self)
 
+        self.worker_thread = None
+
     def enable_available_thresholds(self) -> None:
         self.blue_thresh_w.setEnabled(BLUE in self.band_order)
         self.green_thresh_w.setEnabled(GREEN in self.band_order)
@@ -112,6 +115,10 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         return max(self.max_workers_spinbox.value(), 0)
 
     @property
+    def mask_method(self) -> str:
+        return METHOD_RATIO
+
+    @property
     def band_order_ints(self) -> Sequence[int]:
         return [{BLUE: 0, GREEN: 1, RED: 2, REDEDGE: 3, NIR: 4}[k] for k in self.band_order]
 
@@ -138,21 +145,14 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         ]
         return [thresholds[i] for i in self.band_order_ints]
 
-    def create_masker(self) -> Masker:
+    def get_masker(self) -> 'Masker':
         """Returns an instance of the appropriate glint mask generator given selected options."""
-        threshold_params = dict(
-            img_dir=self.img_dir_w.value,
-            mask_dir=self.mask_dir_w.value,
-            thresholds=self.threshold_values,
-            pixel_buffer=self.pixel_buffer_w.value
-        )
-
         if self.img_type == IMG_TYPE_RGB or self.img_type == IMG_TYPE_ACO:
-            return RGBThresholdMasker(**threshold_params)
+            return RGBThresholdMasker
         elif self.img_type == IMG_TYPE_P4MS:
-            return P4MSThresholdMasker(**threshold_params)
+            return P4MSThresholdMasker
         elif self.img_type == IMG_TYPE_MICASENSE_REDEDGE:
-            return MicasenseRedEdgeThresholdMasker(**threshold_params)
+            return MicasenseRedEdgeThresholdMasker
         else:
             raise ValueError(f"No masker available for img type {self.img_type}")
 
@@ -172,7 +172,7 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
     def progress_maximum(self, v):
         self.progress_bar.setMaximum(v)
 
-    def _inc_progress(self, _):
+    def _inc_progress(self, *_):
         self.progress_val += 1
 
         if self.progress_val == self.progress_maximum:
@@ -186,16 +186,48 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
     def preview_btn_clicked(self) -> None:
         raise NotImplemented
 
-    @logger.catch
-    def run_btn_clicked(self) -> None:
-        masker = self.create_masker()
-        self.progress_val = 0
-        self.progress_maximum = len(masker)
-
-        if len(masker) < 1:
+    def setup_progress(self, len: int):
+        if len < 1:
             self.err_msg.show_message("No files found in the given input directory.")
 
-        masker(max_workers=self.max_workers, callback=self._inc_progress, err_callback=self._err_callback)
+        self.progress_val = 0
+        self.progress_maximum = len
+
+    @logger.catch
+    def run_btn_clicked(self) -> None:
+        masker = self.get_masker()
+
+        # Create a worker thread
+        self.worker_thread = WorkerThread(
+            masker,
+            max_workers=self.max_workers,
+            img_dir=self.img_dir_w.value,
+            mask_dir=self.mask_dir_w.value,
+            thresholds=self.threshold_values,
+            pixel_buffer=self.pixel_buffer_w.value)
+        self.worker_thread.progress.connect(self._inc_progress)
+        self.worker_thread.error.connect(self._err_callback)
+        self.worker_thread.len.connect(self.setup_progress)
+        self.worker_thread.start()
+
+
+class WorkerThread(QThread):
+    len = pyqtSignal(int)
+    error = pyqtSignal(str, str)
+    progress = pyqtSignal(str)
+
+    def __init__(self, masker, max_workers, *args, **kwargs):
+        super().__init__()
+        self.masker_cls = masker
+        self.max_workers = max_workers
+        self.args = args
+        self.kwargs = kwargs
+
+    def run(self):
+        masker = self.masker_cls(*self.args, **self.kwargs)
+        self.len.emit(len(masker))
+
+        masker(max_workers=self.max_workers, callback=self.progress.emit, err_callback=self.error.emit)
 
 
 if __name__ == '__main__':
