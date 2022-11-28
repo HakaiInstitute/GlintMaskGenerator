@@ -185,27 +185,3 @@ class MicasenseRedEdgeThresholdMasker(PixelBufferMixin, Masker):
         super().__init__(algorithm=ThresholdAlgorithm(thresholds),
                          image_loader=MicasenseRedEdgeLoader(img_dir, mask_dir),
                          pixel_buffer=pixel_buffer)
-
-
-class RGBIntensityRatioMasker(PixelBufferMixin, Masker):
-    def __init__(self, img_dir: str, mask_dir: str,
-                 percent_diffuse: float = 0.95, threshold: float = 0.99, pixel_buffer: int = 0):
-        super().__init__(algorithm=IntensityRatioAlgorithm(percent_diffuse, threshold),
-                         image_loader=RGB8BitLoader(img_dir, mask_dir),
-                         pixel_buffer=pixel_buffer)
-
-
-class P4MSIntensityRatioMasker(PixelBufferMixin, Masker):
-    def __init__(self, img_dir: str, mask_dir: str,
-                 percent_diffuse: float = 0.95, threshold: float = 0.99, pixel_buffer: int = 0):
-        super().__init__(algorithm=IntensityRatioAlgorithm(percent_diffuse, threshold),
-                         image_loader=P4MSLoader(img_dir, mask_dir),
-                         pixel_buffer=pixel_buffer)
-
-
-class MicasenseRedEdgeIntensityRatioMasker(PixelBufferMixin, Masker):
-    def __init__(self, img_dir: str, mask_dir: str,
-                 percent_diffuse: float = 0.95, threshold: float = 0.99, pixel_buffer: int = 0):
-        super().__init__(algorithm=IntensityRatioAlgorithm(percent_diffuse, threshold),
-                         image_loader=MicasenseRedEdgeLoader(img_dir, mask_dir),
-                         pixel_buffer=pixel_buffer)
