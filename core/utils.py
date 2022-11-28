@@ -46,3 +46,10 @@ def list_images(img_dir) -> Iterable[str]:
     paths = Path(img_dir).glob("**/*")
     paths = filter(lambda p: p.is_file() and p.suffix.lower() in extensions, paths)
     return (str(p) for p in paths)
+
+
+def make_circular_kernel(size: int) -> np.ndarray:
+    """Create circular kernel"""
+    y, x = np.ogrid[-size:size + 1, -size:size + 1]
+    dist_m: np.ndarray = x ** 2 + y ** 2
+    return dist_m <= size ** 2

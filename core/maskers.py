@@ -6,21 +6,23 @@ Description:
 """
 import concurrent.futures
 import os
-from functools import cached_property
 from typing import Callable, List, Optional, Sequence, Union
 
 import numpy as np
 from PIL import Image
 from scipy.ndimage import convolve
 
-from .glint_algorithms import GlintAlgorithm, IntensityRatioAlgorithm, ThresholdAlgorithm
+from .glint_algorithms import GlintAlgorithm, ThresholdAlgorithm
 from .image_loaders import ImageLoader, MicasenseRedEdgeLoader, P4MSLoader, RGB8BitLoader
+from .utils import make_circular_kernel
 
 
 class Masker(object):
-    def __init__(self, algorithm: GlintAlgorithm, image_loader: ImageLoader):
+    def __init__(self, algorithm: GlintAlgorithm, image_loader: ImageLoader, pixel_buffer: int = 0):
         self.algorithm = algorithm
         self.image_loader = image_loader
+        self.pixel_buffer = pixel_buffer
+        self.buffer_kernel = make_circular_kernel(self.pixel_buffer)
 
     @staticmethod
     def save_mask(mask: np.ndarray, out_path: str):
@@ -39,7 +41,9 @@ class Masker(object):
     # noinspection PyMethodMayBeStatic
     def postprocess_mask(self, mask: np.ndarray) -> np.ndarray:
         """Method which can be overridden to do any postprocessing on the generated boolean numpy mask."""
-        return mask
+        if self.pixel_buffer <= 0:
+            return mask
+        return (convolve(mask, self.buffer_kernel, mode='constant', cval=0) > 0).astype(np.int)
 
     @staticmethod
     def to_metashape_mask(mask: np.ndarray):
@@ -145,25 +149,7 @@ class Masker(object):
             self.save_mask(mask, path)
 
 
-class PixelBufferMixin:
-    def __init__(self, *args, pixel_buffer: int = 0, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.pixel_buffer = pixel_buffer
-
-    @cached_property
-    def kernel(self) -> np.ndarray:
-        """Create circular kernel"""
-        y, x = np.ogrid[-self.pixel_buffer:self.pixel_buffer + 1, -self.pixel_buffer:self.pixel_buffer + 1]
-        dist_m: np.ndarray = x ** 2 + y ** 2
-        return dist_m <= self.pixel_buffer ** 2
-
-    def postprocess_mask(self, mask: np.ndarray) -> np.ndarray:
-        if self.pixel_buffer <= 0:
-            return mask
-        return (convolve(mask, self.kernel, mode='constant', cval=0) > 0).astype(np.int)
-
-
-class RGBThresholdMasker(PixelBufferMixin, Masker):
+class RGBThresholdMasker(Masker):
     def __init__(self, img_dir: str, mask_dir: str,
                  thresholds: Sequence[float] = (1, 1, 0.875), pixel_buffer: int = 0):
         super().__init__(algorithm=ThresholdAlgorithm(thresholds),
@@ -171,7 +157,7 @@ class RGBThresholdMasker(PixelBufferMixin, Masker):
                          pixel_buffer=pixel_buffer)
 
 
-class P4MSThresholdMasker(PixelBufferMixin, Masker):
+class P4MSThresholdMasker(Masker):
     def __init__(self, img_dir: str, mask_dir: str,
                  thresholds: Sequence[float] = (0.875, 1, 1, 1, 1), pixel_buffer: int = 0):
         super().__init__(algorithm=ThresholdAlgorithm(thresholds),
@@ -179,7 +165,7 @@ class P4MSThresholdMasker(PixelBufferMixin, Masker):
                          pixel_buffer=pixel_buffer)
 
 
-class MicasenseRedEdgeThresholdMasker(PixelBufferMixin, Masker):
+class MicasenseRedEdgeThresholdMasker(Masker):
     def __init__(self, img_dir: str, mask_dir: str,
                  thresholds: Sequence[float] = (0.875, 1, 1, 1, 1), pixel_buffer: int = 0):
         super().__init__(algorithm=ThresholdAlgorithm(thresholds),
