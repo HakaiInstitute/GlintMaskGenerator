@@ -32,9 +32,9 @@ class CLI(object):
 
     def process(self, masker: Masker):
         with tqdm(total=len(masker)) as progress:
-            return masker(max_workers=self.max_workers,
-                          callback=lambda _: progress.update(),
-                          err_callback=self._err_callback)
+            masker(max_workers=self.max_workers,
+                   callback=lambda _: progress.update(1),
+                   err_callback=self._err_callback)
 
     def rgb_threshold(self, img_dir: str, out_dir: str, thresholds: List[float] = (1, 1, 0.875),
                       pixel_buffer: int = 0) -> None:
