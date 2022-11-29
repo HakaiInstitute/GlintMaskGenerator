@@ -8,6 +8,7 @@ from os import path
 from typing import List, Sequence
 
 from PyQt5 import QtWidgets, uic
+from PyQt5.QtCore import QObject, QRunnable, QThreadPool, pyqtSignal, pyqtSlot
 from loguru import logger
 
 from core.maskers import CIRThresholdMasker, Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, RGBThresholdMasker
@@ -77,6 +78,10 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         # Message popup boxes
         self.err_msg = ErrorMessageBox(self)
         self.info_msg = InfoMessageBox(self)
+
+        # Run non-ui jobs in a separate thread
+        self.threadpool = QThreadPool()
+        print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
 
         # Connect signals/slots
         self.run_btn.released.connect(self.run_btn_clicked)
@@ -190,14 +195,47 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
 
     @logger.catch
     def run_btn_clicked(self) -> None:
+        self.run_btn.setEnabled(False)
+
         masker = self.create_masker()
         self.progress_val = 0
         self.progress_maximum = len(masker)
 
         if len(masker) < 1:
             self.err_msg.show_message("No files found in the given input directory.")
+            self.run_btn.setEnabled(True)
 
-        masker(max_workers=self.max_workers, callback=self._inc_progress, err_callback=self._err_callback)
+        worker = Worker(masker, max_workers=self.max_workers)
+        worker.signals.progress.connect(self._inc_progress)
+        worker.signals.error.connect(self._err_callback)
+        worker.signals.finished.connect(lambda: self.run_btn.setEnabled(True))
+
+        # Execute
+        self.threadpool.start(worker)
+
+
+class Signals(QObject):
+    finished = pyqtSignal()
+    error = pyqtSignal(str, object)
+    progress = pyqtSignal(int)
+
+
+class Worker(QRunnable):
+    def __init__(self, fn, *args, **kwargs):
+        super(Worker, self).__init__()
+        self.fn = fn
+        self.args = args
+        self.kwargs = kwargs
+        self.signals = Signals()
+
+        # Add callbacks to kwargs
+        self.kwargs['callback'] = self.signals.progress.emit
+        self.kwargs['err_callback'] = self.signals.error.emit
+
+    @pyqtSlot()
+    def run(self):
+        self.fn(*self.args, **self.kwargs)
+        self.signals.finished.emit()
 
 
 if __name__ == '__main__':
