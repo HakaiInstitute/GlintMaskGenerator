@@ -79,6 +79,14 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         self.err_msg = ErrorMessageBox(self)
         self.info_msg = InfoMessageBox(self)
 
+        # Connect signals/slots
+        self.run_btn.released.connect(self.run_btn_clicked)
+        self.reset_thresholds_btn.released.connect(self.reset_thresholds)
+        self.img_type_rgb_radio.clicked.connect(self.enable_available_thresholds)
+        self.img_type_cir_radio.clicked.connect(self.enable_available_thresholds)
+        self.img_type_p4ms_radio.clicked.connect(self.enable_available_thresholds)
+        self.img_type_micasense_radio.clicked.connect(self.enable_available_thresholds)
+
     def enable_available_thresholds(self) -> None:
         self.blue_thresh_w.setEnabled(BLUE in self.band_order)
         self.green_thresh_w.setEnabled(GREEN in self.band_order)
