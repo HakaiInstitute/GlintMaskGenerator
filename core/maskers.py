@@ -137,7 +137,7 @@ class RGBThresholdMasker(Masker):
 
 class CIRThresholdMasker(Masker):
     def __init__(self, img_dir: str, mask_dir: str,
-                 thresholds: Sequence[float] = (1, 1, 0.875), pixel_buffer: int = 0):
+                 thresholds: Sequence[float] = (1, 1, 0.875, 1), pixel_buffer: int = 0):
         super().__init__(algorithm=ThresholdAlgorithm(thresholds),
                          image_loader=CIRLoader(img_dir, mask_dir),
                          pixel_buffer=pixel_buffer)

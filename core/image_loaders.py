@@ -104,8 +104,8 @@ class CIRLoader(SingleFileImageLoader):
         if not isinstance(img_paths, str):
             raise RuntimeError("CIRLoader can only operate on images at a single path")
         else:
-            img_path = img_paths[0]
-            mask_path = self.get_mask_save_paths(img_paths)[0]
+            img_path = img_paths
+            mask_path = next(self.get_mask_save_paths(img_paths))
         with rasterio.open(img_path, 'r') as src:
             profile = src.profile
 
@@ -117,6 +117,7 @@ class CIRLoader(SingleFileImageLoader):
             with rasterio.open(mask_path, 'w', **profile) as dest:
                 for ji, window in src.block_windows(1):
                     img = src.read((1, 2, 3, 4), window=window)
+                    img = np.moveaxis(img, 0, 2)
                     img = self.preprocess_image(img)
                     mask = masker.algorithm(img)
                     mask = masker.postprocess_mask(mask)

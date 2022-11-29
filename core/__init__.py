@@ -5,7 +5,6 @@ Date: 2020-09-18
 Description: 
 """
 
-from .maskers import Masker, MicasenseRedEdgeThresholdMasker, \
-    P4MSThresholdMasker, RGBThresholdMasker
+from core.maskers import CIRThresholdMasker, Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, RGBThresholdMasker
 
-__all__ = ["Masker", "RGBThresholdMasker", "P4MSThresholdMasker", "MicasenseRedEdgeThresholdMasker"]
+__all__ = ["Masker", "RGBThresholdMasker", "P4MSThresholdMasker", "MicasenseRedEdgeThresholdMasker", "CIRThresholdMasker"]
