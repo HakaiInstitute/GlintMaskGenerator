@@ -2,7 +2,6 @@
 Created by: Taylor Denouden
 Organization: Hakai Institute
 Date: 2020-09-16
-Description: 
 """
 import sys
 from os import path

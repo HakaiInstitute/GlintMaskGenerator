@@ -2,7 +2,6 @@
 Created by: Taylor Denouden
 Organization: Hakai Institute
 Date: 2020-09-18
-Description: 
 """
 import os
 import re
@@ -70,7 +69,8 @@ class ImageLoader(ABC):
         mask_img = Image.fromarray(mask, mode='L')
         mask_img.save(str(out_path))
 
-    def mask_images(self, img_paths: Union[List[str], str], masker: "Masker"):
+    # noinspection PyUnresolvedReferences
+    def mask_images(self, img_paths: Union[List[str], str], masker: "Masker"):  # noqa: F821
         img = self.load_image(img_paths)
         img = self.preprocess_image(img)
         mask = masker.algorithm(img)
@@ -100,7 +100,7 @@ class RGBLoader(SingleFileImageLoader):
 class CIRLoader(SingleFileImageLoader):
     _bit_depth = 8
 
-    def mask_images(self, img_paths: Union[List[str], str], masker: 'Masker'):
+    def mask_images(self, img_paths: Union[List[str], str], masker: 'Masker'):  # noqa: F821
         if not isinstance(img_paths, str):
             raise RuntimeError("CIRLoader can only operate on images at a single path")
         else:
