@@ -9,11 +9,10 @@ import os
 from typing import Callable, List, Optional, Sequence, Union
 
 import numpy as np
-from PIL import Image
 from scipy.ndimage import convolve
 
 from .glint_algorithms import GlintAlgorithm, ThresholdAlgorithm
-from .image_loaders import ImageLoader, MicasenseRedEdgeLoader, P4MSLoader, RGB8BitLoader
+from .image_loaders import CIRLoader, ImageLoader, MicasenseRedEdgeLoader, P4MSLoader, RGBLoader
 from .utils import make_circular_kernel
 
 
@@ -23,20 +22,6 @@ class Masker(object):
         self.image_loader = image_loader
         self.pixel_buffer = pixel_buffer
         self.buffer_kernel = make_circular_kernel(self.pixel_buffer)
-
-    @staticmethod
-    def save_mask(mask: np.ndarray, out_path: str):
-        """Utility function to save a mask to the location out_path.
-
-                Parameters
-                ----------
-                mask
-                    2D image mask to save into the image format specified in the out_path.
-                out_path
-                    The path where the file should be saved, including img extension.
-                """
-        mask_img = Image.fromarray(mask, mode='L')
-        mask_img.save(str(out_path))
 
     # noinspection PyMethodMayBeStatic
     def postprocess_mask(self, mask: np.ndarray) -> np.ndarray:
@@ -82,9 +67,9 @@ class Masker(object):
     # noinspection SpellCheckingInspection
     def process_unthreaded(self, callback: Optional[Callable[[List[str]], None]] = None,
                            err_callback: Optional[Callable[[List[str], Exception], None]] = None) -> None:
-        for img, paths in zip(self.image_loader.images, self.image_loader.paths):
+        for paths in self.image_loader.paths:
             try:
-                self._process_one(img, paths)
+                self._process_one(paths)
                 if callback is not None:
                     callback(paths)
 
@@ -113,8 +98,8 @@ class Masker(object):
         """
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_to_paths = {
-                executor.submit(self._process_one, img, paths): paths
-                for img, paths in zip(self.image_loader.images, self.image_loader.paths)
+                executor.submit(self._process_one, paths): paths
+                for paths in self.image_loader.paths
             }
             for future in concurrent.futures.as_completed(future_to_paths):
                 paths = future_to_paths[future]
@@ -129,31 +114,32 @@ class Masker(object):
                     executor.shutdown(wait=False)
                     return
 
-    def _process_one(self, img: np.ndarray, paths: Union[List[str], str]) -> None:
+    def _process_one(self, paths: Union[List[str], str]) -> None:
         """Generates and saves a glint mask for the image located at img_path.
 
         Saves the generated mask to all path locations returned by self.get_mask_save_paths(img_path).
 
         Parameters
         ----------
-        img
-            Numpy array representing the image
         paths
             The file paths used to create the image. Can be single file path or list of path to multiple files
         """
-        mask = self.algorithm(img)
-        mask = self.postprocess_mask(mask)
-        mask = self.to_metashape_mask(mask)
-
-        for path in self.image_loader.get_mask_save_paths(paths):
-            self.save_mask(mask, path)
+        self.image_loader.mask_images(paths, self)
 
 
 class RGBThresholdMasker(Masker):
     def __init__(self, img_dir: str, mask_dir: str,
                  thresholds: Sequence[float] = (1, 1, 0.875), pixel_buffer: int = 0):
         super().__init__(algorithm=ThresholdAlgorithm(thresholds),
-                         image_loader=RGB8BitLoader(img_dir, mask_dir),
+                         image_loader=RGBLoader(img_dir, mask_dir),
+                         pixel_buffer=pixel_buffer)
+
+
+class CIRThresholdMasker(Masker):
+    def __init__(self, img_dir: str, mask_dir: str,
+                 thresholds: Sequence[float] = (1, 1, 0.875), pixel_buffer: int = 0):
+        super().__init__(algorithm=ThresholdAlgorithm(thresholds),
+                         image_loader=CIRLoader(img_dir, mask_dir),
                          pixel_buffer=pixel_buffer)
 
 

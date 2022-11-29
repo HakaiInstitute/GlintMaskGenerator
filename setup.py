@@ -7,7 +7,7 @@ setup(
     version=os.environ['VERSION'],
     packages=['glint_mask_tools'],
     package_dir={'glint_mask_tools': 'core'},
-    install_requires=['numpy', 'scipy', 'pillow'],
+    install_requires=['numpy', 'scipy', 'pillow', 'rasterio'],
     url='https://github.com/HakaiInstitute/glint-mask-tools',
     license='MIT',
     author='Taylor Denouden',
