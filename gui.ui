@@ -38,9 +38,9 @@
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="img_type_aco_radio">
+           <widget class="QRadioButton" name="img_type_cir_radio">
             <property name="text">
-             <string>ACO</string>
+             <string>CIR</string>
             </property>
            </widget>
           </item>
@@ -574,7 +574,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>img_type_aco_radio</sender>
+   <sender>img_type_cir_radio</sender>
    <signal>clicked()</signal>
    <receiver>MainWindow</receiver>
    <slot>enable_available_thresholds()</slot>

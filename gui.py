@@ -11,7 +11,7 @@ from typing import List, Sequence
 from PyQt5 import QtWidgets, uic
 from loguru import logger
 
-from core.maskers import Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, RGBThresholdMasker
+from core.maskers import CIRThresholdMasker, Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, RGBThresholdMasker
 
 # String constants reduce occurrence of silent errors due to typos when doing comparisons
 BLUE = "BLUE"
@@ -24,7 +24,7 @@ METHOD_THRESHOLD = "METHOD_THRESHOLD"
 METHOD_RATIO = "METHOD_RATIO"
 
 IMG_TYPE_RGB = "IMG_TYPE_RGB"
-IMG_TYPE_ACO = "IMG_TYPE_ACO"
+IMG_TYPE_CIR = "IMG_TYPE_CIR"
 IMG_TYPE_P4MS = "IMG_TYPE_P4MS"
 IMG_TYPE_MICASENSE_REDEDGE = "IMG_TYPE_MICASENSE_REDEDGE"
 
@@ -108,8 +108,8 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
 
     @property
     def img_type(self) -> str:
-        if self.img_type_aco_radio.isChecked():
-            return IMG_TYPE_ACO
+        if self.img_type_cir_radio.isChecked():
+            return IMG_TYPE_CIR
         elif self.img_type_p4ms_radio.isChecked():
             return IMG_TYPE_P4MS
         elif self.img_type_micasense_radio.isChecked():
@@ -136,7 +136,7 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
     def band_order(self) -> Sequence[str]:
         if self.img_type == IMG_TYPE_RGB:
             return RED, GREEN, BLUE
-        elif self.img_type == IMG_TYPE_ACO:
+        elif self.img_type == IMG_TYPE_CIR:
             return RED, GREEN, BLUE, NIR
         elif self.img_type == IMG_TYPE_P4MS:
             return BLUE, GREEN, RED, REDEDGE, NIR
@@ -165,8 +165,10 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
                 pixel_buffer=self.pixel_buffer_w.value
             )
 
-            if self.img_type == IMG_TYPE_RGB or self.img_type == IMG_TYPE_ACO:
+            if self.img_type == IMG_TYPE_RGB:
                 return RGBThresholdMasker(**threshold_params)
+            elif self.img_type == IMG_TYPE_CIR:
+                return CIRThresholdMasker(**threshold_params)
             elif self.img_type == IMG_TYPE_P4MS:
                 return P4MSThresholdMasker(**threshold_params)
             elif self.img_type == IMG_TYPE_MICASENSE_REDEDGE:
