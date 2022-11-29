@@ -423,16 +423,6 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="preview_btn">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>Preview</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QPushButton" name="run_btn">
          <property name="text">
           <string>Run</string>
@@ -472,7 +462,6 @@
   <tabstop>img_type_micasense_radio</tabstop>
   <tabstop>method_threshold_radio</tabstop>
   <tabstop>method_ratio_radio</tabstop>
-  <tabstop>preview_btn</tabstop>
   <tabstop>run_btn</tabstop>
  </tabstops>
  <resources/>
@@ -489,22 +478,6 @@
     </hint>
     <hint type="destinationlabel">
      <x>954</x>
-     <y>614</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>preview_btn</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>preview_btn_clicked()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>898</x>
-     <y>574</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>806</x>
      <y>614</y>
     </hint>
    </hints>

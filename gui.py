@@ -209,10 +209,6 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         self.err_msg.show_message(msg)
 
     @logger.catch
-    def preview_btn_clicked(self) -> None:
-        raise NotImplemented
-
-    @logger.catch
     def run_btn_clicked(self) -> None:
         masker = self.create_masker()
         self.progress_val = 0
