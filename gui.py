@@ -2,7 +2,6 @@
 Created by: Taylor Denouden
 Organization: Hakai Institute
 Date: 2020-09-16
-Description: 
 """
 import sys
 from os import path
@@ -11,7 +10,7 @@ from typing import List, Sequence
 from PyQt5 import QtWidgets, uic
 from loguru import logger
 
-from core.maskers import Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, RGBThresholdMasker
+from core.maskers import CIRThresholdMasker, Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, RGBThresholdMasker
 
 # String constants reduce occurrence of silent errors due to typos when doing comparisons
 BLUE = "BLUE"
@@ -20,11 +19,8 @@ RED = "RED"
 REDEDGE = "REDEDGE"
 NIR = "NIR"
 
-METHOD_THRESHOLD = "METHOD_THRESHOLD"
-METHOD_RATIO = "METHOD_RATIO"
-
 IMG_TYPE_RGB = "IMG_TYPE_RGB"
-IMG_TYPE_ACO = "IMG_TYPE_ACO"
+IMG_TYPE_CIR = "IMG_TYPE_CIR"
 IMG_TYPE_P4MS = "IMG_TYPE_P4MS"
 IMG_TYPE_MICASENSE_REDEDGE = "IMG_TYPE_MICASENSE_REDEDGE"
 
@@ -73,9 +69,6 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         self.pixel_buffer_w.value = DEFAULT_PIXEL_BUFFER
         self.max_workers_spinbox.setValue(DEFAULT_MAX_WORKERS)
 
-        # Select the correct set of method parameters in the UI
-        self.update_method_params()
-
         # Enable/disable threshold controls based on imagery type
         self.enable_available_thresholds()
 
@@ -84,6 +77,14 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         # Message popup boxes
         self.err_msg = ErrorMessageBox(self)
         self.info_msg = InfoMessageBox(self)
+
+        # Connect signals/slots
+        self.run_btn.released.connect(self.run_btn_clicked)
+        self.reset_thresholds_btn.released.connect(self.reset_thresholds)
+        self.img_type_rgb_radio.clicked.connect(self.enable_available_thresholds)
+        self.img_type_cir_radio.clicked.connect(self.enable_available_thresholds)
+        self.img_type_p4ms_radio.clicked.connect(self.enable_available_thresholds)
+        self.img_type_micasense_radio.clicked.connect(self.enable_available_thresholds)
 
     def enable_available_thresholds(self) -> None:
         self.blue_thresh_w.setEnabled(BLUE in self.band_order)
@@ -99,17 +100,10 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         self.rededge_thresh_w.value = DEFAULT_REDEDGE_THRESH
         self.nir_thresh_w.value = DEFAULT_NIR_THRESH
 
-    def update_method_params(self) -> None:
-        if self.mask_method == METHOD_RATIO:
-            # TODO: Finish implementing ratio method params
-            self.parameters_stack.setCurrentIndex(1)
-        else:  # self.mask_method == METHOD_THRESHOLD:
-            self.parameters_stack.setCurrentIndex(0)
-
     @property
     def img_type(self) -> str:
-        if self.img_type_aco_radio.isChecked():
-            return IMG_TYPE_ACO
+        if self.img_type_cir_radio.isChecked():
+            return IMG_TYPE_CIR
         elif self.img_type_p4ms_radio.isChecked():
             return IMG_TYPE_P4MS
         elif self.img_type_micasense_radio.isChecked():
@@ -122,13 +116,6 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         return max(self.max_workers_spinbox.value(), 0)
 
     @property
-    def mask_method(self) -> str:
-        if self.method_ratio_radio.isChecked():
-            return METHOD_RATIO
-        else:  # self.method_threshold_radio.isChecked():
-            return METHOD_THRESHOLD
-
-    @property
     def band_order_ints(self) -> Sequence[int]:
         return [{BLUE: 0, GREEN: 1, RED: 2, REDEDGE: 3, NIR: 4}[k] for k in self.band_order]
 
@@ -136,7 +123,7 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
     def band_order(self) -> Sequence[str]:
         if self.img_type == IMG_TYPE_RGB:
             return RED, GREEN, BLUE
-        elif self.img_type == IMG_TYPE_ACO:
+        elif self.img_type == IMG_TYPE_CIR:
             return RED, GREEN, BLUE, NIR
         elif self.img_type == IMG_TYPE_P4MS:
             return BLUE, GREEN, RED, REDEDGE, NIR
@@ -157,28 +144,23 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
 
     def create_masker(self) -> Masker:
         """Returns an instance of the appropriate glint mask generator given selected options."""
-        if self.mask_method == METHOD_THRESHOLD:
-            threshold_params = dict(
-                img_dir=self.img_dir_w.value,
-                mask_dir=self.mask_dir_w.value,
-                thresholds=self.threshold_values,
-                pixel_buffer=self.pixel_buffer_w.value
-            )
+        threshold_params = dict(
+            img_dir=self.img_dir_w.value,
+            mask_dir=self.mask_dir_w.value,
+            thresholds=self.threshold_values,
+            pixel_buffer=self.pixel_buffer_w.value
+        )
 
-            if self.img_type == IMG_TYPE_RGB or self.img_type == IMG_TYPE_ACO:
-                return RGBThresholdMasker(**threshold_params)
-            elif self.img_type == IMG_TYPE_P4MS:
-                return P4MSThresholdMasker(**threshold_params)
-            elif self.img_type == IMG_TYPE_MICASENSE_REDEDGE:
-                return MicasenseRedEdgeThresholdMasker(**threshold_params)
-            else:
-                raise ValueError(f"No masker available for img type {self.img_type}")
-
-        elif self.mask_method == METHOD_RATIO:
-            raise NotImplemented
-
+        if self.img_type == IMG_TYPE_RGB:
+            return RGBThresholdMasker(**threshold_params)
+        elif self.img_type == IMG_TYPE_CIR:
+            return CIRThresholdMasker(**threshold_params)
+        elif self.img_type == IMG_TYPE_P4MS:
+            return P4MSThresholdMasker(**threshold_params)
+        elif self.img_type == IMG_TYPE_MICASENSE_REDEDGE:
+            return MicasenseRedEdgeThresholdMasker(**threshold_params)
         else:
-            raise ValueError(f"No mask generator available for {self.mask_method}")
+            raise ValueError(f"No masker available for img type {self.img_type}")
 
     @property
     def progress_val(self):
@@ -205,10 +187,6 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
     def _err_callback(self, img_path, err):
         msg = '%r generated an exception: %s' % (img_path, err)
         self.err_msg.show_message(msg)
-
-    @logger.catch
-    def preview_btn_clicked(self) -> None:
-        raise NotImplemented
 
     @logger.catch
     def run_btn_clicked(self) -> None:
