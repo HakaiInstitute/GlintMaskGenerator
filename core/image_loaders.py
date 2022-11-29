@@ -116,7 +116,7 @@ class CIRLoader(SingleFileImageLoader):
 
             with rasterio.open(mask_path, 'w', **profile) as dest:
                 for ji, window in src.block_windows(1):
-                    img = src.read(1, window=window)
+                    img = src.read((1, 2, 3, 4), window=window)
                     img = self.preprocess_image(img)
                     mask = masker.algorithm(img)
                     mask = masker.postprocess_mask(mask)
