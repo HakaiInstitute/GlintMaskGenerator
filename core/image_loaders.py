@@ -108,11 +108,7 @@ class CIRLoader(SingleFileImageLoader):
             mask_path = next(self.get_mask_save_paths(img_paths))
         with rasterio.open(img_path, 'r') as src:
             profile = src.profile
-
-            profile.update(
-                dtype=rasterio.uint8,
-                count=1,
-                compress='lzw')
+            profile.update(dtype=rasterio.uint8, count=1, compress='lzw')
 
             with rasterio.open(mask_path, 'w', **profile) as dest:
                 for ji, window in src.block_windows(1):
