@@ -7,7 +7,7 @@ Date: 2020-09-17
 import sys
 from os import path
 
-from PyQt5 import QtWidgets, uic
+from PyQt6 import QtWidgets, uic
 
 bundle_dir = getattr(sys, '_MEIPASS', path.abspath(path.dirname(path.dirname(__file__))))
 UI_PATH = path.abspath(path.join(bundle_dir, 'resources/threshold_ctrl.ui'))

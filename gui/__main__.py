@@ -8,8 +8,8 @@ import sys
 from os import path
 from typing import List, Sequence
 
-from PyQt5 import QtWidgets, uic
-from PyQt5.QtCore import QObject, QRunnable, QThreadPool, pyqtSignal, pyqtSlot
+from PyQt6 import QtWidgets, uic
+from PyQt6.QtCore import QObject, QRunnable, QThreadPool, pyqtSignal, pyqtSlot
 from loguru import logger
 
 from glint_mask_generator import CIRThresholdMasker, Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, RGBThresholdMasker
@@ -47,17 +47,17 @@ class MessageBox(QtWidgets.QMessageBox):
 
     def show_message(self, message):
         self.setText(message)
-        self.exec_()
+        self.exec()
 
 
 class InfoMessageBox(MessageBox):
     def __init__(self, parent):
-        super().__init__(parent, "Info", QtWidgets.QMessageBox.Information)
+        super().__init__(parent, "Info", QtWidgets.QMessageBox.Icon.Information)
 
 
 class ErrorMessageBox(MessageBox):
     def __init__(self, parent):
-        super().__init__(parent, "Error", QtWidgets.QMessageBox.Critical)
+        super().__init__(parent, "Error", QtWidgets.QMessageBox.Icon.Critical)
 
 
 class GlintMaskGenerator(QtWidgets.QMainWindow):
@@ -249,4 +249,4 @@ class Worker(QRunnable):
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     main_window = GlintMaskGenerator()
-    app.exec_()
+    app.exec()

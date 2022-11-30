@@ -6,8 +6,8 @@ Date: 2020-09-17
 import sys
 from os import path
 
-from PyQt5 import QtWidgets, uic
-from PyQt5.QtWidgets import QFileDialog
+from PyQt6 import QtWidgets, uic
+from PyQt6.QtWidgets import QFileDialog
 
 bundle_dir = getattr(sys, '_MEIPASS', path.abspath(path.dirname(path.dirname(__file__))))
 UI_PATH = path.abspath(path.join(bundle_dir, 'resources/directory_path.ui'))
