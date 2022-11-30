@@ -3,6 +3,7 @@ Created by: Taylor Denouden
 Organization: Hakai Institute
 Date: 2020-09-16
 """
+import os
 import sys
 from os import path
 from typing import List, Sequence
@@ -83,6 +84,9 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         self.threadpool = QThreadPool()
         print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
 
+        # Set max workers to good default
+        self.max_workers = os.cpu_count()
+
         # Connect signals/slots
         self.run_btn.released.connect(self.run_btn_clicked)
         self.reset_thresholds_btn.released.connect(self.reset_thresholds)
@@ -119,6 +123,10 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
     @property
     def max_workers(self) -> int:
         return max(self.max_workers_spinbox.value(), 0)
+
+    @max_workers.setter
+    def max_workers(self, v):
+        self.max_workers_spinbox.setValue(v)
 
     @property
     def band_order_ints(self) -> Sequence[int]:

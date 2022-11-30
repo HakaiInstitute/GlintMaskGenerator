@@ -77,7 +77,7 @@ class Masker(object):
                     err_callback(paths, exc)
                 return
 
-    def process(self, max_workers: int = os.cpu_count() * 5, callback: Optional[Callable[[List[str]], None]] = None,
+    def process(self, max_workers: int = os.cpu_count(), callback: Optional[Callable[[List[str]], None]] = None,
                 err_callback: Optional[Callable[[List[str], Exception], None]] = None) -> None:
         """Compute all glint masks.
 
