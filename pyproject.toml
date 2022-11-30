@@ -17,7 +17,7 @@ glint-mask = 'glint_mask_tools.cli:main'
 python = ">=3.8.1,<3.10"
 numpy = "~=1.23.5"
 fire = "~=0.4.0"
-Pillow = "~=8.3.1"
+Pillow = "~=9.3.0"
 scipy = "~=1.9.3"
 tqdm = "~=4.64.1"
 PyQt5 = "~=5.12.3"
