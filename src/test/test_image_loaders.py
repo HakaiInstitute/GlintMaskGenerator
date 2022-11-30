@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from src.glint_mask_tools import P4MSLoader, MicasenseRedEdgeLoader
+from src.glint_mask_tools.image_loaders import P4MSLoader, MicasenseRedEdgeLoader
 
 IMG_CONTENT = Image.fromarray(np.ones((32, 32, 3)).astype(np.uint8) * 255)
 
