@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Iterable, List, Union
 
 import numpy as np
-import rasterio
 from PIL import Image
 
 from .utils import list_images, normalize_img
@@ -98,26 +97,63 @@ class RGBLoader(SingleFileImageLoader):
 
 class CIRLoader(SingleFileImageLoader):
     _bit_depth = 8
+    _crop_size = 256
 
     def apply_masker(self, img_paths: Union[List[str], str], masker: 'Masker'):  # noqa: F821
+        """ Compute the image mask by moving a window over the input.
+            These CIR images are too large to be read into memory simultaneously so this image masking routine is special.
+
+            This is the setup in the following logic:
+            The inner square is the region to be written to the output.
+            The outer square is a padding section used to ensure the pixel buffers are computed properly.
+            x1,y1
+               ,-----------------,
+               |  x,y            |
+               |   ,--------,    |
+               |   |        |    |
+               |   |        |    |
+               |   |________|    |
+               |          xc,yc  |
+               |_________________|
+                               x2,y2
+        """
         if not isinstance(img_paths, str):
             raise RuntimeError("CIRLoader can only operate on images at a single path")
         else:
             img_path = img_paths
             mask_path = next(self.get_mask_save_paths(img_paths))
-        with rasterio.open(img_path, 'r') as src:
-            profile = src.profile
-            profile.update(dtype=rasterio.uint8, count=1, compress='lzw')
 
-            with rasterio.open(mask_path, 'w', **profile) as dest:
-                for ji, window in src.block_windows(1):
-                    img = src.read((1, 2, 3, 4), window=window)
-                    img = np.moveaxis(img, 0, 2)
-                    img = self.preprocess_image(img)
-                    mask = masker.algorithm(img)
-                    mask = masker.postprocess_mask(mask)
-                    mask = masker.to_metashape_mask(mask)
-                    dest.write(mask, window=window, indexes=1)
+        with Image.open(img_path, 'r') as src:
+            height = src.height
+            width = src.width
+
+            pad = masker.pixel_buffer
+
+            # Make an all black image to store the data
+            with Image.new('L', (width, height)) as dest:
+                for y in range(0, height, self._crop_size):
+                    for x in range(0, width, self._crop_size):
+                        xc = min(x + self._crop_size, width)
+                        yc = min(y + self._crop_size, height)
+
+                        x0 = max(x - pad, 0)
+                        x1 = min(xc + pad, width)
+                        y0 = max(y - pad, 0)
+                        y1 = min(yc + pad, height)
+
+                        img = np.array(src.crop((x0, y0, x1, y1)))
+                        img = self.preprocess_image(img)
+                        mask = masker.algorithm(img)
+                        mask = masker.postprocess_mask(mask)
+                        mask = masker.to_metashape_mask(mask)
+
+                        # Remove padding
+                        mask = mask[y - y0:, x - x0:]
+                        mask = mask[:self._crop_size + pad - (y1 - yc), :self._crop_size + pad - (x1 - xc)]
+
+                        # Write the mask section
+                        dest.paste(Image.fromarray(mask), (x, y))
+                dest.save(mask_path)
 
 
 class MultiFileImageLoader(ImageLoader, metaclass=ABCMeta):
