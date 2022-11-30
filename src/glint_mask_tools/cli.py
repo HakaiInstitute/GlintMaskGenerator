@@ -61,7 +61,7 @@ class CLI(object):
 
     def cir_threshold(self, img_dir: str, out_dir: str, thresholds: List[float] = (1, 1, 0.875, 1),
                       pixel_buffer: int = 0) -> None:
-        """Generate masks for glint regions in ACO imagery using Tom Bell's binning algorithm.
+        """Generate masks for glint regions in 4 Band CIR imagery using Tom Bell's binning algorithm.
 
         Parameters
         ----------
