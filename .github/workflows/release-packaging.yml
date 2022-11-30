@@ -1,0 +1,146 @@
+name: Create Release
+
+on:
+  push:
+    branches-ignore:
+      - '**'
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+rc[0-9]+'
+jobs:
+  build-binaries:
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    strategy:
+      matrix:
+        os: [ windows-latest, ubuntu-latest ]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+
+      - name: Setup Poetry
+        uses: abatilo/actions-poetry@v2.0.0
+        with:
+          poetry-version: 1.2.2
+
+      - name: Install dependencies
+        run: |
+          poetry update
+          poetry run pip install -U pip    
+          poetry run pip install --upgrade setuptools
+
+      - name: Install Windows specific dependencies
+        if: ${{ runner.os == 'Windows' }}
+        run: |
+          poetry run pip install -U extern/GDAL-3.4.2-cp39-cp39-win_amd64.whl
+          poetry run pip install -U extern/rasterio-1.2.10-cp39-cp39-win_amd64.whl
+
+      - name: Build Windows GUI Executable
+        if: ${{ runner.os == 'Windows' }}
+        run: |
+          poetry run pyinstaller ^
+            --onefile ^
+            --windowed ^
+            --icon='src\resources\gmt.ico' ^
+            --add-data='src\resources\gmt.ico;resources' ^
+            --additional-hooks-dir=hooks ^
+            --add-data="src\resources\*.ui;resources" ^
+            --hidden-import="src.widgets.buffer_ctrl" ^
+            --hidden-import="src.widgets.threshold_ctrl" ^
+            --hidden-import="src.widgets.directory_path" ^
+            src/gui.py
+
+      - name: Build Linux GUI Executable
+        if: ${{ runner.os == 'Linux' }}
+        run: |
+          poetry run pyinstaller \
+            --onefile \
+            --icon='src/resources/gmt.ico' \
+            --add-data='src/resources/gmt.ico:resources' \
+            --additional-hooks-dir=hooks \
+            --add-data="src/resources/*.ui:resources" \
+            --hidden-import="src.widgets.buffer_ctrl" \
+            --hidden-import="src.widgets.threshold_ctrl" \
+            --hidden-import="src.widgets.directory_path" \
+            src/gui.py
+
+      - name: Archive release artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.os }}-dist
+          path: dist
+
+
+  create-release:
+    needs: build-binaries
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Get tag
+        id: tag
+        run: |
+          echo ::set-output name=tag::${GITHUB_REF#refs/tags/}
+
+      - name: Detect prerelease
+        id: prerelease
+        run: |
+          if echo ${{ steps.tag.outputs.tag }} | grep -qe '?*.*.*rc*'; then
+              echo ::set-output name=prerelease::true
+          else
+              echo ::set-output name=prerelease::false
+          fi
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: windows-latest-dist
+          path: win64-dist
+
+      - name: Download Ubuntu artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: ubuntu-latest-dist
+          path: linux-dist
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          release_name: ${{ steps.tag.outputs.tag }}
+          draft: false
+          prerelease: ${{ steps.prerelease.outputs.prerelease }}
+
+      - name: Upload Windows GUI assets
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: win64-dist/gui.exe
+          asset_name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload Ubuntu GUI assets
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: linux-dist/gui
+          asset_name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux
+          asset_content_type: application/octet-stream
