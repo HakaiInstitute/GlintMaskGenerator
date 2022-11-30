@@ -156,3 +156,6 @@ class MicasenseRedEdgeThresholdMasker(Masker):
         super().__init__(algorithm=ThresholdAlgorithm(thresholds),
                          image_loader=MicasenseRedEdgeLoader(img_dir, mask_dir),
                          pixel_buffer=pixel_buffer)
+
+if __name__ == '__main__':
+    CIRThresholdMasker("ignore/in", "ignore/out", pixel_buffer=10).process_unthreaded()

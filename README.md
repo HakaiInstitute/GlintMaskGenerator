@@ -122,7 +122,8 @@ glint-mask-v*.*.* micasense_threshold /path/to/dir/with/images/ /path/to/out_mas
 Installing the PyPi package allows integrating the mask generation workflow into existing python scripts with ease.
 
 ```python
-from glint_mask_tools import MicasenseRedEdgeThresholdMasker
+from glint_mask_generator import MicasenseRedEdgeThresholdMasker
+
 # Also available: P4MSThresholdMasker, RGBIntensityRatioMasker, RGBThresholdMasker
 
 masker = MicasenseRedEdgeThresholdMasker(img_dir="path/to/micasense/images/", mask_dir="path/to/output/dir/",

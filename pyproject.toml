@@ -7,11 +7,11 @@ license = "MIT"
 readme = "README.md"
 repository = "https://github.com/HakaiInstitute/GlintMaskGenerator"
 packages = [
-    { include = "glint_mask_tools", from="src" }
+    { include = "glint_mask_generator" }
 ]
 
 [tool.poetry.scripts]
-glint-mask = 'glint_mask_tools.cli:main'
+glint-mask = 'glint_mask_generator.cli:main'
 
 [tool.poetry.dependencies]
 python = ">=3.8.1,<3.10"

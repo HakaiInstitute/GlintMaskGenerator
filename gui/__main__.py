@@ -12,7 +12,7 @@ from PyQt5 import QtWidgets, uic
 from PyQt5.QtCore import QObject, QRunnable, QThreadPool, pyqtSignal, pyqtSlot
 from loguru import logger
 
-from src.glint_mask_tools import CIRThresholdMasker, Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, RGBThresholdMasker
+from glint_mask_generator import CIRThresholdMasker, Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, RGBThresholdMasker
 
 # String constants reduce occurrence of silent errors due to typos when doing comparisons
 BLUE = "BLUE"
