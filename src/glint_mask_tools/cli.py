@@ -11,7 +11,7 @@ from typing import List
 import fire
 from tqdm import tqdm
 
-from core.maskers import Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, RGBThresholdMasker, CIRThresholdMasker
+from .maskers import Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, RGBThresholdMasker, CIRThresholdMasker
 
 
 class CLI(object):
@@ -134,5 +134,9 @@ class CLI(object):
         self.process(MicasenseRedEdgeThresholdMasker(img_dir, out_dir, thresholds, pixel_buffer))
 
 
-if __name__ == '__main__':
+def main():
     fire.Fire(CLI)
+
+
+if __name__ == '__main__':
+    main()

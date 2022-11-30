@@ -9,8 +9,8 @@ from os import path
 
 from PyQt5 import QtWidgets, uic
 
-bundle_dir = getattr(sys, '_MEIPASS', path.abspath(path.dirname(__file__)))
-UI_PATH = path.abspath(path.join(bundle_dir, 'buffer_ctrl.ui'))
+bundle_dir = getattr(sys, '_MEIPASS', path.abspath(path.dirname(path.dirname(__file__))))
+UI_PATH = path.abspath(path.join(bundle_dir, 'resources/buffer_ctrl.ui'))
 
 
 class BufferCtrl(QtWidgets.QWidget):

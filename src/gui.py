@@ -11,7 +11,7 @@ from PyQt5 import QtWidgets, uic
 from PyQt5.QtCore import QObject, QRunnable, QThreadPool, pyqtSignal, pyqtSlot
 from loguru import logger
 
-from core.maskers import CIRThresholdMasker, Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, RGBThresholdMasker
+from src.glint_mask_tools import CIRThresholdMasker, Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, RGBThresholdMasker
 
 # String constants reduce occurrence of silent errors due to typos when doing comparisons
 BLUE = "BLUE"
@@ -35,7 +35,7 @@ DEFAULT_PIXEL_BUFFER = 0
 DEFAULT_MAX_WORKERS = 0
 
 bundle_dir = getattr(sys, '_MEIPASS', path.abspath(path.dirname(__file__)))
-UI_PATH = path.abspath(path.join(bundle_dir, 'gui.ui'))
+UI_PATH = path.abspath(path.join(bundle_dir, 'resources/gui.ui'))
 
 
 class MessageBox(QtWidgets.QMessageBox):

@@ -4,6 +4,6 @@ Organization: Hakai Institute
 Date: 2020-09-18
 """
 
-from core.maskers import CIRThresholdMasker, Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, RGBThresholdMasker
+from .maskers import Masker, RGBThresholdMasker, P4MSThresholdMasker, MicasenseRedEdgeThresholdMasker, CIRThresholdMasker
 
 __all__ = ["Masker", "RGBThresholdMasker", "P4MSThresholdMasker", "MicasenseRedEdgeThresholdMasker", "CIRThresholdMasker"]
