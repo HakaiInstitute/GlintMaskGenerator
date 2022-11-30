@@ -36,6 +36,12 @@ jobs:
           poetry update
           poetry run pip install --upgrade setuptools
 
+      - name: Install Windows specific dependencies
+        if: ${{ runner.os == 'Windows' }}
+        run: |
+          poetry run pip install -U extern/GDAL-3.4.2-cp39-cp39-win_amd64.whl
+          poetry run pip install -U extern/rasterio-1.2.10-cp39-cp39-win_amd64.whl
+
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
