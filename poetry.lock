@@ -356,8 +356,8 @@ dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 
 [metadata]
 lock-version = "1.1"
-python-versions = ">=3.8.1,<3.10"
-content-hash = "dd5a964b989436bdcc317123a01691c387ab166150d5576cba7cefa9a8567b96"
+python-versions = ">=3.8.1,<3.11"
+content-hash = "ded52e742945f6003ae9bfc006d181edfee1e68fc85d11bf6e160e3edf0962aa"
 
 [metadata.files]
 altgraph = [
