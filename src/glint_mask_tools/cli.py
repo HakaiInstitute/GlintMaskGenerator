@@ -29,7 +29,7 @@ class CLI(object):
     def _err_callback(path, exception):
         tqdm.write(f"{path} failed with err:\n{exception}", file=sys.stderr)
 
-    def process(self, masker: Masker):
+    def _process(self, masker: Masker):
         with tqdm(total=len(masker)) as progress:
             masker(max_workers=self.max_workers,
                    callback=lambda _: progress.update(1),
@@ -57,11 +57,11 @@ class CLI(object):
         None
             Side effects are that the mask is saved to the specified out_dir location.
         """
-        self.process(RGBThresholdMasker(img_dir, out_dir, thresholds, pixel_buffer))
+        self._process(RGBThresholdMasker(img_dir, out_dir, thresholds, pixel_buffer))
 
     def cir_threshold(self, img_dir: str, out_dir: str, thresholds: List[float] = (1, 1, 0.875, 1),
                       pixel_buffer: int = 0) -> None:
-        """Generate masks for glint regions in ACO imagery using Tom Bell's binning algorithm.
+        """Generate masks for glint regions in 4 Band CIR imagery using Tom Bell's binning algorithm.
 
         Parameters
         ----------
@@ -81,7 +81,7 @@ class CLI(object):
         None
             Side effects are that the mask is saved to the specified out_dir location.
         """
-        self.process(CIRThresholdMasker(img_dir, out_dir, thresholds, pixel_buffer))
+        self._process(CIRThresholdMasker(img_dir, out_dir, thresholds, pixel_buffer))
 
     def p4ms_threshold(self, img_dir: str, out_dir: str, thresholds: List[float] = (0.875, 1, 1, 1, 1),
                        pixel_buffer: int = 0) -> None:
@@ -106,7 +106,7 @@ class CLI(object):
         None
             Side effects are that the mask is saved to the specified out_dir location.
         """
-        self.process(P4MSThresholdMasker(img_dir, out_dir, thresholds, pixel_buffer))
+        self._process(P4MSThresholdMasker(img_dir, out_dir, thresholds, pixel_buffer))
 
     def micasense_threshold(self, img_dir: str, out_dir: str, thresholds: List[float] = (0.875, 1, 1, 1, 1),
                             pixel_buffer: int = 0) -> None:
@@ -131,7 +131,7 @@ class CLI(object):
         None
             Side effects are that the mask is saved to the specified out_dir location.
         """
-        self.process(MicasenseRedEdgeThresholdMasker(img_dir, out_dir, thresholds, pixel_buffer))
+        self._process(MicasenseRedEdgeThresholdMasker(img_dir, out_dir, thresholds, pixel_buffer))
 
 
 def main():

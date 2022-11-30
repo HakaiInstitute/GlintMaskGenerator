@@ -123,7 +123,7 @@ class Masker(object):
         paths
             The file paths used to create the image. Can be single file path or list of path to multiple files
         """
-        self.image_loader.mask_images(paths, self)
+        self.image_loader.apply_masker(paths, self)
 
 
 class RGBThresholdMasker(Masker):

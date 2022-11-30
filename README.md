@@ -13,19 +13,16 @@ These masks can be used in 3rd party structure-from-motion programs to replace t
 1. Go to the [releases page](https://github.com/HakaiInstitute/glint-mask-tools/releases)
 2. Download the latest release file for your operating system.
 3. Extract the compressed binary files from the gzipped archive.
-4. This archive contains two files which provide different interfaces to the same glint mask generation program.
-    4. GlintMaskGenerator-v*.\*.\*.exe provides the GUI interface
-    4. glint-mask-v*.\*.\*.exe is a command line interface and has a few more advanced options available.
+4. This archive contains a file named GlintMaskGenerator-v*.\*.\*.exe that provides a GUI interface to the glint mask generation program.
 5. You can copy these files to any location that is convenient for you.
-    5. On Linux, copying glint-mask to `user/local/bin` will allow you to call the CLI from anywhere by
-       typing `glint-mask`.
 
 ### PyPi package
 
-There also a python package version of the code available for Python 3.8 and up.
+There also a python package version of the code available for Python 3.8 and 3.9.
 
 1. `pip install glint-mask-tools` to install the tools.
 2. Then, `import glint_mask_tools` in your Python script.
+3. Installing with pip also installs the CLI tool, detailed below.
 
 ## Usage
 
@@ -40,7 +37,7 @@ processing errors via a pop-up dialog.
 
 ### CLI
 
-For information about the parameters expected by the CLI, just run `./glint-mask --help` in a bash terminal or command
+For information about the parameters expected by the CLI, run `glint-mask --help` in a bash terminal or command
 line interface. All the functionality of the CLI is documented there.
 
 #### Examples
@@ -57,8 +54,8 @@ glint-mask-v*.*.* --help
 # COMMANDS
 #     COMMAND is one of the following:
 # 
-#      aco_threshold
-#        Generate masks for glint regions in ACO imagery using Tom Bell's binning algorithm.
+#      cir_threshold
+#        Generate masks for glint regions in 4 Band CIR imagery using Tom Bell's binning algorithm.
 # 
 #      micasense_threshold
 #        Generate masks for glint regions in multispectral imagery from the Micasense camera using Tom Bell's algorithm on the blue image band.
@@ -67,9 +64,6 @@ glint-mask-v*.*.* --help
 #        Generate masks for glint regions in multispectral imagery from the DJI camera using Tom Bell's algorithm on the Blue image band.
 # 
 #      process
-# 
-#      rgb_ratio
-#        Generate masks for glint regions in RGB imagery by setting a threshold on estimated specular reflectance.
 # 
 #      rgb_threshold
 #        Generate masks for glint regions in RGB imagery using Tom Bell's binning algorithm.
@@ -122,9 +116,6 @@ glint-mask-v*.*.* p4ms_threshold /path/to/dir/with/images/ /path/to/out_masks/di
 
 # Process Micasense RedEdge imagery 
 glint-mask-v*.*.* micasense_threshold /path/to/dir/with/images/ /path/to/out_masks/dir/
-
-# Process RGB imagery using band ratio method (see Wang, S., Yu, C., Sun, Y. et al. Specular reflection removal of ocean surface remote sensing images from UAVs. Multimedia Tools Appl 77, 11363–11379 (2018). https://doi.org/10.1007/s11042-017-5551-7)
-glint-mask-v*.*.* rgb_ratio /path/to/dir/with/images/ /path/to/out_masks/dir/
 ```
 
 ### Python package
@@ -144,7 +135,7 @@ masker.process(max_workers=5, callback=print, err_callback=print)
 ### Directory of images processing
 
 - All files with "jpg", "jpeg", "tif", "tiff" and "png" extensions will be processed. This can be extended as needed.
-  File extension matching is case insensitive.
+  File extension matching is case-insensitive.
 - Output mask files with be in the specified directory, and have the same name as the input file with "_mask" appended
   to the end of the file name stem. The file type will match the input type.
 
