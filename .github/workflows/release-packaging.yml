@@ -47,7 +47,6 @@ jobs:
           --windowed
           --icon='gui\resources\gmt.ico'
           --add-data='gui\resources\gmt.ico;resources'
-          --additional-hooks-dir=hooks
           --add-data="gui\resources\*.ui;resources"
           --hidden-import="gui.widgets.buffer_ctrl"
           --hidden-import="gui.widgets.threshold_ctrl"
@@ -61,7 +60,6 @@ jobs:
           --onefile
           --icon='gui/resources/gmt.ico'
           --add-data='gui/resources/gmt.ico:resources'
-          --additional-hooks-dir=hooks
           --add-data="gui/resources/*.ui:resources"
           --hidden-import="gui.widgets.buffer_ctrl"
           --hidden-import="gui.widgets.threshold_ctrl"
