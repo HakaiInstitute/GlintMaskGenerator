@@ -38,40 +38,35 @@ jobs:
           poetry run pip install -U pip    
           poetry run pip install --upgrade setuptools
 
-      - name: Install Windows specific dependencies
-        if: ${{ runner.os == 'Windows' }}
-        run: |
-          poetry run pip install -U extern/GDAL-3.4.2-cp39-cp39-win_amd64.whl
-          poetry run pip install -U extern/rasterio-1.2.10-cp39-cp39-win_amd64.whl
-
       - name: Build Windows GUI Executable
         if: ${{ runner.os == 'Windows' }}
         run: |
           poetry run pyinstaller ^
             --onefile ^
             --windowed ^
-            --icon='src\resources\gmt.ico' ^
-            --add-data='src\resources\gmt.ico;resources' ^
+            --icon='gui\resources\gmt.ico' ^
+            --add-data='gui\resources\gmt.ico;resources' ^
             --additional-hooks-dir=hooks ^
-            --add-data="src\resources\*.ui;resources" ^
-            --hidden-import="src.widgets.buffer_ctrl" ^
-            --hidden-import="src.widgets.threshold_ctrl" ^
-            --hidden-import="src.widgets.directory_path" ^
-            src/gui.py
+            --add-data="gui\resources\*.ui;resources" ^
+            --hidden-import="gui.widgets.buffer_ctrl" ^
+            --hidden-import="gui.widgets.threshold_ctrl" ^
+            --hidden-import="gui.widgets.directory_path" ^
+            gui/__main__.py
 
       - name: Build Linux GUI Executable
         if: ${{ runner.os == 'Linux' }}
         run: |
           poetry run pyinstaller \
             --onefile \
-            --icon='src/resources/gmt.ico' \
-            --add-data='src/resources/gmt.ico:resources' \
+            --icon='gui/resources/gmt.ico' \
+            --add-data='gui/resources/gmt.ico:resources' \
             --additional-hooks-dir=hooks \
-            --add-data="src/resources/*.ui:resources" \
-            --hidden-import="src.widgets.buffer_ctrl" \
-            --hidden-import="src.widgets.threshold_ctrl" \
-            --hidden-import="src.widgets.directory_path" \
-            src/gui.py
+            --add-data="gui/resources/*.ui:resources" \
+            --hidden-import="gui.widgets.buffer_ctrl" \
+            --hidden-import="gui.widgets.threshold_ctrl" \
+            --hidden-import="gui.widgets.directory_path" \
+            gui/__main__.py
+
 
       - name: Archive release artifacts
         uses: actions/upload-artifact@v2
@@ -131,7 +126,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: win64-dist/gui.exe
+          asset_path: win64-dist/__main__.exe
           asset_name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.exe
           asset_content_type: application/octet-stream
 
@@ -141,6 +136,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: linux-dist/gui
+          asset_path: linux-dist/__main__
           asset_name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux
           asset_content_type: application/octet-stream
