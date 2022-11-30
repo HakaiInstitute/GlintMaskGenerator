@@ -5,9 +5,9 @@ name: Test
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
+    branches: [main, develop]
   release:
     types: [created, edited]
 
@@ -18,24 +18,37 @@ jobs:
     strategy:
       matrix:
         os: [Ubuntu, Windows]
-        python-version: [3.8]
+        python-version: ['3.9']
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
+
+      - name: Setup Poetry
+        uses: abatilo/actions-poetry@v2.0.0
+        with:
+          poetry-version: 1.2.2
+
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install flake8 pytest
-          pip install -r requirements.txt
+          poetry update
+          poetry run pip install --upgrade setuptools
+
+      - name: Install Windows specific dependencies
+        if: ${{ runner.os == 'Windows' }}
+        run: |
+          poetry run pip install -U extern/GDAL-3.4.2-cp39-cp39-win_amd64.whl
+          poetry run pip install -U extern/rasterio-1.2.10-cp39-cp39-win_amd64.whl
+
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          poetry run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+          poetry run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
       - name: Test with pytest
         run: |
-          pytest -v
+          poetry run pytest -v

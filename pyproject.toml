@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "glint-mask-tools"
+version = "2.0.5"
+description = "Create masks for specular reflection in UAV and aerial imagery"
+authors = ["Taylor Denouden <taylor.denouden@hakai.org>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/HakaiInstitute/GlintMaskGenerator"
+packages = [
+    { include = "glint_mask_tools", from="src" }
+]
+
+[tool.poetry.scripts]
+glint-mask = 'glint_mask_tools.cli:main'
+
+[tool.poetry.dependencies]
+python = ">=3.8.1,<3.10"
+numpy = "~=1.23.5"
+fire = "~=0.4.0"
+Pillow = "~=8.3.1"
+scipy = "~=1.9.3"
+tqdm = "~=4.64.1"
+PyQt5 = "~=5.12.3"
+loguru = "~=0.6.0"
+rasterio = "~=1.2.10"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.2.0"
+flake8 = "^6.0.0"
+pyinstaller = "^4.10"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
