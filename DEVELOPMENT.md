@@ -35,7 +35,7 @@ This is done automatically via GitHub Actions scripts. The workflow to trigger t
     1. Ideally, use a Pull-Request workflow. Make a pull-request to the master branch from some other branch on GitHub.
     2. This will run the tests.
 2. Once the tests are passing, tag the main branch on your copy locally with `git checkout main && git pull && git tag v*.*.*` 
-    using an appropriate semantic version number. Also update the `pyproject.toml` with this version.
+    using an appropriate semantic version number. The `pyproject.toml` is updated with this version by the actions script at build time.
 3. Push the tag to GitHub with `git push --tags`. Pushing a tag of the format `v*.*.*` triggers an action where the code is 
     checked to see tests are passing, then executables for Linux and Windows are built and uploaded to the GitHub release page.
 4. Similarly, the PyPi package will be built and published using Poetry commands defined by the `pypi-publish.yml`

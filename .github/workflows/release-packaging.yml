@@ -35,7 +35,8 @@ jobs:
       - name: Install dependencies
         run: |
           poetry update
-          poetry run pip install -U pip    
+          poetry version ${{ env.tag }}
+          poetry run pip install --upgrade pip    
           poetry run pip install --upgrade setuptools
 
       - name: Build Windows GUI Executable
@@ -84,15 +85,15 @@ jobs:
       - name: Get tag
         id: tag
         run: |
-          echo ::set-output name=tag::${GITHUB_REF#refs/tags/}
+          echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
       - name: Detect prerelease
         id: prerelease
         run: |
-          if echo ${{ steps.tag.outputs.tag }} | grep -qe '?*.*.*rc*'; then
-              echo ::set-output name=prerelease::true
+          if echo ${{ env.tag }} | grep -qe '?*.*.*rc*'; then
+              echo "prerelease=true" >> $GITHUB_ENV
           else
-              echo ::set-output name=prerelease::false
+              echo "prerelease=false" >> $GITHUB_ENV
           fi
 
       - name: Download Windows artifacts
@@ -113,10 +114,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.tag.outputs.tag }}
-          release_name: ${{ steps.tag.outputs.tag }}
+          tag_name: ${{ env.tag }}
+          release_name: ${{ env.tag }}
           draft: false
-          prerelease: ${{ steps.prerelease.outputs.prerelease }}
+          prerelease: ${{ env.prerelease }}
 
       - name: Upload Windows GUI assets
         uses: actions/upload-release-asset@v1.0.1
@@ -125,7 +126,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: win64-dist/__main__.exe
-          asset_name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-win64.exe
+          asset_name: GlintMaskGenerator-${{ env.tag }}-win64.exe
           asset_content_type: application/octet-stream
 
       - name: Upload Ubuntu GUI assets
@@ -135,5 +136,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: linux-dist/__main__
-          asset_name: GlintMaskGenerator-${{ steps.tag.outputs.tag }}-linux
+          asset_name: GlintMaskGenerator-${{ env.tag }}-linux
           asset_content_type: application/octet-stream
