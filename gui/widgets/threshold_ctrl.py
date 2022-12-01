@@ -4,24 +4,21 @@ Organization: Hakai Institute
 Date: 2020-09-17
 """
 
-import sys
-from os import path
-
 from PyQt6 import QtWidgets, uic
 
-bundle_dir = getattr(sys, '_MEIPASS', path.abspath(path.dirname(path.dirname(__file__))))
-UI_PATH = path.abspath(path.join(bundle_dir, 'resources/threshold_ctrl.ui'))
+from gui.utils import resource_path
 
 
 class ThresholdCtrl(QtWidgets.QWidget):
     def __init__(self, parent):
         super().__init__(parent)
 
-        uic.loadUi(UI_PATH, self)
-        self.show()
+        uic.loadUi(resource_path('resources/threshold_ctrl.ui'), self)
 
         self.slider.valueChanged.connect(lambda value: self.spinbox.setValue(value / 1000.))
         self.spinbox.valueChanged.connect(lambda value: self.slider.setValue(int(value * 1000)))
+
+        self.show()
 
     @property
     def value(self) -> float:
