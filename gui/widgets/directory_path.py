@@ -3,21 +3,18 @@ Created by: Taylor Denouden
 Organization: Hakai Institute
 Date: 2020-09-17
 """
-import sys
-from os import path
 
 from PyQt6 import QtWidgets, uic
 from PyQt6.QtWidgets import QFileDialog
 
-bundle_dir = getattr(sys, '_MEIPASS', path.abspath(path.dirname(path.dirname(__file__))))
-UI_PATH = path.abspath(path.join(bundle_dir, 'resources/directory_path.ui'))
+from gui.utils import resource_path
 
 
 class DirectoryPath(QtWidgets.QWidget):
     def __init__(self, parent):
         super().__init__(parent)
 
-        uic.loadUi(UI_PATH, self)
+        uic.loadUi(resource_path('resources/directory_path.ui'), self)
         self.show()
 
     @property

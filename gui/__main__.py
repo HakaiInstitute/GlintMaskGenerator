@@ -5,14 +5,15 @@ Date: 2020-09-16
 """
 import os
 import sys
-from os import path
 from typing import List, Sequence
 
 from PyQt6 import QtWidgets, uic
 from PyQt6.QtCore import QObject, QRunnable, QThreadPool, pyqtSignal, pyqtSlot
 from loguru import logger
 
-from glint_mask_generator import CIRThresholdMasker, Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, RGBThresholdMasker
+from glint_mask_generator import CIRThresholdMasker, Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, \
+    RGBThresholdMasker
+from gui.utils import resource_path
 
 # String constants reduce occurrence of silent errors due to typos when doing comparisons
 BLUE = "BLUE"
@@ -34,9 +35,6 @@ DEFAULT_REDEDGE_THRESH = 1.000
 DEFAULT_NIR_THRESH = 1.000
 DEFAULT_PIXEL_BUFFER = 0
 DEFAULT_MAX_WORKERS = 0
-
-bundle_dir = getattr(sys, '_MEIPASS', path.abspath(path.dirname(__file__)))
-UI_PATH = path.abspath(path.join(bundle_dir, 'resources/gui.ui'))
 
 
 class MessageBox(QtWidgets.QMessageBox):
@@ -63,8 +61,8 @@ class ErrorMessageBox(MessageBox):
 class GlintMaskGenerator(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
-        uic.loadUi(UI_PATH, self)
-        self.show()
+        uic.loadUi(resource_path('resources/gui.ui'), self)
+
 
         # Set default values
         self.reset_thresholds()
@@ -94,6 +92,8 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         self.img_type_cir_radio.clicked.connect(self.enable_available_thresholds)
         self.img_type_p4ms_radio.clicked.connect(self.enable_available_thresholds)
         self.img_type_micasense_radio.clicked.connect(self.enable_available_thresholds)
+
+        self.show()
 
     def enable_available_thresholds(self) -> None:
         self.blue_thresh_w.setEnabled(BLUE in self.band_order)
