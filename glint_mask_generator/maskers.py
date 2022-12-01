@@ -27,7 +27,7 @@ class Masker(object):
         """Method which can be overridden to do any postprocessing on the generated boolean numpy mask."""
         if self.pixel_buffer <= 0:
             return mask
-        return (convolve(mask, self.buffer_kernel, mode='constant', cval=0) > 0).astype(np.int)
+        return (convolve(mask, self.buffer_kernel, mode='constant', cval=0) > 0).astype(int)
 
     @staticmethod
     def to_metashape_mask(mask: np.ndarray):
