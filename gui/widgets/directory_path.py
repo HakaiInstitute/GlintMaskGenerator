@@ -30,4 +30,4 @@ class DirectoryPath(QtWidgets.QWidget):
 
     def dir_btn_clicked(self):
         self.value = QFileDialog.getExistingDirectory(
-            self, 'Select directory', self.value, QFileDialog.ShowDirsOnly)
+            self, 'Select directory', self.value, QFileDialog.Option.ShowDirsOnly)
