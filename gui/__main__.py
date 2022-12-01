@@ -9,6 +9,7 @@ from typing import List, Sequence
 
 from PyQt6 import QtWidgets, uic
 from PyQt6.QtCore import QObject, QRunnable, QThreadPool, pyqtSignal, pyqtSlot
+from PyQt6.QtGui import QIcon
 from loguru import logger
 
 from glint_mask_generator import CIRThresholdMasker, Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, \
@@ -63,6 +64,9 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         super().__init__()
         uic.loadUi(resource_path('resources/gui.ui'), self)
 
+        # Setup window
+        self.setWindowTitle("Glint Mask Generator")
+        self.setWindowIcon(QIcon(resource_path("resources/gmt.ico")))
 
         # Set default values
         self.reset_thresholds()
