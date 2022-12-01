@@ -21,7 +21,7 @@ These masks can be used in 3rd party structure-from-motion programs to replace t
 There also a python package version of the code available for Python 3.8 and 3.9.
 
 1. `pip install glint-mask-tools` to install the tools.
-2. Then, `import glint_mask_tools` in your Python script.
+2. Then, `import glint_mask_generator` in your Python script.
 3. Installing with pip also installs the CLI tool, detailed below.
 
 ## Usage
