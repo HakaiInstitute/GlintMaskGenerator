@@ -5,8 +5,8 @@ on:
     branches-ignore:
       - '**'
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
-      - 'v[0-9]+.[0-9]+.[0-9]+rc[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+rc[0-9]+'
 jobs:
   build-binaries:
     defaults:
@@ -35,7 +35,7 @@ jobs:
       - name: Get tag
         id: tag
         run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-        
+
       - name: Install Linux dependencies
         if: ${{ runner.os == 'Linux' }}
         run: >
@@ -130,8 +130,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ env.tag }}
-          release_name: ${{ env.tag }}
-          draft: false
+          release_name: v${{ env.tag }}
+          draft: true
           prerelease: ${{ env.prerelease }}
 
       - name: Upload Windows GUI assets
@@ -141,7 +141,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: win64-dist/__main__.exe
-          asset_name: GlintMaskGenerator-${{ env.tag }}-win64.exe
+          asset_name: GlintMaskGenerator-v${{ env.tag }}-win64.exe
           asset_content_type: application/octet-stream
 
       - name: Upload Ubuntu GUI assets
@@ -151,5 +151,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: linux-dist/__main__
-          asset_name: GlintMaskGenerator-${{ env.tag }}-linux
+          asset_name: GlintMaskGenerator-v${{ env.tag }}-linux
           asset_content_type: application/octet-stream
