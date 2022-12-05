@@ -14,6 +14,7 @@ from loguru import logger
 
 from glint_mask_generator import CIRThresholdMasker, Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, \
     RGBThresholdMasker
+from gui import __version__
 from gui.utils import resource_path
 
 # String constants reduce occurrence of silent errors due to typos when doing comparisons
@@ -65,7 +66,7 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         uic.loadUi(resource_path('resources/gui.ui'), self)
 
         # Setup window
-        self.setWindowTitle("Glint Mask Generator")
+        self.setWindowTitle(f"Glint Mask Generator v{__version__}")
         self.setWindowIcon(QIcon(resource_path("resources/gmt.ico")))
 
         # Set default values

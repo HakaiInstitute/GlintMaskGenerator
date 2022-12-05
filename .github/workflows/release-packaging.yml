@@ -32,12 +32,17 @@ jobs:
         with:
           poetry-version: 1.2.2
 
+      - name: Get tag
+        id: tag
+        run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        
       - name: Install dependencies
         run: |
-          poetry update
           poetry version ${{ env.tag }}
-          poetry run pip install --upgrade pip    
-          poetry run pip install --upgrade setuptools
+          sed -i "s/0.0.0/${{ env.tag }}/g" gui/__init__.py
+          sed -i "s/0.0.0/${{ env.tag }}/g" glint_mask_generator/__init__.py
+          poetry run pip install --upgrade pip setuptools
+          poetry install
 
       - name: Build Windows GUI Executable
         if: ${{ runner.os == 'Windows' }}
@@ -66,7 +71,6 @@ jobs:
           --hidden-import="gui.widgets.directory_path"
           gui/__main__.py
 
-
       - name: Archive release artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -84,8 +88,7 @@ jobs:
 
       - name: Get tag
         id: tag
-        run: |
-          echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
       - name: Detect prerelease
         id: prerelease
