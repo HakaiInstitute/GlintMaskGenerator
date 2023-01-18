@@ -96,7 +96,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Get tag
         id: tag
@@ -112,44 +112,28 @@ jobs:
           fi
 
       - name: Download Windows artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: windows-latest-dist
           path: win64-dist
 
       - name: Download Ubuntu artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: ubuntu-latest-dist
           path: linux-dist
 
+      - name: Rename release artifacts
+        run: |
+          mv win64-dist/__main__.exe GlintMaskGenerator-v${{ env.tag }}-win64.exe
+          mv linux-dist/__main__ GlintMaskGenerator-v${{ env.tag }}-linux
+
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ env.tag }}
-          release_name: v${{ env.tag }}
-          draft: true
+          name: v${{ env.tag }}
           prerelease: ${{ env.prerelease }}
-
-      - name: Upload Windows GUI assets
-        uses: actions/upload-release-asset@v1.0.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: win64-dist/__main__.exe
-          asset_name: GlintMaskGenerator-v${{ env.tag }}-win64.exe
-          asset_content_type: application/octet-stream
-
-      - name: Upload Ubuntu GUI assets
-        uses: actions/upload-release-asset@v1.0.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: linux-dist/__main__
-          asset_name: GlintMaskGenerator-v${{ env.tag }}-linux
-          asset_content_type: application/octet-stream
+          draft: true
+          files: |
+            GlintMaskGenerator-v${{ env.tag }}-win64.exe
+            GlintMaskGenerator-v${{ env.tag }}-linux
