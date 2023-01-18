@@ -3,7 +3,6 @@ Created by: Taylor Denouden
 Organization: Hakai Institute
 Date: 2020-09-18
 """
-import os
 import re
 from abc import ABC, ABCMeta, abstractmethod
 from functools import singledispatchmethod
@@ -87,8 +86,7 @@ class SingleFileImageLoader(ImageLoader, metaclass=ABCMeta):
 
     @property
     def paths(self) -> Iterable[str]:
-        # Filter anything smaller than 1kb, since it's probably corrupt
-        return filter(lambda p: os.stat(p).st_size > (1 << 20), list_images(self.image_directory))
+        return list_images(self.image_directory)
 
 
 class RGBLoader(SingleFileImageLoader):
