@@ -6,7 +6,7 @@
 </a>
 
 <a href="https://github.com/HakaiInstitute/GlintMaskGenerator/blob/main/LICENSE.txt">
-    <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-darkgray.svg" height="20px" />
+    <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-black.svg" height="20px" />
 </a>
 
 <a href="https://badge.fury.io/py/glint-mask-tools">
