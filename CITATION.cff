@@ -1,14 +1,15 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 authors:
-- family-names: "Denouden"
-  given-names: "Taylor"
-  orcid: https://orcid.org/0000-0003-0457-1022
-- family-names: "Timmer"
-  given-names: "Brian"
-- family-names: "Reshitnyk"
-  given-names: "Luba"
-title: "GlintMaskGenerator"
-version: 2.0.5
+    - family-names: Denouden
+      given-names: Taylor
+      orcid: https://orcid.org/0000-0003-0457-1022
+    - family-names: Timmer
+      given-names: Brian
+    - family-names: Reshitnyk
+      given-names: Luba
+title: HakaiInstitute/GlintMaskGenerator: 3.0.3
+version: 3.0.3
+doi: 10.5281/zenodo.7674703
 date-released: 2021-12-15
 url: "https://github.com/HakaiInstitute/GlintMaskGenerator"
