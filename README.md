@@ -1,6 +1,18 @@
 # Glint Mask Tools
 
-![Python application](https://github.com/HakaiInstitute/glint-mask-tools/workflows/Main/badge.svg?branch=master)
+<div style="overflow: hidden; display: flex; justify-content:flex-start; gap:10px;">
+<a href="https://github.com/HakaiInstitute/GlintMaskGenerator/actions/workflows/test_code.yml">
+    <img alt="Tests" src="https://github.com/HakaiInstitute/GlintMaskGenerator/actions/workflows/test_code.yml/badge.svg"/>
+</a>
+
+<a href="https://github.com/HakaiInstitute/GlintMaskGenerator/blob/main/LICENSE.txt">
+    <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-darkgray.svg" height="20px" />
+</a>
+
+<a href="https://badge.fury.io/py/glint-mask-tools">
+    <img alt="PyPI version" src="https://badge.fury.io/py/glint-mask-tools.svg" height="20">
+</a>
+</div>
 
 ## Description
 
