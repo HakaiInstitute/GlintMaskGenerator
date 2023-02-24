@@ -12,6 +12,10 @@
 <a href="https://badge.fury.io/py/glint-mask-tools">
     <img alt="PyPI version" src="https://badge.fury.io/py/glint-mask-tools.svg" height="20">
 </a>
+
+<a href="https://zenodo.org/badge/latestdoi/266147098">
+    <img src="https://zenodo.org/badge/266147098.svg" alt="DOI">
+</a>
 </div>
 
 ## Description
