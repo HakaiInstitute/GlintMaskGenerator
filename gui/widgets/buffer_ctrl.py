@@ -13,10 +13,14 @@ class BufferCtrl(QtWidgets.QWidget):
     def __init__(self, parent):
         super().__init__(parent)
 
-        uic.loadUi(resource_path('resources/buffer_ctrl.ui'), self)
+        uic.loadUi(resource_path("resources/buffer_ctrl.ui"), self)
 
-        self.slider.valueChanged.connect(lambda value: self.spinbox.setValue(int(value)))
-        self.spinbox.valueChanged.connect(lambda value: self.slider.setValue(int(value)))
+        self.slider.valueChanged.connect(
+            lambda value: self.spinbox.setValue(int(value))
+        )
+        self.spinbox.valueChanged.connect(
+            lambda value: self.slider.setValue(int(value))
+        )
 
         self.show()
 

@@ -13,10 +13,14 @@ class ThresholdCtrl(QtWidgets.QWidget):
     def __init__(self, parent):
         super().__init__(parent)
 
-        uic.loadUi(resource_path('resources/threshold_ctrl.ui'), self)
+        uic.loadUi(resource_path("resources/threshold_ctrl.ui"), self)
 
-        self.slider.valueChanged.connect(lambda value: self.spinbox.setValue(value / 1000.))
-        self.spinbox.valueChanged.connect(lambda value: self.slider.setValue(int(value * 1000)))
+        self.slider.valueChanged.connect(
+            lambda value: self.spinbox.setValue(value / 1000.0)
+        )
+        self.spinbox.valueChanged.connect(
+            lambda value: self.slider.setValue(int(value * 1000))
+        )
 
         self.show()
 
