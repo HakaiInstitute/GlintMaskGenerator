@@ -63,30 +63,30 @@ glint-mask-v*.*.* --help
 
 # NAME
 #     glint-mask-v*.*.*
-# 
+#
 # SYNOPSIS
 #     glint-mask-v*.*.* - COMMAND | VALUE
-# 
+#
 # COMMANDS
 #     COMMAND is one of the following:
-# 
+#
 #      cir_threshold
 #        Generate masks for glint regions in 4 Band CIR imagery using Tom Bell's binning algorithm.
-# 
+#
 #      micasense_threshold
 #        Generate masks for glint regions in multispectral imagery from the Micasense camera using Tom Bell's algorithm on the blue image band.
-# 
+#
 #      p4ms_threshold
 #        Generate masks for glint regions in multispectral imagery from the DJI camera using Tom Bell's algorithm on the Blue image band.
-# 
+#
 #      process
-# 
+#
 #      rgb_threshold
 #        Generate masks for glint regions in RGB imagery using Tom Bell's binning algorithm.
-# 
+#
 # VALUES
 #     VALUE is one of the following:
-# 
+#
 #      max_workers
 #        The maximum number of threads to use for processing.
 ```
@@ -97,25 +97,25 @@ glint-mask-v*.*.* rgb_threshold --help
 
 # NAME
 #     glint-mask-v*.*.* rgb_threshold - Generate masks for glint regions in RGB imagery using Tom Bell's binning algorithm.
-# 
+#
 # SYNOPSIS
 #     glint-mask-v*.*.* rgb_threshold IMG_DIR OUT_DIR <flags>
-# 
+#
 # DESCRIPTION
 #     Generate masks for glint regions in RGB imagery using Tom Bell's binning algorithm.
-# 
+#
 # POSITIONAL ARGUMENTS
 #     IMG_DIR
 #         The path to a named input image or directory containing images. If img_dir is a directory, all tif, jpg, jpeg, and png images in that directory will be # processed.
 #     OUT_DIR
 #         The path to send your out image including the file name and type. e.g. "/path/to/mask.png". out_dir must be a directory if img_dir is specified as a # # # directory.
-# 
+#
 # FLAGS
 #     --thresholds=THRESHOLDS
 #         The pixel band thresholds indicating glint. Domain for values is (0.0, 1.0). Default is [1, 1, 0.875].
 #     --pixel_buffer=PIXEL_BUFFER
 #         The pixel distance to buffer out the mask. Defaults to 0 (off).
-# 
+#
 # NOTES
 #     You can also use flags syntax for POSITIONAL ARGUMENTS
 ```
@@ -130,7 +130,7 @@ glint-mask-v*.*.* aco_threshold /path/to/dir/with/images/ /path/to/out_masks/dir
 # Process DJI P4MS imagery
 glint-mask-v*.*.* p4ms_threshold /path/to/dir/with/images/ /path/to/out_masks/dir/
 
-# Process Micasense RedEdge imagery 
+# Process Micasense RedEdge imagery
 glint-mask-v*.*.* micasense_threshold /path/to/dir/with/images/ /path/to/out_masks/dir/
 ```
 

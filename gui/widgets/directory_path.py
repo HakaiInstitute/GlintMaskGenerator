@@ -14,7 +14,7 @@ class DirectoryPath(QtWidgets.QWidget):
     def __init__(self, parent):
         super().__init__(parent)
 
-        uic.loadUi(resource_path('resources/directory_path.ui'), self)
+        uic.loadUi(resource_path("resources/directory_path.ui"), self)
         self.show()
 
     @property
@@ -27,4 +27,5 @@ class DirectoryPath(QtWidgets.QWidget):
 
     def dir_btn_clicked(self):
         self.value = QFileDialog.getExistingDirectory(
-            self, 'Select directory', self.value, QFileDialog.Option.ShowDirsOnly)
+            self, "Select directory", self.value, QFileDialog.Option.ShowDirsOnly
+        )

@@ -12,12 +12,17 @@ from PyQt6.QtCore import QObject, QRunnable, QThreadPool, pyqtSignal, pyqtSlot
 from PyQt6.QtGui import QIcon
 from loguru import logger
 
-from glint_mask_generator import CIRThresholdMasker, Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMasker, \
-    RGBThresholdMasker
+from glint_mask_generator import (
+    CIRThresholdMasker,
+    Masker,
+    MicasenseRedEdgeThresholdMasker,
+    P4MSThresholdMasker,
+    RGBThresholdMasker,
+)
 from gui import __version__
 from gui.utils import resource_path
 
-# String constants reduce occurrence of silent errors due to typos when doing comparisons
+# String constants to eliminate silent errors due to typos
 BLUE = "BLUE"
 GREEN = "GREEN"
 RED = "RED"
@@ -63,7 +68,7 @@ class ErrorMessageBox(MessageBox):
 class GlintMaskGenerator(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
-        uic.loadUi(resource_path('resources/gui.ui'), self)
+        uic.loadUi(resource_path("resources/gui.ui"), self)
 
         # Setup window
         self.setWindowTitle(f"Glint Mask Generator v{__version__}")
@@ -85,7 +90,9 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
 
         # Run non-ui jobs in a separate thread
         self.threadpool = QThreadPool()
-        print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
+        print(
+            "Multithreading with maximum %d threads" % self.threadpool.maxThreadCount()
+        )
 
         # Set max workers to good default
         self.max_workers = os.cpu_count()
@@ -135,7 +142,9 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
 
     @property
     def band_order_ints(self) -> Sequence[int]:
-        return [{BLUE: 0, GREEN: 1, RED: 2, REDEDGE: 3, NIR: 4}[k] for k in self.band_order]
+        return [
+            {BLUE: 0, GREEN: 1, RED: 2, REDEDGE: 3, NIR: 4}[k] for k in self.band_order
+        ]
 
     @property
     def band_order(self) -> Sequence[str]:
@@ -150,7 +159,10 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
 
     @property
     def threshold_values(self) -> Sequence[float]:
-        """Returns the thresholds in the order corresponding to the imagery type band order."""
+        """
+        Returns the thresholds in the order corresponding to the imagery type band
+        order.
+        """
         thresholds: List[float] = [
             self.blue_thresh_w.value,
             self.green_thresh_w.value,
@@ -161,12 +173,15 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         return [thresholds[i] for i in self.band_order_ints]
 
     def create_masker(self) -> Masker:
-        """Returns an instance of the appropriate glint mask generator given selected options."""
+        """
+        Returns an instance of the appropriate glint mask generator given selected
+        options.
+        """
         threshold_params = dict(
             img_dir=self.img_dir_w.value,
             mask_dir=self.mask_dir_w.value,
             thresholds=self.threshold_values,
-            pixel_buffer=self.pixel_buffer_w.value
+            pixel_buffer=self.pixel_buffer_w.value,
         )
 
         if self.img_type == IMG_TYPE_RGB:
@@ -200,10 +215,10 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         self.progress_val += 1
 
         if self.progress_val == self.progress_maximum:
-            self.info_msg.show_message('Processing is complete')
+            self.info_msg.show_message("Processing is complete")
 
     def _err_callback(self, img_path, err):
-        msg = '%r generated an exception: %s' % (img_path, err)
+        msg = "%r generated an exception: %s" % (img_path, err)
         self.err_msg.show_message(msg)
 
     @logger.catch
@@ -242,8 +257,8 @@ class Worker(QRunnable):
         self.signals = Signals()
 
         # Add callbacks to kwargs
-        self.kwargs['callback'] = self.signals.progress.emit
-        self.kwargs['err_callback'] = self.signals.error.emit
+        self.kwargs["callback"] = self.signals.progress.emit
+        self.kwargs["err_callback"] = self.signals.error.emit
 
     @pyqtSlot()
     def run(self):
@@ -251,7 +266,7 @@ class Worker(QRunnable):
         self.signals.finished.emit()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     main_window = GlintMaskGenerator()
     app.exec()

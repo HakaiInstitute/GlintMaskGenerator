@@ -18,7 +18,9 @@ class GlintAlgorithm(ABC):
 
     @abstractmethod
     def __call__(self, img: np.ndarray) -> np.ndarray:
-        """Return a boolean glint mask for a given image. Output mask should have 1 for masked, 0 for unmasked."""
+        """Return a boolean glint mask for a given image.
+        Output mask should have 1 for masked, 0 for unmasked.
+        """
         raise NotImplementedError
 
 
@@ -38,10 +40,10 @@ class IntensityRatioAlgorithm(GlintAlgorithm):
         Parameters
         ----------
         percent_diffuse
-            An estimate of the percentage of pixels in an image that show pure diffuse reflectance, and thus no specular
-            reflectance (glint).
+            An estimate of the percentage of pixels in an image that show pure diffuse
+            reflectance, and thus no specular reflectance (glint).
         threshold
-            The threshold on the specular reflectance estimate image to convert into a mask.
+            Threshold on specular reflectance estimate to binarize into a mask.
             e.g. if more than 50% specular reflectance is unacceptable, use 0.5.
         """
         super().__init__()
@@ -61,29 +63,34 @@ class IntensityRatioAlgorithm(GlintAlgorithm):
         numpy.ndarray, shape=(H,W)
             Numpy array of glint mask for img at input_path.
         """
-        return self._estimate_specular_reflection_component(img, self.percent_diffuse) > self.threshold
+        return (
+            self._estimate_specular_reflection_component(img, self.percent_diffuse)
+            > self.threshold
+        )
 
     @staticmethod
-    def _estimate_specular_reflection_component(img: np.ndarray, percent_diffuse: float) -> np.ndarray:
+    def _estimate_specular_reflection_component(
+        img: np.ndarray, percent_diffuse: float
+    ) -> np.ndarray:
         """Estimate the specular reflection component of pixels in an image.
 
-            Based on method from:
-                Wang, S., Yu, C., Sun, Y. et al. Specular reflection removal
-                of ocean surface remote sensing images from UAVs. Multimedia Tools
-                Appl 77, 11363–11379 (2018). https://doi.org/10.1007/s11042-017-5551-7
+        Based on method from:
+            Wang, S., Yu, C., Sun, Y. et al. Specular reflection removal
+            of ocean surface remote sensing images from UAVs. Multimedia Tools
+            Appl 77, 11363–11379 (2018). https://doi.org/10.1007/s11042-017-5551-7
 
-            Parameters
-            ----------
-            img: numpy.ndarray, shape=(H,W,C)
-                A numpy ndarray of an RGB image.
-            percent_diffuse
-                An estimate of the % of pixels that show purely diffuse reflection.
+        Parameters
+        ----------
+        img: numpy.ndarray, shape=(H,W,C)
+            A numpy ndarray of an RGB image.
+        percent_diffuse
+            An estimate of the % of pixels that show purely diffuse reflection.
 
-            Returns
-            -------
-            numpy.ndarray, shape=(H,W)
-                An 1D image where values are an estimate of the component of specular reflectance.
-            """
+        Returns
+        -------
+        numpy.ndarray, shape=(H,W)
+            1D image with values being an estimate of specular reflectance.
+        """
         # Calculate the pixel-wise max intensity and intensity range over RGB channels
         i_max = np.amax(img, axis=2)
         i_min = np.amin(img, axis=2)
@@ -97,7 +104,7 @@ class IntensityRatioAlgorithm(GlintAlgorithm):
         #     specular reflection
         num_thresh = math.ceil(percent_diffuse * q.size)
 
-        # Get intensity ratio for a pixel dividing the image into diffuse and specular sections
+        # Get intensity ratio by separating the image into diffuse and specular sections
         q_x_hat = np.partition(q.ravel(), num_thresh)[num_thresh]
 
         # Estimate the spectral component of each pixel

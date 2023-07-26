@@ -10,7 +10,7 @@ import numpy as np
 
 
 def normalize_img(img: np.ndarray, bit_depth: int) -> np.ndarray:
-    """Utility function to normalize the values of an image with arbitrary bit_depth to range [0, 1].
+    """Normalize the values of an image with arbitrary bit_depth to range [0, 1].
 
     Parameters
     ----------
@@ -31,9 +31,9 @@ def normalize_img(img: np.ndarray, bit_depth: int) -> np.ndarray:
 def list_images(img_dir) -> Iterable[str]:
     """List all image files in img_dir.
 
-    Returns an iterator that lists the files to process. Subclasses may want to override this to return specific
-    image types or filter the results. By default, will list all images in self.img_dir if the file extension is in
-    the extensions list.
+    Returns an iterator that lists the files to process. Subclasses may want to override
+    this to return specific image types or filter the results. By default, will list all
+    images in self.img_dir if the file extension is in the extensions list.
 
     Returns
     -------
@@ -49,6 +49,6 @@ def list_images(img_dir) -> Iterable[str]:
 
 def make_circular_kernel(size: int) -> np.ndarray:
     """Create circular kernel"""
-    y, x = np.ogrid[-size:size + 1, -size:size + 1]
-    dist_m: np.ndarray = x ** 2 + y ** 2
-    return dist_m <= size ** 2
+    y, x = np.ogrid[-size : size + 1, -size : size + 1]
+    dist_m: np.ndarray = x**2 + y**2
+    return dist_m <= size**2

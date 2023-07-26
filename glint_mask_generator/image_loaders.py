@@ -7,18 +7,23 @@ import re
 from abc import ABC, ABCMeta, abstractmethod
 from functools import singledispatchmethod
 from pathlib import Path
-from typing import Iterable, List, Union
+from typing import Iterable, List, Union, TYPE_CHECKING
 
 import numpy as np
 from PIL import Image
 
 from .utils import list_images, normalize_img
 
+if TYPE_CHECKING:
+    from .maskers import Masker
+
 Image.MAX_IMAGE_PIXELS = None
 
 
 class ImageLoader(ABC):
-    def __init__(self, image_directory: str, mask_directory: str):
+    def __init__(
+        self, image_directory: Union[str, Path], mask_directory: Union[str, Path]
+    ):
         super().__init__()
         self.image_directory = Path(image_directory)
         self.mask_directory = Path(mask_directory)
@@ -38,8 +43,8 @@ class ImageLoader(ABC):
 
     @property
     @abstractmethod
-    def _bit_depth(self):
-        return NotImplementedError
+    def _bit_depth(self) -> int:
+        raise NotImplementedError
 
     def preprocess_image(self, img: np.ndarray) -> np.ndarray:
         return normalize_img(img, bit_depth=self._bit_depth)
@@ -64,10 +69,12 @@ class ImageLoader(ABC):
         out_path
             The path where the file should be saved, including img extension.
         """
-        mask_img = Image.fromarray(mask, mode='L')
+        mask_img = Image.fromarray(mask, mode="L")
         mask_img.save(str(out_path))
 
-    def apply_masker(self, img_paths: Union[List[str], str], masker: "Masker"):  # noqa: F821
+    def apply_masker(
+        self, img_paths: Union[List[str], str], masker: "Masker"
+    ):  # noqa: F821
         img = self.load_image(img_paths)
         img = self.preprocess_image(img)
         mask = masker.algorithm(img)
@@ -82,6 +89,7 @@ class SingleFileImageLoader(ImageLoader, metaclass=ABCMeta):
     @staticmethod
     def load_image(path: str) -> np.ndarray:
         img = Image.open(path)
+        # noinspection PyTypeChecker
         return np.array(img).astype(float)
 
     @property
@@ -97,23 +105,27 @@ class CIRLoader(SingleFileImageLoader):
     _bit_depth = 8
     _crop_size = 256
 
-    def apply_masker(self, img_paths: Union[List[str], str], masker: 'Masker'):  # noqa: F821
-        """ Compute the image mask by moving a window over the input.
-            These CIR images are too large to be read into memory simultaneously so this image masking routine is special.
+    def apply_masker(
+        self, img_paths: Union[List[str], str], masker: "Masker"
+    ):  # noqa: F821
+        """Compute the image mask by moving a window over the input.
+        These CIR images are too large to be read into memory simultaneously so this
+        image masking routine is special.
 
-            This is the setup in the following logic:
-            The inner square is the region to be written to the output.
-            The outer square is a padding section used to ensure the pixel buffers are computed properly.
-            x1,y1
-               ,-----------------,
-               |  x,y            |
-               |   ,--------,    |
-               |   |        |    |
-               |   |        |    |
-               |   |________|    |
-               |          xc,yc  |
-               |_________________|
-                               x2,y2
+        This is the setup in the following logic:
+        The inner square is the region to be written to the output.
+        The outer square is a padding section used to ensure the pixel buffers are
+        computed properly.
+        x1,y1
+           ,-----------------,
+           |  x,y            |
+           |   ,--------,    |
+           |   |        |    |
+           |   |        |    |
+           |   |________|    |
+           |          xc,yc  |
+           |_________________|
+                           x2,y2
         """
         if not isinstance(img_paths, str):
             raise RuntimeError("CIRLoader can only operate on images at a single path")
@@ -121,14 +133,14 @@ class CIRLoader(SingleFileImageLoader):
             img_path = img_paths
             mask_path = next(self.get_mask_save_paths(img_paths))
 
-        with Image.open(img_path, 'r') as src:
+        with Image.open(img_path, "r") as src:
             height = src.height
             width = src.width
 
             pad = masker.pixel_buffer
 
             # Make an all black image to store the data
-            with Image.new('L', (width, height)) as dest:
+            with Image.new("L", (width, height)) as dest:
                 for y in range(0, height, self._crop_size):
                     for x in range(0, width, self._crop_size):
                         xc = min(x + self._crop_size, width)
@@ -139,6 +151,7 @@ class CIRLoader(SingleFileImageLoader):
                         y0 = max(y - pad, 0)
                         y1 = min(yc + pad, height)
 
+                        # noinspection PyTypeChecker
                         img = np.array(src.crop((x0, y0, x1, y1)))
                         img = self.preprocess_image(img)
                         mask = masker.algorithm(img)
@@ -146,8 +159,11 @@ class CIRLoader(SingleFileImageLoader):
                         mask = masker.to_metashape_mask(mask)
 
                         # Remove padding
-                        mask = mask[y - y0:, x - x0:]
-                        mask = mask[:self._crop_size + pad - (y1 - yc), :self._crop_size + pad - (x1 - xc)]
+                        mask = mask[(y - y0) :, (x - x0) :]
+                        mask = mask[
+                            : self._crop_size + pad - (y1 - yc),
+                            : self._crop_size + pad - (x1 - xc),
+                        ]
 
                         # Write the mask section
                         dest.paste(Image.fromarray(mask), (x, y))
@@ -156,7 +172,8 @@ class CIRLoader(SingleFileImageLoader):
 
 class MultiFileImageLoader(ImageLoader, metaclass=ABCMeta):
     @staticmethod
-    def load_image(paths: List[str]) -> np.ndarray:
+    def load_image(paths: List[Union[str, Path]]) -> np.ndarray:
+        # noinspection PyTypeChecker
         imgs = [np.asarray(Image.open(p)) for p in paths]
         return np.stack(imgs, axis=2).astype(float)
 
@@ -167,10 +184,12 @@ class MultiFileImageLoader(ImageLoader, metaclass=ABCMeta):
 
 
 class MicasenseRedEdgeLoader(MultiFileImageLoader):
-    _blue_band_pattern = re.compile("(.*[\\\\/])?IMG_[0-9]{4}_1.tif", flags=re.IGNORECASE)
+    _blue_band_pattern = re.compile(
+        "(.*[\\\\/])?IMG_[0-9]{4}_1.tif", flags=re.IGNORECASE
+    )
     _bit_depth = 16
 
-    def _is_blue_band_path(self, path: str) -> bool:
+    def _is_blue_band_path(self, path: Union[str, Path]) -> bool:
         return self._blue_band_pattern.match(str(path)) is not None
 
     @property
@@ -180,7 +199,9 @@ class MicasenseRedEdgeLoader(MultiFileImageLoader):
     @staticmethod
     def _blue_band_path_to_band_paths(path: str) -> List[str]:
         in_path_root = Path(path).stem[:-1]
-        return [str(Path(path).with_name(f"{in_path_root}{i}.tif")) for i in range(1, 6)]
+        return [
+            str(Path(path).with_name(f"{in_path_root}{i}.tif")) for i in range(1, 6)
+        ]
 
     @property
     def paths(self) -> Iterable[List[str]]:
@@ -188,10 +209,12 @@ class MicasenseRedEdgeLoader(MultiFileImageLoader):
 
 
 class P4MSLoader(MultiFileImageLoader):
-    _blue_band_pattern = re.compile("(.*[\\\\/])?DJI_[0-9]{3}1.TIF", flags=re.IGNORECASE)
+    _blue_band_pattern = re.compile(
+        "(.*[\\\\/])?DJI_[0-9]{3}1.TIF", flags=re.IGNORECASE
+    )
     _bit_depth = 16
 
-    def _is_blue_band_path(self, path: str) -> bool:
+    def _is_blue_band_path(self, path: Union[str, Path]) -> bool:
         return self._blue_band_pattern.match(str(path)) is not None
 
     @property
@@ -199,9 +222,11 @@ class P4MSLoader(MultiFileImageLoader):
         return filter(self._is_blue_band_path, list_images(self.image_directory))
 
     @staticmethod
-    def _blue_band_path_to_band_paths(path: str) -> List[str]:
+    def _blue_band_path_to_band_paths(path: Union[str, Path]) -> List[str]:
         in_path_root = Path(path).stem[:-1]
-        return [str(Path(path).with_name(f"{in_path_root}{i}.TIF")) for i in range(1, 6)]
+        return [
+            str(Path(path).with_name(f"{in_path_root}{i}.TIF")) for i in range(1, 6)
+        ]
 
     @property
     def paths(self) -> Iterable[List[str]]:
