@@ -95,7 +95,7 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         )
 
         # Set max workers to good default
-        self.max_workers = os.cpu_count()
+        self.max_workers = min(4, os.cpu_count())
 
         # Connect signals/slots
         self.run_btn.released.connect(self.run_btn_clicked)
