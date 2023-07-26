@@ -15,7 +15,7 @@ from .maskers import Masker, MicasenseRedEdgeThresholdMasker, P4MSThresholdMaske
 
 
 class CLI(object):
-    def __init__(self, max_workers: int = os.cpu_count()):
+    def __init__(self, max_workers: int = min(4, os.cpu_count())):
         """Command Line Interface Class for glint mask generators.
 
         Parameters
