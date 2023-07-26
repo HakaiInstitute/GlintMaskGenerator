@@ -82,7 +82,7 @@ class SingleFileImageLoader(ImageLoader, metaclass=ABCMeta):
     @staticmethod
     def load_image(path: str) -> np.ndarray:
         img = Image.open(path)
-        return np.array(img).astype(np.float)
+        return np.array(img).astype(float)
 
     @property
     def paths(self) -> Iterable[str]:
@@ -158,7 +158,7 @@ class MultiFileImageLoader(ImageLoader, metaclass=ABCMeta):
     @staticmethod
     def load_image(paths: List[str]) -> np.ndarray:
         imgs = [np.asarray(Image.open(p)) for p in paths]
-        return np.stack(imgs, axis=2).astype(np.float)
+        return np.stack(imgs, axis=2).astype(float)
 
     @property
     @abstractmethod
