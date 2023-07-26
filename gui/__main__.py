@@ -88,7 +88,7 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
 
         # Set max workers to good default
-        self.max_workers = os.cpu_count()
+        self.max_workers = min(4, os.cpu_count())
 
         # Connect signals/slots
         self.run_btn.released.connect(self.run_btn_clicked)
