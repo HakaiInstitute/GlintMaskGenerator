@@ -7,12 +7,15 @@ import re
 from abc import ABC, ABCMeta, abstractmethod
 from functools import singledispatchmethod
 from pathlib import Path
-from typing import Iterable, List, Union
+from typing import Iterable, List, Union, TYPE_CHECKING
 
 import numpy as np
 from PIL import Image
 
 from .utils import list_images, normalize_img
+
+if TYPE_CHECKING:
+    from .maskers import Masker
 
 Image.MAX_IMAGE_PIXELS = None
 
