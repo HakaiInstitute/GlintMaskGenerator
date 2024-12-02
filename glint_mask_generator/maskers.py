@@ -3,6 +3,7 @@ Created by: Taylor Denouden
 Organization: Hakai Institute
 Date: 2020-09-18
 """
+
 import concurrent.futures
 import os
 from typing import Callable, List, Optional, Sequence, Union

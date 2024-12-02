@@ -3,14 +3,15 @@ Created by: Taylor Denouden
 Organization: Hakai Institute
 Date: 2020-09-16
 """
+
 import os
 import sys
 from typing import List, Sequence
 
+from loguru import logger
 from PyQt6 import QtWidgets, uic
 from PyQt6.QtCore import QObject, QRunnable, QThreadPool, pyqtSignal, pyqtSlot
 from PyQt6.QtGui import QIcon
-from loguru import logger
 
 from glint_mask_generator import (
     CIRThresholdMasker,

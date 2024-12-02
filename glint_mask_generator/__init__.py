@@ -5,11 +5,11 @@ Date: 2020-09-18
 """
 
 from .maskers import (
-    Masker,
-    RGBThresholdMasker,
-    P4MSThresholdMasker,
-    MicasenseRedEdgeThresholdMasker,
     CIRThresholdMasker,
+    Masker,
+    MicasenseRedEdgeThresholdMasker,
+    P4MSThresholdMasker,
+    RGBThresholdMasker,
 )
 
 __all__ = [
