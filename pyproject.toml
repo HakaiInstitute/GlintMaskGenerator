@@ -29,6 +29,11 @@ pyinstaller = "^5.6.2"
 pre-commit = "^3.3.3"
 ruff = "^0.8.1"
 
+[tool.poetry.group.docs.dependencies]
+mkdocs = "^1.6.1"
+mkdocs-material = "^9.5.47"
+mkdocstrings-python = "^1.12.2"
+
 [tool.ruff.lint.isort]
 combine-as-imports = true
 
