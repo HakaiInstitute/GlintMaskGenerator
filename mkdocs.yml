@@ -6,8 +6,7 @@ repo_name: HakaiInstitue/GlintMaskGenerator
 nav:
   - Home: index.md
   - Installation: installation.md
-  - Getting Started: getting_started.md
-  - Command Line Interface: cli.md
+  - Usage: usage.md
   - Issue Tracker: 'https://github.com/HakaiInstitute/GlintMaskGenerator/issues'
 
 theme:
