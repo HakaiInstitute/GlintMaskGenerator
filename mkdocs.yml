@@ -1,0 +1,66 @@
+site_name: GlintMaskGenerator
+site_url: https://glint-mask-generator.readthedocs.io
+repo_url: https://github.com/HakaiInstitute/GlintMaskGenerator
+repo_name: HakaiInstitue/GlintMaskGenerator
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Getting Started: getting_started.md
+  - Command Line Interface: cli.md
+  - Issue Tracker: 'https://github.com/HakaiInstitute/GlintMaskGenerator/issues'
+
+theme:
+  name: material
+  palette:
+    primary: yellow
+  icon:
+    logo: material/weather-sunny-off
+  features:
+    - navigation.indexes
+
+extra:
+  social:
+    - icon: fontawesome/brands/x-twitter
+      link: https://x.com/HakaiGeospatial
+    - icon: fontawesome/brands/instagram
+      link: https://www.instagram.com/hakaiinstitute
+    - icon: fontawesome/brands/linkedin
+      link: https://ca.linkedin.com/company/hakai-institute
+
+
+watch:
+  - glint_mask_generator
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.keys
+  - pymdownx.tilde
+  - tables
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+plugins:
+  - search:
+      lang: en
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
