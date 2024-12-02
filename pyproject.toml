@@ -14,12 +14,12 @@ packages = [
 glint-mask = 'glint_mask_generator.cli:main'
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.12"
+python = ">=3.9,<3.13"
 numpy = "~=1.25.1"
 fire = "~=0.5.0"
-Pillow = ">=9.3,<10.4"
+Pillow = "~=10.4"
 scipy = "~=1.11.1"
-tqdm = ">=4.65,<4.67"
+tqdm = "~=4.65"
 loguru = "~=0.7.0"
 pyqt6 = "^6.4.0"
 
@@ -29,6 +29,8 @@ pyinstaller = "^5.6.2"
 pre-commit = "^3.3.3"
 ruff = "^0.8.1"
 
+[tool.ruff.lint.isort]
+combine-as-imports = true
 
 [build-system]
 requires = ["poetry-core"]

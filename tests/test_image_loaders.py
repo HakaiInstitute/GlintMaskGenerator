@@ -3,13 +3,14 @@ Created by: Taylor Denouden
 Organization: Hakai Institute
 Date: 2020-06-12
 """
+
 import os
 from pathlib import Path
 
 import numpy as np
 from PIL import Image
 
-from glint_mask_generator.image_loaders import P4MSLoader, MicasenseRedEdgeLoader
+from glint_mask_generator.image_loaders import MicasenseRedEdgeLoader, P4MSLoader
 
 IMG_CONTENT = Image.fromarray(np.ones((32, 32, 3)).astype(np.uint8) * 255)
 TEST_FILE_NAMES = [

@@ -4,6 +4,7 @@ Organization: Hakai Institute
 Date: 2020-05-30
 Description: Command line interface to the glint-mask-tools.
 """
+
 import os
 import sys
 from typing import List
@@ -12,11 +13,11 @@ import fire
 from tqdm import tqdm
 
 from .maskers import (
+    CIRThresholdMasker,
     Masker,
     MicasenseRedEdgeThresholdMasker,
     P4MSThresholdMasker,
     RGBThresholdMasker,
-    CIRThresholdMasker,
 )
 
 

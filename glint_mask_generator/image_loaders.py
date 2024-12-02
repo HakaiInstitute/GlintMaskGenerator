@@ -3,11 +3,12 @@ Created by: Taylor Denouden
 Organization: Hakai Institute
 Date: 2020-09-18
 """
+
 import re
 from abc import ABC, ABCMeta, abstractmethod
 from functools import singledispatchmethod
 from pathlib import Path
-from typing import Iterable, List, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable, List, Union
 
 import numpy as np
 from PIL import Image
@@ -72,9 +73,7 @@ class ImageLoader(ABC):
         mask_img = Image.fromarray(mask, mode="L")
         mask_img.save(str(out_path))
 
-    def apply_masker(
-        self, img_paths: Union[List[str], str], masker: "Masker"
-    ):  # noqa: F821
+    def apply_masker(self, img_paths: Union[List[str], str], masker: "Masker"):  # noqa: F821
         img = self.load_image(img_paths)
         img = self.preprocess_image(img)
         mask = masker.algorithm(img)
@@ -105,9 +104,7 @@ class CIRLoader(SingleFileImageLoader):
     _bit_depth = 8
     _crop_size = 256
 
-    def apply_masker(
-        self, img_paths: Union[List[str], str], masker: "Masker"
-    ):  # noqa: F821
+    def apply_masker(self, img_paths: Union[List[str], str], masker: "Masker"):  # noqa: F821
         """Compute the image mask by moving a window over the input.
         These CIR images are too large to be read into memory simultaneously so this
         image masking routine is special.
