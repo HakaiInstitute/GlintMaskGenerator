@@ -1,16 +1,89 @@
 # Usage
 
-## GUI
+## General usage notes
 
-In Windows, launch the GUI by double clicking the executable file. In Linux, you'll have to launch the GUI from the
-terminal, e.g. `./GlintMaskGenerator`.
+### Accepted file types
 
-For now, generating masks by passing directory paths containing images is the supported workflow. Be sure to change the
-image type option when processing imagery for cameras other than RGB cameras (e.g. Micasense RedEdge or DJI P4MS
-cameras). You will be notified of any
-processing errors via a pop-up dialog.
+- Supported file types are currently .jpg, .jpeg, .tif, .tiff, and .png (all are case-insensitive).
 
-## CLI
+### Output files:
+
+- Saved in the specified output directory
+- Named as original filename + "_mask" suffix and maintain the same file type as the input file
+    - Example: `image1.jpg` → `image1_mask.jpg`
+- When processing multi-band imagery (e.g., Micasense RedEdge or P4MS), masks will be generated for all sibling band
+  images.
+    - This caters to the expectations of SfM software like Agisoft Metashape.
+
+### Understanding Pixel Thresholds
+
+Pixel thresholds determine how the software identifies glint in your imagery. The thresholds are specified as decimal
+values between 0.0 and 1.0, which are then applied to the full range of possible pixel values in your image.
+
+#### How Thresholds Work
+
+For example, in an 8-bit image (pixel values 0-255):
+
+- A threshold of 0.5 means: pixel value > (0.5 × 255) = 127
+- A threshold of 0.875 means: pixel value > (0.875 × 255) = 223
+
+#### Multiple Band Behavior
+
+When multiple bands are present (like in RGB images):
+
+1. Each band is checked against its respective threshold
+2. If ANY band exceeds its threshold, that pixel is marked as glint
+3. The resulting masks are combined using a union operation
+
+#### Example
+
+For an RGB image with thresholds:
+
+- Blue: 0.875 (triggers at values > 223)
+- Green: 1.000 (never triggers)
+- Red: 1.000 (never triggers)
+
+A pixel will be marked as glint if its blue value exceeds 223, regardless of its red and green values.
+
+## Interfaces
+
+### GUI
+
+The GUI version provides an intuitive interface for generating glint masks from imagery. Launch the application by
+double-clicking the executable file on Windows, or running `./GlintMaskGenerator` from the terminal on Linux.
+
+#### Main Options
+
+1. **Imagery Type Selection**
+    - Choose the appropriate camera/sensor type for your imagery:
+        - RGB: Standard RGB camera imagery
+        - CIR: 4-band Color Infrared imagery
+        - P4MS: DJI Phantom 4 Multispectral camera imagery
+        - MicasenseRedEdge: Micasense RedEdge multispectral camera imagery
+
+2. **Directory Selection**
+    - Image Directory: Select the input folder containing your imagery files using the "..." button
+    - Output Directory: Choose where the generated mask files will be saved
+
+3. **Band Thresholds**
+    - Adjust thresholds for each available band using the sliders
+    - Range: 0.0 to 1.0 (higher values = less masking)
+        - Default values:
+            - Blue: 0.875
+            - Green: 1.000
+            - Red: 1.000
+            - Red Edge: 1.000 (when applicable)
+            - NIR: 1.000 (when applicable)
+        - Use the "Reset all" button to restore default values
+
+4. **Processing Options**
+    - Pixel Buffer Radius: Adjusts the expansion of masked regions (default: 0)
+    - Max Workers: Controls the number of parallel processing threads (default: 4)
+
+5. **Processing**
+    - Click "Run" to start generating masks
+
+### CLI
 
 For information about the parameters expected by the CLI, run glint-mask --help in a bash terminal or command line
 interface. All the functionality of the CLI is documented there.
@@ -53,23 +126,45 @@ interface. All the functionality of the CLI is documented there.
 ╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
-### Examples
+#### CLI Examples
 
 ```bash
-# Process rgb imagery directory with default parameters
-glint-mask rgb_threshold /path/to/dir/with/images/ /path/to/out_masks/dir/
+# Process RGB imagery directory with default parameters
+# - Uses default thresholds (Blue: 0.875, Green: 1.0, Red: 1.0)
+# - No pixel buffer
+# - 4 worker threads
+glint-mask rgb-threshold /path/to/dir/with/images/ /path/to/out_masks/dir/
 
-# Process PhaseONE camera imagery with image bands split over multiple files
-glint-mask aco_threshold /path/to/dir/with/images/ /path/to/out_masks/dir/
+# Process PhaseONE CIR imagery with custom settings
+# - Specify custom thresholds with --thresholds
+# - Add 2-pixel buffer with --pixel-buffer
+# - Use 8 worker threads with --max-workers
+glint-mask cir-threshold \
+    --thresholds 0.8,0.9,0.9,0.9 \
+    --pixel-buffer 2 \
+    --max-workers 8 \
+    /path/to/dir/with/images/ \
+    /path/to/out_masks/dir/
 
-# Process DJI P4MS imagery
-glint-mask p4ms_threshold /path/to/dir/with/images/ /path/to/out_masks/dir/
+# Process DJI P4MS imagery with minimal masking
+# - Higher thresholds mean less aggressive masking
+# - Useful for scenes with minimal glint
+glint-mask p4ms-threshold \
+    --thresholds 0.95,1.0,1.0,1.0,1.0 \
+    /path/to/dir/with/images/ \
+    /path/to/out_masks/dir/
 
-# Process Micasense RedEdge imagery
-glint-mask micasense_threshold /path/to/dir/with/images/ /path/to/out_masks/dir/
+# Process Micasense RedEdge imagery with aggressive masking
+# - Lower thresholds mean more aggressive masking
+# - Larger pixel buffer for broader masked areas
+glint-mask micasense-threshold \
+    --thresholds 0.8,0.9,0.9,0.9,0.9 \
+    --pixel-buffer 5 \
+    /path/to/dir/with/images/ \
+    /path/to/out_masks/dir/
 ```
 
-## Python Package
+### Python Library
 
 Installing the PyPi package allows integrating the mask generation workflow into existing python scripts with ease.
 
@@ -79,28 +174,10 @@ from glint_mask_generator import MicasenseRedEdgeThresholdMasker
 # Also available: P4MSThresholdMasker, RGBIntensityRatioMasker, RGBThresholdMasker
 
 masker = MicasenseRedEdgeThresholdMasker(
-    img_dir="path/to/micasense/images/", 
+    img_dir="path/to/micasense/images/",
     mask_dir="path/to/output/dir/",
-    thresholds=(0.875, 1, 1, 1, 1), 
+    thresholds=(0.875, 1, 1, 1, 1),
     pixel_buffer=5
 )
 masker.process(max_workers=5, callback=print, err_callback=print)
 ```
-
-## Notes
-
-### Directory of images processing
-
-- All files with "jpg", "jpeg", "tif", "tiff" and "png" extensions will be processed. This can be extended as needed.
-  File extension matching is case-insensitive.
-- Output mask files with be in the specified directory, and have the same name as the input file with "_mask" appended
-  to the end of the file name stem. The file type will match the input type.
-
-### Multi-band image processing
-
-- For imagery types where each band is spread over multiple files, a mask will be generated for all the sibling band
-  images.
-    - For example, if a mask is generated using a threshold on the blue band image, identical masks are saved for
-      sibling red, green, blue, nir, and red_edge bands as well.
-    - If thresholds are passed for multiple bands, these mask outputs combined with a union operator before being saved
-      for all the sibling bands associated with that capture event.

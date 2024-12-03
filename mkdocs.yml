@@ -5,8 +5,10 @@ repo_name: HakaiInstitue/GlintMaskGenerator
 
 nav:
   - Home: index.md
+  - How it works: how_it_works.md
   - Installation: installation.md
   - Usage: usage.md
+  - FAQs: faq.md
   - Issue Tracker: 'https://github.com/HakaiInstitute/GlintMaskGenerator/issues'
 
 theme:
@@ -51,3 +53,7 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+
+plugins:
+  - search:
+      lang: en
