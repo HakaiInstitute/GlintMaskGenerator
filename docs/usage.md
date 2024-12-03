@@ -18,79 +18,56 @@ interface. All the functionality of the CLI is documented there.
 ```bash
 glint-mask --help
 
-# NAME
-#     glint-mask-v*.*.*
-#
-# SYNOPSIS
-#     glint-mask-v*.*.* - COMMAND | VALUE
-#
-# COMMANDS
-#     COMMAND is one of the following:
-#
-#      cir_threshold
-#        Generate masks for glint regions in 4 Band CIR imagery using Tom Bell's binning algorithm.
-#
-#      micasense_threshold
-#        Generate masks for glint regions in multispectral imagery from the Micasense camera using Tom Bell's algorithm on the blue image band.
-#
-#      p4ms_threshold
-#        Generate masks for glint regions in multispectral imagery from the DJI camera using Tom Bell's algorithm on the Blue image band.
-#
-#      process
-#
-#      rgb_threshold
-#        Generate masks for glint regions in RGB imagery using Tom Bell's binning algorithm.
-#
-# VALUES
-#     VALUE is one of the following:
-#
-#      max_workers
-#        The maximum number of threads to use for processing.
+ Usage: glint-mask [OPTIONS] COMMAND [ARGS]...                                                                                                                                                                                                                      
+                                                                                                                                                                                                                                                                    
+╭─ Options ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ --install-completion          Install completion for the current shell.                                                                                       │
+│ --show-completion             Show completion for the current shell, to copy it or customize the installation.                                                │
+│ --help                        Show this message and exit.                                                                                                     │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ rgb-threshold         Generate masks for glint regions in RGB imagery using Tom Bell's binning algorithm.                                                     │
+│ cir-threshold         Generate masks for glint regions in 4 Band CIR imagery using Tom Bell's binning algorithm.                                              │
+│ p4ms-threshold        Generate masks for glint regions in multispectral imagery from the DJI camera using Tom Bell's algorithm on the Blue image band.        │
+│ micasense-threshold   Generate masks for glint regions in multispectral imagery from the Micasense camera using Tom Bell's algorithm on the blue image band.  │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
 ```bash
 # Get addition parameters for one of the cameras/methods available
-glint-mask-v*.*.* rgb_threshold --help
-
-# NAME
-#     glint-mask-v*.*.* rgb_threshold - Generate masks for glint regions in RGB imagery using Tom Bell's binning algorithm.
-#
-# SYNOPSIS
-#     glint-mask-v*.*.* rgb_threshold IMG_DIR OUT_DIR <flags>
-#
-# DESCRIPTION
-#     Generate masks for glint regions in RGB imagery using Tom Bell's binning algorithm.
-#
-# POSITIONAL ARGUMENTS
-#     IMG_DIR
-#         The path to a named input image or directory containing images. If img_dir is a directory, all tif, jpg, jpeg, and png images in that directory will be # processed.
-#     OUT_DIR
-#         The path to send your out image including the file name and type. e.g. "/path/to/mask.png". out_dir must be a directory if img_dir is specified as a # # # directory.
-#
-# FLAGS
-#     --thresholds=THRESHOLDS
-#         The pixel band thresholds indicating glint. Domain for values is (0.0, 1.0). Default is [1, 1, 0.875].
-#     --pixel_buffer=PIXEL_BUFFER
-#         The pixel distance to buffer out the mask. Defaults to 0 (off).
-#
-# NOTES
-#     You can also use flags syntax for POSITIONAL ARGUMENTS
+glint-mask rgb_threshold --help
+❯ glint-mask rgb-threshold --help
+                                                                                                                                                                                                                                                                    
+ Usage: glint-mask rgb-threshold [OPTIONS] IMG_DIR OUT_DIR                                                                                                                                                                                                          
+                                                                                                                                                                                                                                                                    
+ Generate masks for glint regions in RGB imagery using Tom Bell's binning algorithm.                                                                                                                                                                                
+                                                                                                                                                                                                                                                                    
+╭─ Arguments ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ *    img_dir      PATH  The path to a named input image or directory containing images. If img_dir is a directory, all tif, jpg, jpeg, and png images in that directory will be processed. [default: None] [required]  │
+│ *    out_dir      PATH  The path to send your out image including the file name and type. e.g. "/path/to/mask.png". out_dir must be a directory if img_dir is specified as a directory. [default: None] [required]     │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ --thresholds          FLOAT    The pixel band thresholds indicating glint. Domain for values is (0.0, 1.0). [default: 0.875, 1, 1, 1, 1]                                                                               │
+│ --pixel-buffer        INTEGER  The pixel distance to buffer out the mask. [default: 0]                                                                                                                                 │
+│ --max-workers         INTEGER  The maximum number of threads to use for processing. [default: 4]                                                                                                                       │
+│ --help                         Show this message and exit.                                                                                                                                                             │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
 ### Examples
 
 ```bash
 # Process rgb imagery directory with default parameters
-glint-mask-v*.*.* rgb_threshold /path/to/dir/with/images/ /path/to/out_masks/dir/
+glint-mask rgb_threshold /path/to/dir/with/images/ /path/to/out_masks/dir/
 
 # Process PhaseONE camera imagery with image bands split over multiple files
-glint-mask-v*.*.* aco_threshold /path/to/dir/with/images/ /path/to/out_masks/dir/
+glint-mask aco_threshold /path/to/dir/with/images/ /path/to/out_masks/dir/
 
 # Process DJI P4MS imagery
-glint-mask-v*.*.* p4ms_threshold /path/to/dir/with/images/ /path/to/out_masks/dir/
+glint-mask p4ms_threshold /path/to/dir/with/images/ /path/to/out_masks/dir/
 
 # Process Micasense RedEdge imagery
-glint-mask-v*.*.* micasense_threshold /path/to/dir/with/images/ /path/to/out_masks/dir/
+glint-mask micasense_threshold /path/to/dir/with/images/ /path/to/out_masks/dir/
 ```
 
 ## Python Package
