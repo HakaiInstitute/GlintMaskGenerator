@@ -15,8 +15,8 @@ processing errors via a pop-up dialog.
 For information about the parameters expected by the CLI, run glint-mask --help in a bash terminal or command line
 interface. All the functionality of the CLI is documented there.
 
-```bash
-glint-mask --help
+```
+❯ glint-mask --help
 
  Usage: glint-mask [OPTIONS] COMMAND [ARGS]...                                                                                                                                                                                                                      
                                                                                                                                                                                                                                                                     
@@ -33,9 +33,8 @@ glint-mask --help
 ╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
-```bash
+```
 # Get addition parameters for one of the cameras/methods available
-glint-mask rgb_threshold --help
 ❯ glint-mask rgb-threshold --help
                                                                                                                                                                                                                                                                     
  Usage: glint-mask rgb-threshold [OPTIONS] IMG_DIR OUT_DIR                                                                                                                                                                                                          
@@ -74,13 +73,17 @@ glint-mask micasense_threshold /path/to/dir/with/images/ /path/to/out_masks/dir/
 
 Installing the PyPi package allows integrating the mask generation workflow into existing python scripts with ease.
 
-```python
+```py
 from glint_mask_generator import MicasenseRedEdgeThresholdMasker
 
 # Also available: P4MSThresholdMasker, RGBIntensityRatioMasker, RGBThresholdMasker
 
-masker = MicasenseRedEdgeThresholdMasker(img_dir="path/to/micasense/images/", mask_dir="path/to/output/dir/",
-                                         thresholds=(0.875, 1, 1, 1, 1), pixel_buffer=5)
+masker = MicasenseRedEdgeThresholdMasker(
+    img_dir="path/to/micasense/images/", 
+    mask_dir="path/to/output/dir/",
+    thresholds=(0.875, 1, 1, 1, 1), 
+    pixel_buffer=5
+)
 masker.process(max_workers=5, callback=print, err_callback=print)
 ```
 
