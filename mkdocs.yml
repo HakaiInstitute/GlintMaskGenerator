@@ -1,0 +1,59 @@
+site_name: GlintMaskGenerator
+site_url: https://glint-mask-generator.readthedocs.io
+repo_url: https://github.com/HakaiInstitute/GlintMaskGenerator
+repo_name: HakaiInstitue/GlintMaskGenerator
+
+nav:
+  - Home: index.md
+  - How it works: how_it_works.md
+  - Installation: installation.md
+  - Usage: usage.md
+  - FAQs: faq.md
+  - Issue Tracker: 'https://github.com/HakaiInstitute/GlintMaskGenerator/issues'
+
+theme:
+  name: material
+  palette:
+    primary: yellow
+  icon:
+    logo: material/weather-sunny-off
+  features:
+    - navigation.instant
+    - navigation.instant.prefetch
+    - content.code.copy
+
+extra:
+  social:
+    - icon: fontawesome/brands/x-twitter
+      link: https://x.com/HakaiGeospatial
+    - icon: fontawesome/brands/instagram
+      link: https://www.instagram.com/hakaiinstitute
+    - icon: fontawesome/brands/linkedin
+      link: https://ca.linkedin.com/company/hakai-institute
+  consent:
+    title: Cookie consent
+    description: >-
+      We use cookies to recognize your repeated visits and preferences, as well
+      as to measure the effectiveness of our documentation and whether users
+      find what they're searching for. With your consent, you're helping us to
+      make our documentation better.
+
+watch:
+  - glint_mask_generator
+
+markdown_extensions:
+  - admonition
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+plugins:
+  - search:
+      lang: en
