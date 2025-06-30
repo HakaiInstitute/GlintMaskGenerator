@@ -133,3 +133,5 @@ dmypy.json
 ignore/
 
 data/
+
+.DS_Store
