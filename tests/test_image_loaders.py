@@ -71,7 +71,7 @@ def test_p4ms_loader(tmp_path):
             "DJI_2025.TIF",
         ],
     ]
-    valid_paths = [[Path(tmp_path) / p for p in paths] for paths in valid_paths]
+    valid_paths = [[str(Path(tmp_path) / p) for p in paths] for paths in valid_paths]
     valid_paths = sorted(valid_paths, key=lambda a: a[0])
 
     masker_paths = sorted(image_loader.paths, key=lambda a: a[0])
@@ -140,7 +140,7 @@ def test_micasense_red_edge_masker(tmp_path):
             "IMG_4321_5.tif",
         ],
     ]
-    valid_paths = [[Path(tmp_path) / p for p in paths] for paths in valid_paths]
+    valid_paths = [[str(Path(tmp_path) / p) for p in paths] for paths in valid_paths]
     valid_paths = sorted(valid_paths, key=lambda a: a[0])
 
     masker_paths = sorted(image_loader.paths, key=lambda a: a[0])
