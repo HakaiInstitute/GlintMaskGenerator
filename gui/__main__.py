@@ -1,12 +1,12 @@
-"""
-Created by: Taylor Denouden
+"""Created by: Taylor Denouden
 Organization: Hakai Institute
-Date: 2020-09-16
+Date: 2020-09-16.
 """
 
 import os
 import sys
-from typing import List, Sequence
+from collections.abc import Sequence
+from typing import Any, Callable
 
 from loguru import logger
 from PyQt6 import QtWidgets, uic
@@ -46,28 +46,28 @@ DEFAULT_MAX_WORKERS = 0
 
 
 class MessageBox(QtWidgets.QMessageBox):
-    def __init__(self, parent, title, icon):
+    def __init__(self, parent: QtWidgets.QWidget, title: str, icon: str) -> None:
         super().__init__(parent)
         self.setIcon(icon)
         self.setWindowTitle(title)
 
-    def show_message(self, message):
+    def show_message(self, message: str) -> None:
         self.setText(message)
         self.exec()
 
 
 class InfoMessageBox(MessageBox):
-    def __init__(self, parent):
+    def __init__(self, parent: QtWidgets.QWidget) -> None:
         super().__init__(parent, "Info", QtWidgets.QMessageBox.Icon.Information)
 
 
 class ErrorMessageBox(MessageBox):
-    def __init__(self, parent):
+    def __init__(self, parent: QtWidgets.QWidget) -> None:
         super().__init__(parent, "Error", QtWidgets.QMessageBox.Icon.Critical)
 
 
 class GlintMaskGenerator(QtWidgets.QMainWindow):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         uic.loadUi(resource_path("resources/gui.ui"), self)
 
@@ -91,9 +91,6 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
 
         # Run non-ui jobs in a separate thread
         self.threadpool = QThreadPool()
-        print(
-            "Multithreading with maximum %d threads" % self.threadpool.maxThreadCount()
-        )
 
         # Set max workers to good default
         self.max_workers = min(4, os.cpu_count())
@@ -126,45 +123,45 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
     def img_type(self) -> str:
         if self.img_type_cir_radio.isChecked():
             return IMG_TYPE_CIR
-        elif self.img_type_p4ms_radio.isChecked():
+        if self.img_type_p4ms_radio.isChecked():
             return IMG_TYPE_P4MS
-        elif self.img_type_micasense_radio.isChecked():
+        if self.img_type_micasense_radio.isChecked():
             return IMG_TYPE_MICASENSE_REDEDGE
-        else:  # self.img_type_rgb_radio.isChecked()
+        if self.img_type_rgb_radio.isChecked():
             return IMG_TYPE_RGB
+        msg = "Unknown image type."
+        raise (ValueError(msg))
 
     @property
     def max_workers(self) -> int:
         return max(self.max_workers_spinbox.value(), 0)
 
     @max_workers.setter
-    def max_workers(self, v):
+    def max_workers(self, v: int) -> None:
         self.max_workers_spinbox.setValue(v)
 
     @property
     def band_order_ints(self) -> Sequence[int]:
-        return [
-            {BLUE: 0, GREEN: 1, RED: 2, REDEDGE: 3, NIR: 4}[k] for k in self.band_order
-        ]
+        return [{BLUE: 0, GREEN: 1, RED: 2, REDEDGE: 3, NIR: 4}[k] for k in self.band_order]
 
     @property
     def band_order(self) -> Sequence[str]:
         if self.img_type == IMG_TYPE_RGB:
             return RED, GREEN, BLUE
-        elif self.img_type == IMG_TYPE_CIR:
+        if self.img_type == IMG_TYPE_CIR:
             return RED, GREEN, BLUE, NIR
-        elif self.img_type == IMG_TYPE_P4MS:
+        if self.img_type == IMG_TYPE_P4MS:
             return BLUE, GREEN, RED, REDEDGE, NIR
         if self.img_type == IMG_TYPE_MICASENSE_REDEDGE:
             return BLUE, GREEN, RED, NIR, REDEDGE
+        return None
 
     @property
     def threshold_values(self) -> Sequence[float]:
-        """
-        Returns the thresholds in the order corresponding to the imagery type band
+        """Returns the thresholds in the order corresponding to the imagery type band
         order.
         """
-        thresholds: List[float] = [
+        thresholds: list[float] = [
             self.blue_thresh_w.value,
             self.green_thresh_w.value,
             self.red_thresh_w.value,
@@ -174,52 +171,51 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         return [thresholds[i] for i in self.band_order_ints]
 
     def create_masker(self) -> Masker:
-        """
-        Returns an instance of the appropriate glint mask generator given selected
+        """Returns an instance of the appropriate glint mask generator given selected
         options.
         """
-        threshold_params = dict(
-            img_dir=self.img_dir_w.value,
-            mask_dir=self.mask_dir_w.value,
-            thresholds=self.threshold_values,
-            pixel_buffer=self.pixel_buffer_w.value,
-        )
+        threshold_params = {
+            "img_dir": self.img_dir_w.value,
+            "mask_dir": self.mask_dir_w.value,
+            "thresholds": self.threshold_values,
+            "pixel_buffer": self.pixel_buffer_w.value,
+        }
 
         if self.img_type == IMG_TYPE_RGB:
             return RGBThresholdMasker(**threshold_params)
-        elif self.img_type == IMG_TYPE_CIR:
+        if self.img_type == IMG_TYPE_CIR:
             return CIRThresholdMasker(**threshold_params)
-        elif self.img_type == IMG_TYPE_P4MS:
+        if self.img_type == IMG_TYPE_P4MS:
             return P4MSThresholdMasker(**threshold_params)
-        elif self.img_type == IMG_TYPE_MICASENSE_REDEDGE:
+        if self.img_type == IMG_TYPE_MICASENSE_REDEDGE:
             return MicasenseRedEdgeThresholdMasker(**threshold_params)
-        else:
-            raise ValueError(f"No masker available for img type {self.img_type}")
+        msg = f"No masker available for img type {self.img_type}"
+        raise ValueError(msg)
 
     @property
-    def progress_val(self):
+    def progress_val(self) -> int:
         return self.progress_bar.value()
 
     @progress_val.setter
-    def progress_val(self, v):
+    def progress_val(self, v: int) -> None:
         self.progress_bar.setValue(v)
 
     @property
-    def progress_maximum(self):
+    def progress_maximum(self) -> int:
         return self.progress_bar.maximum()
 
     @progress_maximum.setter
-    def progress_maximum(self, v):
+    def progress_maximum(self, v: int) -> None:
         self.progress_bar.setMaximum(v)
 
-    def _inc_progress(self, _):
+    def _inc_progress(self, _: int) -> None:
         self.progress_val += 1
 
         if self.progress_val == self.progress_maximum:
             self.info_msg.show_message("Processing is complete")
 
-    def _err_callback(self, img_path, err):
-        msg = "%r generated an exception: %s" % (img_path, err)
+    def _err_callback(self, img_path: str, err: Exception) -> None:
+        msg = f"{img_path!r} generated an exception: {err}"
         self.err_msg.show_message(msg)
 
     @logger.catch
@@ -250,8 +246,8 @@ class Signals(QObject):
 
 
 class Worker(QRunnable):
-    def __init__(self, fn, *args, **kwargs):
-        super(Worker, self).__init__()
+    def __init__(self, fn: Callable[Any, Any], *args: list[Any], **kwargs: dict[str, Any]) -> None:
+        super().__init__()
         self.fn = fn
         self.args = args
         self.kwargs = kwargs
@@ -262,7 +258,7 @@ class Worker(QRunnable):
         self.kwargs["err_callback"] = self.signals.error.emit
 
     @pyqtSlot()
-    def run(self):
+    def run(self) -> None:
         self.fn(*self.args, **self.kwargs)
         self.signals.finished.emit()
 

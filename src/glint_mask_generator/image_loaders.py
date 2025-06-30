@@ -1,14 +1,18 @@
-"""
+"""Module with classes that handle imagery I/O.
+
 Created by: Taylor Denouden
 Organization: Hakai Institute
-Date: 2020-09-18
+Date: 2020-09-18.
 """
+
+from __future__ import annotations
 
 import re
 from abc import ABC, ABCMeta, abstractmethod
+from collections.abc import Iterable
 from functools import singledispatchmethod
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, List, Union
+from typing import TYPE_CHECKING
 
 import numpy as np
 from PIL import Image
@@ -22,24 +26,32 @@ Image.MAX_IMAGE_PIXELS = None
 
 
 class ImageLoader(ABC):
+    """Abstract base class for all image loader classes which handle loading the data for each sensor capture."""
+
     def __init__(
-        self, image_directory: Union[str, Path], mask_directory: Union[str, Path]
-    ):
+        self,
+        image_directory: str | Path,
+        mask_directory: str | Path,
+    ) -> None:
+        """Create a new ImageLoader."""
         super().__init__()
         self.image_directory = Path(image_directory)
         self.mask_directory = Path(mask_directory)
 
-    def __len__(self):
+    def __len__(self) -> int:
+        """Get the number of captures."""
         return sum(1 for _ in self.paths)
 
     @staticmethod
     @abstractmethod
     def load_image(path: str) -> np.ndarray:
+        """Load the image at path into a numpy array."""
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def paths(self) -> Iterable[Union[List[str], str]]:
+    def paths(self) -> Iterable[list[str] | str]:
+        """Get path or paths of imagery to load per capture."""
         raise NotImplementedError
 
     @property
@@ -48,10 +60,12 @@ class ImageLoader(ABC):
         raise NotImplementedError
 
     def preprocess_image(self, img: np.ndarray) -> np.ndarray:
+        """Scale the values in the imagery or do other preprocessing logic when overridden."""
         return normalize_img(img, bit_depth=self._bit_depth)
 
     @singledispatchmethod
-    def get_mask_save_paths(self, img_paths: List[str]) -> Iterable[str]:
+    def get_mask_save_paths(self, img_paths: list[str]) -> Iterable[str]:
+        """Get a list of paths where the output mask images should be saved."""
         img_names = (Path(p).stem for p in img_paths)
         return (str(self.mask_directory.joinpath(f"{p}_mask.png")) for p in img_names)
 
@@ -60,8 +74,8 @@ class ImageLoader(ABC):
         return self.get_mask_save_paths([img_path])
 
     @staticmethod
-    def save_mask(mask: np.ndarray, out_path: str):
-        """Utility function to save a mask to the location out_path.
+    def save_mask(mask: np.ndarray, out_path: str) -> None:
+        """Save the mask to the location out_path.
 
         Parameters
         ----------
@@ -69,11 +83,13 @@ class ImageLoader(ABC):
             2D image mask to save into the image format specified in the out_path.
         out_path
             The path where the file should be saved, including img extension.
+
         """
         mask_img = Image.fromarray(mask, mode="L")
         mask_img.save(str(out_path))
 
-    def apply_masker(self, img_paths: Union[List[str], str], masker: "Masker"):  # noqa: F821
+    def apply_masker(self, img_paths: list[str] | str, masker: Masker) -> None:
+        """Compute the image mask for each image using the configured masking algorithm."""
         img = self.load_image(img_paths)
         img = self.preprocess_image(img)
         mask = masker.algorithm(img)
@@ -85,28 +101,37 @@ class ImageLoader(ABC):
 
 
 class SingleFileImageLoader(ImageLoader, metaclass=ABCMeta):
+    """Abstract class for handling the loading of imagery contained within a single file."""
+
     @staticmethod
     def load_image(path: str) -> np.ndarray:
+        """Load the image into a numpy array."""
         img = Image.open(path)
         # noinspection PyTypeChecker
         return np.array(img).astype(float)
 
     @property
     def paths(self) -> Iterable[str]:
+        """Get grouped paths of imagery to load."""
         return list_images(self.image_directory)
 
 
 class RGBLoader(SingleFileImageLoader):
+    """Class responsible for loading simple RGB imagery data."""
+
     _bit_depth = 8
 
 
 class CIRLoader(SingleFileImageLoader):
+    """Class responsible for loading 4-band CIR imagery, such as that output by IX Capture software."""
+
     _bit_depth = 8
     _crop_size = 256
 
-    def apply_masker(self, img_paths: Union[List[str], str], masker: "Masker"):  # noqa: F821
+    def apply_masker(self, img_paths: list[str] | str, masker: Masker) -> None:
         """Compute the image mask by moving a window over the input.
-        These CIR images are too large to be read into memory simultaneously so this
+
+        These CIR images are too large to be read into memory simultaneously, so this
         image masking routine is special.
 
         This is the setup in the following logic:
@@ -125,10 +150,10 @@ class CIRLoader(SingleFileImageLoader):
                            x2,y2
         """
         if not isinstance(img_paths, str):
-            raise RuntimeError("CIRLoader can only operate on images at a single path")
-        else:
-            img_path = img_paths
-            mask_path = next(self.get_mask_save_paths(img_paths))
+            msg = "CIRLoader can only operate on images at a single path"
+            raise TypeError(msg)
+        img_path = img_paths
+        mask_path = next(self.get_mask_save_paths(img_paths))
 
         with Image.open(img_path, "r") as src:
             height = src.height
@@ -168,25 +193,32 @@ class CIRLoader(SingleFileImageLoader):
 
 
 class MultiFileImageLoader(ImageLoader, metaclass=ABCMeta):
+    """Abstract class for loading imagery where band data is stored in a multiple files."""
+
     @staticmethod
-    def load_image(paths: List[Union[str, Path]]) -> np.ndarray:
+    def load_image(paths: list[str | Path]) -> np.ndarray:
+        """Load all images into a numpy array."""
         # noinspection PyTypeChecker
         imgs = [np.asarray(Image.open(p)) for p in paths]
         return np.stack(imgs, axis=2).astype(float)
 
     @property
     @abstractmethod
-    def paths(self) -> Iterable[List[str]]:
+    def paths(self) -> Iterable[list[str]]:
+        """Get grouped paths of imagery to load."""
         raise NotImplementedError
 
 
 class MicasenseRedEdgeLoader(MultiFileImageLoader):
+    """Class responsible for loading imagery from Micasense Red Edge sensors."""
+
     _blue_band_pattern = re.compile(
-        "(.*[\\\\/])?IMG_[0-9]{4}_1.tif", flags=re.IGNORECASE
+        "(.*[\\\\/])?IMG_[0-9]{4}_1.tif",
+        flags=re.IGNORECASE,
     )
     _bit_depth = 16
 
-    def _is_blue_band_path(self, path: Union[str, Path]) -> bool:
+    def _is_blue_band_path(self, path: str | Path) -> bool:
         return self._blue_band_pattern.match(str(path)) is not None
 
     @property
@@ -194,24 +226,26 @@ class MicasenseRedEdgeLoader(MultiFileImageLoader):
         return filter(self._is_blue_band_path, list_images(self.image_directory))
 
     @staticmethod
-    def _blue_band_path_to_band_paths(path: str) -> List[str]:
+    def _blue_band_path_to_band_paths(path: str) -> list[str]:
         in_path_root = Path(path).stem[:-1]
-        return [
-            str(Path(path).with_name(f"{in_path_root}{i}.tif")) for i in range(1, 6)
-        ]
+        return [str(Path(path).with_name(f"{in_path_root}{i}.tif")) for i in range(1, 6)]
 
     @property
-    def paths(self) -> Iterable[List[str]]:
+    def paths(self) -> Iterable[list[str]]:
+        """Get grouped paths of imagery to load."""
         return map(self._blue_band_path_to_band_paths, self._blue_band_paths)
 
 
 class P4MSLoader(MultiFileImageLoader):
+    """Class responsible for loading imagery from Phantom 4 MS sensors."""
+
     _blue_band_pattern = re.compile(
-        "(.*[\\\\/])?DJI_[0-9]{3}1.TIF", flags=re.IGNORECASE
+        "(.*[\\\\/])?DJI_[0-9]{3}1.TIF",
+        flags=re.IGNORECASE,
     )
     _bit_depth = 16
 
-    def _is_blue_band_path(self, path: Union[str, Path]) -> bool:
+    def _is_blue_band_path(self, path: str | Path) -> bool:
         return self._blue_band_pattern.match(str(path)) is not None
 
     @property
@@ -219,12 +253,11 @@ class P4MSLoader(MultiFileImageLoader):
         return filter(self._is_blue_band_path, list_images(self.image_directory))
 
     @staticmethod
-    def _blue_band_path_to_band_paths(path: Union[str, Path]) -> List[str]:
+    def _blue_band_path_to_band_paths(path: str | Path) -> list[str]:
         in_path_root = Path(path).stem[:-1]
-        return [
-            str(Path(path).with_name(f"{in_path_root}{i}.TIF")) for i in range(1, 6)
-        ]
+        return [str(Path(path).with_name(f"{in_path_root}{i}.TIF")) for i in range(1, 6)]
 
     @property
-    def paths(self) -> Iterable[List[str]]:
+    def paths(self) -> Iterable[list[str]]:
+        """Get grouped paths of imagery to load."""
         return map(self._blue_band_path_to_band_paths, self._blue_band_paths)

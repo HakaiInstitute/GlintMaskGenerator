@@ -1,12 +1,15 @@
-"""
+"""Module containing the main Masker classes for different comninations of glint masking algorithms and sensors.
+
 Created by: Taylor Denouden
 Organization: Hakai Institute
 Date: 2020-09-18
 """
 
+from __future__ import annotations
+
 import concurrent.futures
 import os
-from typing import Callable, List, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 from scipy.ndimage import convolve
@@ -21,14 +24,20 @@ from .image_loaders import (
 )
 from .utils import make_circular_kernel
 
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
-class Masker(object):
+
+class Masker:
+    """The main class for masking glint in imagery. It is composed of an image loader and glint masking algorithm."""
+
     def __init__(
         self,
         algorithm: GlintAlgorithm,
         image_loader: ImageLoader,
         pixel_buffer: int = 0,
-    ):
+    ) -> None:
+        """Create the Masker object."""
         self.algorithm = algorithm
         self.image_loader = image_loader
         self.pixel_buffer = pixel_buffer
@@ -36,15 +45,16 @@ class Masker(object):
 
     # noinspection PyMethodMayBeStatic
     def postprocess_mask(self, mask: np.ndarray) -> np.ndarray:
-        """Hook to do any postprocessing on the generated boolean numpy mask."""
+        """Postprocess the generated boolean numpy mask. Can be overridden to customize behavior."""
         if self.pixel_buffer <= 0:
             return mask
         return (convolve(mask, self.buffer_kernel, mode="constant", cval=0) > 0).astype(
-            int
+            int,
         )
 
     @staticmethod
-    def to_metashape_mask(mask: np.ndarray):
+    def to_metashape_mask(mask: np.ndarray) -> np.ndarray:
+        """Scale the mask values to work with Agisoft Metashape expectations."""
         return np.logical_not(mask).astype(np.uint8) * 255
 
     def __len__(self) -> int:
@@ -54,16 +64,17 @@ class Masker(object):
         -------
         int
             The number of files that need to be processed.
+
         """
         return len(self.image_loader)
 
     def __call__(
         self,
         max_workers: int,
-        callback: Optional[Callable[[str], None]] = None,
-        err_callback: Optional[Callable[[str, Exception], None]] = None,
+        callback: Callable[[list[str]], None] = lambda _: None,
+        err_callback: Callable[[list[str], Exception], None] = lambda _s, _e: None,
     ) -> None:
-        """Calling Masker.process by calling the instance as a function.
+        """Run the masker processing.
 
         Parameters
         ----------
@@ -71,39 +82,40 @@ class Masker(object):
             The number of threads to use during processing. Useful for limiting memory
             consumption.
         callback
-            Optional callback that receives the img_path as an arg after it is
+            Callback that receives the img_path as an arg after it is
             successfully processed.
         err_callback
-            Optional callback that receives the img_path and an Exception as args after
+            Callback that receives the img_path and an Exception as args after
             a processing failure.
+
         """
         if max_workers == 0:
             return self.process_unthreaded(callback, err_callback)
-        else:
-            return self.process(max_workers, callback, err_callback)
+        return self.process(max_workers, callback, err_callback)
 
     # noinspection SpellCheckingInspection
     def process_unthreaded(
         self,
-        callback: Optional[Callable[[List[str]], None]] = None,
-        err_callback: Optional[Callable[[List[str], Exception], None]] = None,
+        callback: Callable[[list[str]], None] = lambda _: None,
+        err_callback: Callable[[list[str], Exception], None] = lambda _s, _e: None,
     ) -> None:
-        for paths in self.image_loader.paths:
-            try:
+        """Process all the images within the main process."""
+        cur = None
+        try:
+            for paths in self.image_loader.paths:
+                cur = paths
                 self._process_one(paths)
-                if callback is not None:
-                    callback(paths)
+                callback(paths)
 
-            except Exception as exc:
-                if err_callback is not None:
-                    err_callback(paths, exc)
-                return
+        except Exception as exc:
+            err_callback(cur, exc)
+            return
 
     def process(
         self,
         max_workers: int = os.cpu_count(),
-        callback: Optional[Callable[[List[str]], None]] = None,
-        err_callback: Optional[Callable[[List[str], Exception], None]] = None,
+        callback: Callable[[list[str]], None] = lambda _: None,
+        err_callback: Callable[[list[str], Exception], None] = lambda _s, _e: None,
     ) -> None:
         """Compute all glint masks.
 
@@ -116,32 +128,28 @@ class Masker(object):
             The maximum number of image processing workers.
             Useful for limiting memory usage.
         callback
-            Optional callback function passed the name of each input and output mask
+            Callback function passed the name of each input and output mask
             files after processing it. Will receive img_path: str as arg.
         err_callback
-            Optional callback function passed exception object on processing failure.
+            Callback function passed exception object on processing failure.
             Will receive img_path: str, and the Exception as args.
+
         """
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-            future_to_paths = {
-                executor.submit(self._process_one, paths): paths
-                for paths in self.image_loader.paths
-            }
+            future_to_paths = {executor.submit(self._process_one, paths): paths for paths in self.image_loader.paths}
             for future in concurrent.futures.as_completed(future_to_paths):
                 paths = future_to_paths[future]
                 try:
                     future.result()
-                    if callback is not None:
-                        callback(paths)
+                    callback(paths)
 
                 except Exception as exc:
-                    if err_callback is not None:
-                        err_callback(paths, exc)
+                    err_callback(paths, exc)
                     executor.shutdown(wait=False)
                     return
 
-    def _process_one(self, paths: Union[List[str], str]) -> None:
-        """Generates and saves a glint mask for the image located at img_path.
+    def _process_one(self, paths: list[str] | str) -> None:
+        """Generate and saves a glint mask for the image located at img_path.
 
         Saves the generated mask to all path locations returned by
         self.get_mask_save_paths(img_path).
@@ -151,18 +159,22 @@ class Masker(object):
         paths
             The file paths used to create the image. Can be single file path or list of
             path to multiple files
+
         """
         self.image_loader.apply_masker(paths, self)
 
 
 class RGBThresholdMasker(Masker):
+    """The main Masker class for threshold masking 3-band RGB imagery."""
+
     def __init__(
         self,
         img_dir: str,
         mask_dir: str,
         thresholds: Sequence[float] = (1, 1, 0.875),
         pixel_buffer: int = 0,
-    ):
+    ) -> None:
+        """Create a new RGBThresholdMasker."""
         super().__init__(
             algorithm=ThresholdAlgorithm(thresholds),
             image_loader=RGBLoader(img_dir, mask_dir),
@@ -171,13 +183,16 @@ class RGBThresholdMasker(Masker):
 
 
 class CIRThresholdMasker(Masker):
+    """The main Masker class for threshold masking 4-band CIR imagery."""
+
     def __init__(
         self,
         img_dir: str,
         mask_dir: str,
         thresholds: Sequence[float] = (1, 1, 0.875, 1),
         pixel_buffer: int = 0,
-    ):
+    ) -> None:
+        """Create a new CIRThresholdMasker."""
         super().__init__(
             algorithm=ThresholdAlgorithm(thresholds),
             image_loader=CIRLoader(img_dir, mask_dir),
@@ -186,13 +201,16 @@ class CIRThresholdMasker(Masker):
 
 
 class P4MSThresholdMasker(Masker):
+    """The main Masker class for threshold masking Phantom 4 MS imagery."""
+
     def __init__(
         self,
         img_dir: str,
         mask_dir: str,
         thresholds: Sequence[float] = (0.875, 1, 1, 1, 1),
         pixel_buffer: int = 0,
-    ):
+    ) -> None:
+        """Create a new P4MSThresholdMasker."""
         super().__init__(
             algorithm=ThresholdAlgorithm(thresholds),
             image_loader=P4MSLoader(img_dir, mask_dir),
@@ -201,13 +219,16 @@ class P4MSThresholdMasker(Masker):
 
 
 class MicasenseRedEdgeThresholdMasker(Masker):
+    """The main Masker class for threshold masking Micasense Red Edge imagery."""
+
     def __init__(
         self,
         img_dir: str,
         mask_dir: str,
         thresholds: Sequence[float] = (0.875, 1, 1, 1, 1),
         pixel_buffer: int = 0,
-    ):
+    ) -> None:
+        """Create a new MicasenseRedEdgeThresholdMasker."""
         super().__init__(
             algorithm=ThresholdAlgorithm(thresholds),
             image_loader=MicasenseRedEdgeLoader(img_dir, mask_dir),

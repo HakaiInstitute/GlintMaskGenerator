@@ -1,5 +1,4 @@
-"""
-Created by: Taylor Denouden
+"""Created by: Taylor Denouden
 Organization: Hakai Institute
-Date: 2020-09-17
+Date: 2020-09-17.
 """

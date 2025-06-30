@@ -1,11 +1,12 @@
-"""
+"""Utilities for glint_mask_generator operations.
+
 Created by: Taylor Denouden
 Organization: Hakai Institute
 Date: 2020-09-18
 """
 
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 import numpy as np
 
@@ -25,11 +26,12 @@ def normalize_img(img: np.ndarray, bit_depth: int) -> np.ndarray:
     -------
     np.ndarray
         The image normalized to range [0,1].
+
     """
     return img / ((1 << bit_depth) - 1)
 
 
-def list_images(img_dir) -> Iterable[str]:
+def list_images(img_dir: str) -> Iterable[str]:
     """List all image files in img_dir.
 
     Returns an iterator that lists the files to process. Subclasses may want to override
@@ -40,6 +42,7 @@ def list_images(img_dir) -> Iterable[str]:
     -------
     Iterable[str]
         The list of files to be used for generating the masks.
+
     """
     extensions = (".png", ".jpg", ".jpeg", ".tif", ".tiff")
 
@@ -49,7 +52,7 @@ def list_images(img_dir) -> Iterable[str]:
 
 
 def make_circular_kernel(size: int) -> np.ndarray:
-    """Create circular kernel"""
+    """Create a circular kernel."""
     y, x = np.ogrid[-size : size + 1, -size : size + 1]
     dist_m: np.ndarray = x**2 + y**2
     return dist_m <= size**2
