@@ -254,8 +254,9 @@ class P4MSLoader(MultiFileImageLoader):
 
     @staticmethod
     def _blue_band_path_to_band_paths(path: str | Path) -> list[str]:
-        in_path_root = Path(path).stem[:-1]
-        return [str(Path(path).with_name(f"{in_path_root}{i}.TIF")) for i in range(1, 6)]
+        path = Path(path)
+        stem = path.stem[:-1]
+        return [str(path.with_name(f"{stem}{i}.TIF")) for i in range(1, 6)]
 
     @property
     def paths(self) -> Iterable[list[str]]:
