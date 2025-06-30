@@ -5,39 +5,38 @@ on:
     branches-ignore:
       - '**'
     tags:
-      - '[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+rc[0-9]+'
 
 jobs:
-
-  Deploy:
-    name: Deploy
+  deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Get tag
         id: tag
-        run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        run: echo "tag=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: '3.10'
+          version: "0.7.12"
+          enable-cache: true
 
-      - name: Setup Poetry
-        uses: abatilo/actions-poetry@v2.0.0
+      - name: "Set up Python"
+        uses: actions/setup-python@v5
         with:
-          poetry-version: 1.2.2
+          python-version-file: "pyproject.toml"
 
       - name: Install dependencies
-        run: |
-          poetry update
-          poetry run pip install --upgrade setuptools
+        run: uv sync --all-extras --dev
 
       - name: Build and publish
         env:
-          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: |
-          poetry version ${{ env.tag }}
-          sed -i "s/0.0.0/${{ env.tag }}/g" glint_mask_generator/__init__.py
-          poetry publish --build
+          sed -i "s/0.0.0/${{ env.tag }}/g" src/glint_mask_generator/__init__.py
+          uv build
+          uv publish

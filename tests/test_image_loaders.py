@@ -1,10 +1,8 @@
-"""
-Created by: Taylor Denouden
+"""Created by: Taylor Denouden
 Organization: Hakai Institute
 Date: 2020-06-12
 """
 
-import os
 from pathlib import Path
 
 import numpy as np
@@ -73,10 +71,10 @@ def test_p4ms_loader(tmp_path):
             "DJI_2025.TIF",
         ],
     ]
-    valid_paths = [[os.path.join(tmp_path, p) for p in paths] for paths in valid_paths]
+    valid_paths = [[str(Path(tmp_path) / p) for p in paths] for paths in valid_paths]
     valid_paths = sorted(valid_paths, key=lambda a: a[0])
 
-    masker_paths = sorted(list(image_loader.paths), key=lambda a: a[0])
+    masker_paths = sorted(image_loader.paths, key=lambda a: a[0])
     assert len(image_loader) == len(valid_paths)
     assert (np.array(masker_paths) == np.array(valid_paths)).all()
 
@@ -108,17 +106,12 @@ def test_p4ms_loader(tmp_path):
     assert image_loader._is_blue_band_path("/home/wherever/dji_0011.tif") is True
     assert image_loader._is_blue_band_path("/home/wherever/DJI_0013.TIF") is False
 
-    assert (
-        image_loader._is_blue_band_path(Path("C:\\Users\\some\\dir\\dji_0011.tif"))
-        is True
-    )
+    assert image_loader._is_blue_band_path(Path("C:\\Users\\some\\dir\\dji_0011.tif")) is True
     assert not image_loader._is_blue_band_path(
-        Path("C:\\Users\\some\\dir\\DJI_0013.TIF")
+        Path("C:\\Users\\some\\dir\\DJI_0013.TIF"),
     )
     assert image_loader._is_blue_band_path("C:\\Users\\some\\dir\\dji_0011.tif") is True
-    assert (
-        image_loader._is_blue_band_path("C:\\Users\\some\\dir\\DJI_0013.TIF") is False
-    )
+    assert image_loader._is_blue_band_path("C:\\Users\\some\\dir\\DJI_0013.TIF") is False
 
 
 def test_micasense_red_edge_masker(tmp_path):
@@ -147,10 +140,10 @@ def test_micasense_red_edge_masker(tmp_path):
             "IMG_4321_5.tif",
         ],
     ]
-    valid_paths = [[os.path.join(tmp_path, p) for p in paths] for paths in valid_paths]
+    valid_paths = [[str(Path(tmp_path) / p) for p in paths] for paths in valid_paths]
     valid_paths = sorted(valid_paths, key=lambda a: a[0])
 
-    masker_paths = sorted(list(image_loader.paths), key=lambda a: a[0])
+    masker_paths = sorted(image_loader.paths, key=lambda a: a[0])
     assert len(image_loader) == len(valid_paths)
     assert (np.array(masker_paths) == np.array(valid_paths)).all()
 
@@ -189,17 +182,7 @@ def test_micasense_red_edge_masker(tmp_path):
     assert image_loader._is_blue_band_path("/home/dir/img_3332_1.tif") is True
     assert image_loader._is_blue_band_path("/home/dir/img_3332_5.tif") is False
 
-    assert (
-        image_loader._is_blue_band_path(Path("C:\\Users\\some\\dir\\img_3332_1.tif"))
-        is True
-    )
-    assert (
-        image_loader._is_blue_band_path(Path("C:\\Users\\some\\dir\\img_3332_5.tif"))
-        is False
-    )
-    assert (
-        image_loader._is_blue_band_path("C:\\Users\\some\\dir\\img_3332_1.tif") is True
-    )
-    assert (
-        image_loader._is_blue_band_path("C:\\Users\\some\\dir\\img_3332_5.tif") is False
-    )
+    assert image_loader._is_blue_band_path(Path("C:\\Users\\some\\dir\\img_3332_1.tif")) is True
+    assert image_loader._is_blue_band_path(Path("C:\\Users\\some\\dir\\img_3332_5.tif")) is False
+    assert image_loader._is_blue_band_path("C:\\Users\\some\\dir\\img_3332_1.tif") is True
+    assert image_loader._is_blue_band_path("C:\\Users\\some\\dir\\img_3332_5.tif") is False

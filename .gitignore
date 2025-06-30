@@ -131,3 +131,7 @@ dmypy.json
 .idea/
 
 ignore/
+
+data/
+
+.DS_Store

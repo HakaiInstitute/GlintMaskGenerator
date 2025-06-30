@@ -91,8 +91,8 @@ interface. All the functionality of the CLI is documented there.
 ```
 ❯ glint-mask --help
 
- Usage: glint-mask [OPTIONS] COMMAND [ARGS]...                                                                                                                                                                                                                      
-                                                                                                                                                                                                                                                                    
+ Usage: glint-mask [OPTIONS] COMMAND [ARGS]...
+
 ╭─ Options ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
 │ --install-completion          Install completion for the current shell.                                                                                       │
 │ --show-completion             Show completion for the current shell, to copy it or customize the installation.                                                │
@@ -109,11 +109,11 @@ interface. All the functionality of the CLI is documented there.
 ```
 # Get addition parameters for one of the cameras/methods available
 ❯ glint-mask rgb-threshold --help
-                                                                                                                                                                                                                                                                    
- Usage: glint-mask rgb-threshold [OPTIONS] IMG_DIR OUT_DIR                                                                                                                                                                                                          
-                                                                                                                                                                                                                                                                    
- Generate masks for glint regions in RGB imagery using Tom Bell's binning algorithm.                                                                                                                                                                                
-                                                                                                                                                                                                                                                                    
+
+ Usage: glint-mask rgb-threshold [OPTIONS] IMG_DIR OUT_DIR
+
+ Generate masks for glint regions in RGB imagery using Tom Bell's binning algorithm.
+
 ╭─ Arguments ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
 │ *    img_dir      PATH  The path to a named input image or directory containing images. If img_dir is a directory, all tif, jpg, jpeg, and png images in that directory will be processed. [default: None] [required]  │
 │ *    out_dir      PATH  The path to send your out image including the file name and type. e.g. "/path/to/mask.png". out_dir must be a directory if img_dir is specified as a directory. [default: None] [required]     │
