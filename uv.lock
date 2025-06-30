@@ -97,7 +97,6 @@ wheels = [
 
 [[package]]
 name = "glint-mask-generator"
-version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "loguru" },
