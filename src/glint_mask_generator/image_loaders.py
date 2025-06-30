@@ -262,3 +262,28 @@ class P4MSLoader(MultiFileImageLoader):
     def paths(self) -> Iterable[list[str]]:
         """Get grouped paths of imagery to load."""
         return map(self._blue_band_path_to_band_paths, self._blue_band_paths)
+
+
+class DJIM3MLoader(MultiFileImageLoader):
+    """Class responsible for loading imagery from DJI Mavic 3 MS sensors."""
+
+    _green_band_pattern = re.compile(r"(.*[\\/])?DJI_[0-9]+_[0-9]{4}_G\.TIF", flags=re.IGNORECASE)
+    _bit_depth = 16
+
+    def _is_green_band_path(self, path: str | Path) -> bool:
+        return self._green_band_pattern.match(str(path)) is not None
+
+    @property
+    def _green_band_paths(self) -> Iterable[str]:
+        return filter(self._is_green_band_path, list_images(self.image_directory))
+
+    @staticmethod
+    def _green_band_path_to_band_paths(path: str | Path) -> list[str]:
+        path = Path(path)
+        stem = path.stem[:-1]
+        return [str(path.with_name(f"{stem}{b}.TIF")) for b in ["G", "R", "RE", "NIR"]]
+
+    @property
+    def paths(self) -> Iterable[list[str]]:
+        """Get grouped paths of imagery to load."""
+        return map(self._green_band_path_to_band_paths, self._green_band_paths)
