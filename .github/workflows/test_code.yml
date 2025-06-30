@@ -5,44 +5,54 @@ name: Tests
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main, develop]
+    branches:
+      - main
+      - develop
   release:
-    types: [created, edited]
+    types:
+      - created
+      - edited
 
 jobs:
-  Test:
-    name: ${{ matrix.os }} / ${{ matrix.python-version }}
+  Tests:
+    name: test ${{ matrix.py }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}-latest
-    strategy:
-      matrix:
-        os: [Ubuntu, Windows]
-        python-version: ['3.9', '3.10', '3.11']
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.os }}-${{ matrix.py }}
+      cancel-in-progress: true
 
-      - name: Setup Poetry
-        uses: abatilo/actions-poetry@v2.0.0
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - Ubuntu
+          - Windows
+          - MacOs
+        py:
+          - "3.13"
+          - "3.12"
+          - "3.11"
+          - "3.10"
+          - "3.9"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          poetry-version: 1.2.2
+          version: "0.7.12"
+          enable-cache: true
+
+      - name: "Set up Python"
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.py }}
 
       - name: Install dependencies
-        run: |
-          poetry update
-          poetry run pip install --upgrade setuptools
+        run: uv sync --all-extras --dev
 
-      - name: Lint with flake8
-        run: |
-          # stop the build if there are Python syntax errors or undefined names
-          poetry run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          poetry run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-
-      - name: Test with pytest
-        run: |
-          poetry run pytest -v
+      - name: Run tests
+        run: uv run pytest

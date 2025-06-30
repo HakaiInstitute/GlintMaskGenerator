@@ -1,6 +1,5 @@
 [project]
 name = "glint-mask-generator"
-version = "0.1.0"
 description = "Create masks for specular reflection in UAV and aerial imagery"
 license = "MIT"
 readme = "README.md"
@@ -34,6 +33,9 @@ glint-mask = "glint_mask_generator.cli:app"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.hatch.version]
+path = "src/glint_mask_generator/__init__.py"
+
 [tool.ruff]
 line-length = 120
 
@@ -56,3 +58,6 @@ ignore = [
 "gui/*" = [
     "D",
 ]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
