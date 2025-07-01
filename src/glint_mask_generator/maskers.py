@@ -14,18 +14,11 @@ from typing import TYPE_CHECKING, Callable
 import numpy as np
 from scipy.ndimage import convolve
 
-from .glint_algorithms import GlintAlgorithm, ThresholdAlgorithm
-from .image_loaders import (
-    CIRLoader,
-    ImageLoader,
-    MicasenseRedEdgeLoader,
-    P4MSLoader,
-    RGBLoader,
-)
 from .utils import make_circular_kernel
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from .glint_algorithms import GlintAlgorithm
+    from .image_loaders import ImageLoader
 
 
 class Masker:
@@ -162,79 +155,3 @@ class Masker:
 
         """
         self.image_loader.apply_masker(paths, self)
-
-
-class RGBThresholdMasker(Masker):
-    """The main Masker class for threshold masking 3-band RGB imagery."""
-
-    def __init__(
-        self,
-        img_dir: str,
-        mask_dir: str,
-        thresholds: Sequence[float] = (1, 1, 0.875),
-        pixel_buffer: int = 0,
-    ) -> None:
-        """Create a new RGBThresholdMasker."""
-        super().__init__(
-            algorithm=ThresholdAlgorithm(thresholds),
-            image_loader=RGBLoader(img_dir, mask_dir),
-            pixel_buffer=pixel_buffer,
-        )
-
-
-class CIRThresholdMasker(Masker):
-    """The main Masker class for threshold masking 4-band CIR imagery."""
-
-    def __init__(
-        self,
-        img_dir: str,
-        mask_dir: str,
-        thresholds: Sequence[float] = (1, 1, 0.875, 1),
-        pixel_buffer: int = 0,
-    ) -> None:
-        """Create a new CIRThresholdMasker."""
-        super().__init__(
-            algorithm=ThresholdAlgorithm(thresholds),
-            image_loader=CIRLoader(img_dir, mask_dir),
-            pixel_buffer=pixel_buffer,
-        )
-
-
-class P4MSThresholdMasker(Masker):
-    """The main Masker class for threshold masking Phantom 4 MS imagery."""
-
-    def __init__(
-        self,
-        img_dir: str,
-        mask_dir: str,
-        thresholds: Sequence[float] = (0.875, 1, 1, 1, 1),
-        pixel_buffer: int = 0,
-    ) -> None:
-        """Create a new P4MSThresholdMasker."""
-        super().__init__(
-            algorithm=ThresholdAlgorithm(thresholds),
-            image_loader=P4MSLoader(img_dir, mask_dir),
-            pixel_buffer=pixel_buffer,
-        )
-
-
-class MicasenseRedEdgeThresholdMasker(Masker):
-    """The main Masker class for threshold masking Micasense Red Edge imagery."""
-
-    def __init__(
-        self,
-        img_dir: str,
-        mask_dir: str,
-        thresholds: Sequence[float] = (0.875, 1, 1, 1, 1),
-        pixel_buffer: int = 0,
-    ) -> None:
-        """Create a new MicasenseRedEdgeThresholdMasker."""
-        super().__init__(
-            algorithm=ThresholdAlgorithm(thresholds),
-            image_loader=MicasenseRedEdgeLoader(img_dir, mask_dir),
-            pixel_buffer=pixel_buffer,
-        )
-
-
-if __name__ == "__main__":
-    CIRThresholdMasker("ignore/in", "ignore/out", pixel_buffer=10).process_unthreaded()

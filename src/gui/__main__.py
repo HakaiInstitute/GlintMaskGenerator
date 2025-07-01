@@ -7,79 +7,21 @@ from __future__ import annotations
 
 import os
 import sys
-from dataclasses import dataclass
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 from loguru import logger
 from PyQt6 import QtWidgets, uic
 from PyQt6.QtCore import QObject, QRunnable, Qt, QThreadPool, pyqtSignal, pyqtSlot
 from PyQt6.QtGui import QIcon
 
-from glint_mask_generator import Masker, __version__
-from glint_mask_generator.glint_algorithms import ThresholdAlgorithm
-from glint_mask_generator.image_loaders import (
-    CIRLoader,
-    ImageLoader,
-    MicasenseRedEdgeLoader,
-    P4MSLoader,
-    RGBLoader,
-)
+from glint_mask_generator import __version__
+from glint_mask_generator.sensors import _SensorConfig, sensors
 from gui.utils import resource_path
 from gui.widgets.threshold_ctrl import ThresholdCtrl
 
+if TYPE_CHECKING:
+    from glint_mask_generator.maskers import Masker
 
-@dataclass(frozen=True)
-class BandConfig:
-    name: str
-    default_threshold: float
-
-
-@dataclass
-class SensorConfig:
-    name: str
-    bands: list[BandConfig]
-    loader_class: type[ImageLoader]
-
-    def create_masker(self, img_dir: str, mask_dir: str, thresholds: list[float], pixel_buffer: int) -> Masker:
-        """Create a masker instance for this sensor configuration."""
-        return Masker(
-            algorithm=ThresholdAlgorithm(thresholds),
-            image_loader=self.loader_class(img_dir, mask_dir),
-            pixel_buffer=pixel_buffer,
-        )
-
-    def get_default_thresholds(self) -> list[float]:
-        """Get the default threshold values for all bands."""
-        return [band.default_threshold for band in self.bands]
-
-
-_bands = {
-    "CB": BandConfig("Coastal Blue", 1.000),
-    "B": BandConfig("Blue", 0.875),
-    "G": BandConfig("Green", 1.000),
-    "G2": BandConfig("Green 2", 1.000),
-    "R": BandConfig("Red", 1.000),
-    "R2": BandConfig("Red 2", 1.000),
-    "RE": BandConfig("Red Edge", 1.000),
-    "RE2": BandConfig("Red Edge 2", 1.000),
-    "NIR": BandConfig("NIR", 1.000),
-    "NIR2": BandConfig("NIR 2", 1.000),
-}
-
-sensors = (
-    SensorConfig(name="RGB", bands=[_bands.get(b) for b in ["R", "G", "B"]], loader_class=RGBLoader),
-    SensorConfig(name="CIR", bands=[_bands.get(b) for b in ["R", "G", "B", "NIR"]], loader_class=CIRLoader),
-    SensorConfig(
-        name="P4MS",
-        bands=[_bands.get(b) for b in ["B", "G", "R", "RE", "NIR"]],
-        loader_class=P4MSLoader,
-    ),
-    SensorConfig(
-        name="MicaSense RE",
-        bands=[_bands.get(b) for b in ["B", "G", "R", "RE", "NIR"]],
-        loader_class=MicasenseRedEdgeLoader,
-    ),
-)
 
 DEFAULT_PIXEL_BUFFER = 0
 DEFAULT_MAX_WORKERS = 0
@@ -116,17 +58,16 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         self.setWindowIcon(QIcon(resource_path("resources/gmt.ico")))
 
         # Initialize sensor management
-        self.selected_sensor: SensorConfig | None = None
-        self.sensor_radios: list[QtWidgets.QRadioButton] = []
+        self.selected_sensor: _SensorConfig | None = None
         self.threshold_widgets: list[ThresholdCtrl] = []
         self.threshold_labels: list[QtWidgets.QLabel] = []
 
-        # Create dynamic sensor radio buttons
-        self.create_sensor_radios()
+        # Setup sensor dropdown
+        self.setup_sensor_dropdown()
 
         # Set default sensor and thresholds
-        if self.sensor_radios:
-            self.sensor_radios[0].setChecked(True)
+        if self.sensor_combo.count() > 0:
+            self.sensor_combo.setCurrentIndex(0)
             self.on_sensor_changed()
 
         # Set default values
@@ -151,32 +92,26 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
 
         self.show()
 
-    def create_sensor_radios(self) -> None:
-        """Dynamically create radio buttons for each sensor configuration."""
-        # Clear existing radio buttons from layout
-        for radio in self.sensor_radios:
-            radio.deleteLater()
-        self.sensor_radios.clear()
+    def setup_sensor_dropdown(self) -> None:
+        """Setup the sensor dropdown with available sensor configurations."""
+        # Clear existing items
+        self.sensor_combo.clear()
 
-        # Create new radio buttons
-        for i, sensor in enumerate(sensors):
-            radio = QtWidgets.QRadioButton(sensor.name)
-            if i == 0:  # First sensor is default
-                radio.setChecked(True)
-            radio.clicked.connect(self.on_sensor_changed)
-            self.sensor_radios.append(radio)
-            self.box_img_types.addWidget(radio)
+        # Add sensor options to dropdown
+        for sensor in sensors:
+            self.sensor_combo.addItem(sensor.name)
+
+        # Connect signal
+        self.sensor_combo.currentIndexChanged.connect(self.on_sensor_changed)
 
     def on_sensor_changed(self) -> None:
         """Handle sensor selection change."""
-        # Find which radio button is checked
-        for i, radio in enumerate(self.sensor_radios):
-            if radio.isChecked():
-                self.selected_sensor = sensors[i]
-                break
-
-        # Update threshold sliders for the selected sensor
-        self.create_threshold_sliders()
+        # Get selected sensor from dropdown
+        current_index = self.sensor_combo.currentIndex()
+        if 0 <= current_index < len(sensors):
+            self.selected_sensor = sensors[current_index]
+            # Update threshold sliders for the selected sensor
+            self.create_threshold_sliders()
 
     def create_threshold_sliders(self) -> None:
         """Dynamically create threshold sliders for the selected sensor's bands."""
@@ -227,7 +162,7 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
                 self.threshold_widgets[i].value = band.default_threshold
 
     @property
-    def selected_sensor_config(self) -> SensorConfig:
+    def selected_sensor_config(self) -> _SensorConfig:
         """Get the currently selected sensor configuration."""
         if self.selected_sensor is None:
             msg = "No sensor selected"
