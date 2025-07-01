@@ -6,11 +6,65 @@ Date: 2020-06-12
 from pathlib import Path
 
 import numpy as np
+import pytest
 from PIL import Image
 
-from glint_mask_generator.image_loaders import MicasenseRedEdgeLoader, P4MSLoader
+from glint_mask_generator.image_loaders import (
+    CIRLoader,
+    MicasenseRedEdgeLoader,
+    P4MSLoader,
+    RGBLoader,
+)
 
-IMG_CONTENT = Image.fromarray(np.ones((32, 32, 3)).astype(np.uint8) * 255)
+
+def create_test_image_8bit(height=32, width=32, channels=3, add_glint=False):
+    """Create a test image with 8-bit depth."""
+    rng = np.random.default_rng(42)
+    if add_glint:
+        # Create image with some high-intensity "glint" pixels
+        img = rng.uniform(
+            50,
+            150,
+            (height, width, channels),
+        ).astype(np.uint8)
+
+        # Add some bright spots to simulate glint
+        img[height // 4 : height // 2, width // 4 : width // 2] = 255
+    else:
+        img = rng.uniform(
+            50,
+            200,
+            (height, width, channels),
+        ).astype(np.uint8)
+    return Image.fromarray(img)
+
+
+def create_test_image_16bit(height=32, width=32, channels=1, add_glint=False):
+    """Create a test image with 16-bit depth."""
+    rng = np.random.default_rng(42)
+    if add_glint:
+        # Create image with some high-intensity "glint" pixels
+        img = rng.uniform(
+            5000,
+            25000,
+            (height, width),
+        ).astype(np.uint16)
+
+        # Add some bright spots to simulate glint
+        img[height // 4 : height // 2, width // 4 : width // 2] = 65535
+    else:
+        img = rng.uniform(
+            5000,
+            40000,
+            (height, width),
+        ).astype(np.uint16)
+
+    if channels > 1:
+        img = np.stack([img] * channels, axis=2)
+    return Image.fromarray(img)
+
+
+IMG_CONTENT = create_test_image_8bit()
 TEST_FILE_NAMES = [
     "1.jpg",
     "2.JPG",
@@ -186,3 +240,89 @@ def test_micasense_red_edge_masker(tmp_path):
     assert image_loader._is_blue_band_path(Path("C:\\Users\\some\\dir\\img_3332_5.tif")) is False
     assert image_loader._is_blue_band_path("C:\\Users\\some\\dir\\img_3332_1.tif") is True
     assert image_loader._is_blue_band_path("C:\\Users\\some\\dir\\img_3332_5.tif") is False
+
+
+def test_rgb_loader(tmp_path):
+    """Test that RGB loader works with 8-bit images."""
+    # Create test RGB images
+    test_files = ["image1.jpg", "image2.png", "image3.tiff"]
+
+    for filename in test_files:
+        img = create_test_image_8bit(height=64, width=64, channels=3)
+        img.save(tmp_path / filename)
+
+    # Test the class
+    image_loader = RGBLoader(tmp_path, tmp_path / "masks")
+
+    assert len(image_loader) == len(test_files)
+    assert image_loader._bit_depth == 8
+
+    # Test image loading
+    img_path = str(tmp_path / test_files[0])
+    loaded_img = image_loader.load_image(img_path)
+    assert loaded_img.shape[2] == 3  # RGB channels
+    assert loaded_img.dtype == float
+
+
+def test_cir_loader(tmp_path):
+    """Test that CIR loader works with 4-band images."""
+    # Create test CIR image (4-band)
+    img = create_test_image_8bit(height=128, width=128, channels=4)
+    test_file = "cir_image.tif"
+    img.save(tmp_path / test_file)
+
+    # Test the class
+    image_loader = CIRLoader(tmp_path, tmp_path / "masks")
+
+    assert len(image_loader) == 1
+    assert image_loader._bit_depth == 8
+    assert image_loader._crop_size == 256
+
+    # Test image loading
+    img_path = str(tmp_path / test_file)
+    loaded_img = image_loader.load_image(img_path)
+    assert loaded_img.shape[2] == 4  # CIR channels
+
+
+@pytest.fixture
+def sensor_test_images(tmp_path):
+    """Fixture that creates test images for all sensor types."""
+    # RGB images
+    rgb_files = ["rgb1.jpg", "rgb2.png"]
+    for filename in rgb_files:
+        img = create_test_image_8bit(height=64, width=64, channels=3, add_glint=True)
+        img.save(tmp_path / filename)
+
+    # CIR image
+    cir_img = create_test_image_8bit(height=256, width=256, channels=4, add_glint=True)
+    cir_img.save(tmp_path / "cir_large.tif")
+
+    # MicaSense RedEdge files (5 bands)
+    for capture_id in [1234, 5678]:
+        for band in range(1, 6):
+            img = create_test_image_16bit(height=32, width=32, add_glint=(band == 1))
+            img.save(tmp_path / f"IMG_{capture_id}_{band}.tif")
+
+    # P4MS files - Use 3-digit capture IDs and proper band naming
+    for capture_id in [101, 201]:  # 3-digit capture IDs for P4MS
+        for band in range(1, 6):
+            img = create_test_image_16bit(height=32, width=32, add_glint=(band == 1))
+            img.save(tmp_path / f"DJI_{capture_id}{band}.TIF")
+
+    return tmp_path
+
+
+def test_all_sensor_bit_depths(sensor_test_images):
+    """Test that all sensors report correct bit depths."""
+    tmp_path = sensor_test_images
+    mask_dir = tmp_path / "masks"
+
+    loaders = [
+        (RGBLoader(tmp_path, mask_dir), 8),
+        (CIRLoader(tmp_path, mask_dir), 8),
+        (MicasenseRedEdgeLoader(tmp_path, mask_dir), 16),
+        (P4MSLoader(tmp_path, mask_dir), 16),
+    ]
+
+    for loader, expected_bit_depth in loaders:
+        assert loader._bit_depth == expected_bit_depth

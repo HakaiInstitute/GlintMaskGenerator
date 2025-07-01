@@ -54,6 +54,8 @@ ignore = [
     "S101",
     "ANN",
     "D",
+    "PLR2004",
+    "FBT002",
 ]
 
 "src/gui/*" = [
