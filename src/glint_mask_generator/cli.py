@@ -89,9 +89,8 @@ def _create_sensor_command(sensor_cfg: _SensorConfig) -> Callable[..., None]:
 
 # Dynamically register sensor commands
 for sensor_config in sensors:
-    command_name = sensor_config.name.lower().replace(" ", "-").replace("_", "-")
     command_func = _create_sensor_command(sensor_config)
-    app.command(name=command_name)(command_func)
+    app.command(name=sensor_config.cli_command)(command_func)
 
 
 if __name__ == "__main__":
