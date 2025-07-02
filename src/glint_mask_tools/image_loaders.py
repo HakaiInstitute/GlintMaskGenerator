@@ -187,8 +187,10 @@ class MicasenseRedEdgeLoader(MultiFileImageLoader):
 
         groups = []
         for base_file in sorted(base_files):
-            # Find corresponding band files
-            band_files = [str(base_file.with_name(f"{base_file.stem[:-1]}{i}.tif")) for i in range(1, 6)]
+            # Get the original extension (preserving case)
+            original_ext = base_file.suffix
+            # Find corresponding band files using original extension
+            band_files = [str(base_file.with_name(f"{base_file.stem[:-1]}{i}{original_ext}")) for i in range(1, 6)]
 
             # Verify all files exist
             if all(Path(f).exists() for f in band_files):
@@ -210,8 +212,10 @@ class P4MSLoader(MultiFileImageLoader):
 
         groups = []
         for base_file in sorted(base_files):
-            # Find corresponding band files
-            band_files = [str(base_file.with_name(f"{base_file.stem[:-1]}{i}.TIF")) for i in range(1, 6)]
+            # Get the original extension (preserving case)
+            original_ext = base_file.suffix
+            # Find corresponding band files using original extension
+            band_files = [str(base_file.with_name(f"{base_file.stem[:-1]}{i}{original_ext}")) for i in range(1, 6)]
 
             # Verify all files exist
             if all(Path(f).exists() for f in band_files):

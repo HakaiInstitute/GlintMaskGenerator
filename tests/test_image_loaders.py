@@ -119,11 +119,11 @@ def test_p4ms_loader(tmp_path):
             "DJI_1025.TIF",
         ],
         [
-            "DJI_2021.TIF",
-            "DJI_2022.TIF",
-            "DJI_2023.TIF",
-            "DJI_2024.TIF",
-            "DJI_2025.TIF",
+            "DJI_2021.tif",
+            "DJI_2022.tif",
+            "DJI_2023.tif",
+            "DJI_2024.tif",
+            "DJI_2025.tif",
         ],
     ]
     valid_paths = [[str(Path(tmp_path) / p) for p in paths] for paths in valid_paths]
@@ -153,11 +153,11 @@ def test_micasense_red_edge_masker(tmp_path):
             "IMG_1234_5.tif",
         ],
         [
-            "IMG_4321_1.tif",
-            "IMG_4321_2.tif",
-            "IMG_4321_3.tif",
-            "IMG_4321_4.tif",
-            "IMG_4321_5.tif",
+            "IMG_4321_1.TIF",
+            "IMG_4321_2.TIF",
+            "IMG_4321_3.TIF",
+            "IMG_4321_4.TIF",
+            "IMG_4321_5.TIF",
         ],
     ]
     valid_paths = [[str(Path(tmp_path) / p) for p in paths] for paths in valid_paths]
