@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Annotated, Callable
 import typer
 from tqdm import tqdm
 
-from .sensors import _SensorConfig, sensors
+from .sensors import Sensor, _known_sensors
 
 if TYPE_CHECKING:
     from .maskers import Masker
@@ -38,7 +38,7 @@ def _process(masker: Masker, max_workers: int) -> None:
         )
 
 
-def _create_sensor_command(sensor_cfg: _SensorConfig) -> Callable[..., None]:
+def _create_sensor_command(sensor_cfg: Sensor) -> Callable[..., None]:
     """Create a CLI command function for a sensor configuration."""
 
     def sensor_command(
@@ -63,11 +63,11 @@ def _create_sensor_command(sensor_cfg: _SensorConfig) -> Callable[..., None]:
             ),
         ],
         thresholds: Annotated[
-            list[float] | None,
+            list[float],
             typer.Option(
                 help="The pixel band thresholds indicating glint. Domain for values is (0.0, 1.0).",
             ),
-        ] = None,
+        ] = tuple(b.default_threshold for b in sensor_cfg.bands),
         pixel_buffer: Annotated[
             int,
             typer.Option(help="The pixel distance to buffer out the mask."),
@@ -88,9 +88,9 @@ def _create_sensor_command(sensor_cfg: _SensorConfig) -> Callable[..., None]:
 
 
 # Dynamically register sensor commands
-for sensor_config in sensors:
-    command_func = _create_sensor_command(sensor_config)
-    app.command(name=sensor_config.cli_command)(command_func)
+for cfg in _known_sensors:
+    command_func = _create_sensor_command(cfg.sensor)
+    app.command(name=cfg.cli_name)(command_func)
 
 
 if __name__ == "__main__":

@@ -5,10 +5,16 @@ Organization: Hakai Institute
 Date: 2020-09-18
 """
 
-from collections.abc import Iterable
+from __future__ import annotations
+
+from functools import partial
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 def normalize_img(img: np.ndarray, bit_depth: int) -> np.ndarray:
@@ -31,7 +37,11 @@ def normalize_img(img: np.ndarray, bit_depth: int) -> np.ndarray:
     return img / ((1 << bit_depth) - 1)
 
 
-def list_images(img_dir: str) -> Iterable[str]:
+normalize_8bit_img = partial(normalize_img, bit_depth=8)
+normalize_16bit_img = partial(normalize_img, bit_depth=16)
+
+
+def list_images(img_dir: str | Path) -> Iterable[str]:
     """List all image files in img_dir.
 
     Returns an iterator that lists the files to process. Subclasses may want to override

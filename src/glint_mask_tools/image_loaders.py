@@ -18,7 +18,7 @@ import numpy as np
 import tifffile
 from PIL import Image
 
-from .utils import list_images, normalize_img
+from .utils import list_images
 
 if TYPE_CHECKING:
     from .maskers import Masker
@@ -55,15 +55,6 @@ class ImageLoader(ABC):
         """Get path or paths of imagery to load per capture."""
         raise NotImplementedError
 
-    @property
-    @abstractmethod
-    def _bit_depth(self) -> int:
-        raise NotImplementedError
-
-    def preprocess_image(self, img: np.ndarray) -> np.ndarray:
-        """Scale the values in the imagery or do other preprocessing logic when overridden."""
-        return normalize_img(img, bit_depth=self._bit_depth)
-
     @singledispatchmethod
     def get_mask_save_paths(self, img_paths: list[str]) -> Iterable[str]:
         """Get a list of paths where the output mask images should be saved."""
@@ -74,34 +65,15 @@ class ImageLoader(ABC):
     def _(self, img_path: str) -> Iterable[str]:
         return self.get_mask_save_paths([img_path])
 
-    @staticmethod
-    def save_mask(mask: np.ndarray, out_path: str) -> None:
-        """Save the mask to the location out_path.
+    def save_masks(self, mask: np.ndarray, img_paths: list[str] | str) -> None:
+        """Save the mask to appropriate locations based on the img_paths."""
+        mask_img = Image.fromarray(mask)
 
-        Parameters
-        ----------
-        mask
-            2D image mask to save into the image format specified in the out_path.
-        out_path
-            The path where the file should be saved, including img extension.
-
-        """
-        mask_img = Image.fromarray(mask, mode="L")
-        mask_img.save(str(out_path))
-
-    def apply_masker(self, img_paths: list[str] | str, masker: Masker) -> None:
-        """Compute the image mask for each image using the configured masking algorithm."""
-        img = self.load_image(img_paths)
-        img = self.preprocess_image(img)
-        mask = masker.algorithm(img)
-        mask = masker.postprocess_mask(mask)
-        mask = masker.to_metashape_mask(mask)
-
-        for path in self.get_mask_save_paths(img_paths):
-            self.save_mask(mask, path)
+        for out_path in self.get_mask_save_paths(img_paths):
+            mask_img.save(str(out_path))
 
 
-class SingleFileImageLoader(ImageLoader, metaclass=ABCMeta):
+class SingleFileImageLoader(ImageLoader):
     """Abstract class for handling the loading of imagery contained within a single file."""
 
     @staticmethod
@@ -113,20 +85,13 @@ class SingleFileImageLoader(ImageLoader, metaclass=ABCMeta):
 
     @property
     def paths(self) -> Iterable[str]:
-        """Get grouped paths of imagery to load."""
+        """Get paths of images to load."""
         return list_images(self.image_directory)
 
 
-class RGBLoader(SingleFileImageLoader):
-    """Class responsible for loading simple RGB imagery data."""
+class BigTiffLoader(SingleFileImageLoader):
+    """Class responsible for loading large single, tiff imagery, such as that output by IX Capture software."""
 
-    _bit_depth = 8
-
-
-class CIRLoader(SingleFileImageLoader):
-    """Class responsible for loading 4-band CIR imagery, such as that output by IX Capture software."""
-
-    _bit_depth = 8
     _crop_size = 256
 
     def apply_masker(self, img_paths: list[str] | str, masker: Masker) -> None:
@@ -151,7 +116,7 @@ class CIRLoader(SingleFileImageLoader):
                            x2,y2
         """
         if not isinstance(img_paths, str):
-            msg = "CIRLoader can only operate on images at a single path"
+            msg = "BigTiffLoader can only operate on images at a single path"
             raise TypeError(msg)
         img_path = img_paths
         mask_path = next(self.get_mask_save_paths(img_paths))
@@ -174,7 +139,7 @@ class CIRLoader(SingleFileImageLoader):
                     y1 = min(yc + pad, height)
 
                     # noinspection PyTypeChecker
-                    img = src[y0:y1, x0:x1, :4]
+                    img = src[y0:y1, x0:x1]
                     img = self.preprocess_image(img)
                     mask = masker.algorithm(img)
                     mask = masker.postprocess_mask(mask)
@@ -212,78 +177,76 @@ class MultiFileImageLoader(ImageLoader, metaclass=ABCMeta):
 class MicasenseRedEdgeLoader(MultiFileImageLoader):
     """Class responsible for loading imagery from Micasense Red Edge sensors."""
 
-    _blue_band_pattern = re.compile(
-        "(.*[\\\\/])?IMG_[0-9]{4}_1.tif",
-        flags=re.IGNORECASE,
-    )
-    _bit_depth = 16
-
-    def _is_blue_band_path(self, path: str | Path) -> bool:
-        return self._blue_band_pattern.match(str(path)) is not None
-
-    @property
-    def _blue_band_paths(self) -> Iterable[str]:
-        return filter(self._is_blue_band_path, list_images(self.image_directory))
-
-    @staticmethod
-    def _blue_band_path_to_band_paths(path: str) -> list[str]:
-        in_path_root = Path(path).stem[:-1]
-        return [str(Path(path).with_name(f"{in_path_root}{i}.tif")) for i in range(1, 6)]
+    _base_file_pattern = re.compile("(.*[\\\\/])?IMG_[0-9]{4}_1.tif", flags=re.IGNORECASE)
 
     @property
     def paths(self) -> Iterable[list[str]]:
-        """Get grouped paths of imagery to load."""
-        return map(self._blue_band_path_to_band_paths, self._blue_band_paths)
+        """Find and group related band files together."""
+        base_files = filter(self._base_file_pattern.match, list_images(self.image_directory))
+        base_files = [Path(f) for f in base_files]
+
+        groups = []
+        for base_file in sorted(base_files):
+            # Get the original extension (preserving case)
+            original_ext = base_file.suffix
+            # Find corresponding band files using original extension
+            band_files = [str(base_file.with_name(f"{base_file.stem[:-1]}{i}{original_ext}")) for i in range(1, 6)]
+
+            # Verify all files exist
+            if all(Path(f).exists() for f in band_files):
+                groups.append(band_files)
+
+        return groups
 
 
 class P4MSLoader(MultiFileImageLoader):
     """Class responsible for loading imagery from Phantom 4 MS sensors."""
 
-    _blue_band_pattern = re.compile(
-        "(.*[\\\\/])?DJI_[0-9]{3}1.TIF",
-        flags=re.IGNORECASE,
-    )
-    _bit_depth = 16
-
-    def _is_blue_band_path(self, path: str | Path) -> bool:
-        return self._blue_band_pattern.match(str(path)) is not None
-
-    @property
-    def _blue_band_paths(self) -> Iterable[str]:
-        return filter(self._is_blue_band_path, list_images(self.image_directory))
-
-    @staticmethod
-    def _blue_band_path_to_band_paths(path: str | Path) -> list[str]:
-        path = Path(path)
-        stem = path.stem[:-1]
-        return [str(path.with_name(f"{stem}{i}.TIF")) for i in range(1, 6)]
+    _base_file_pattern = re.compile("(.*[\\\\/])?DJI_[0-9]{3}1.TIF", flags=re.IGNORECASE)
 
     @property
     def paths(self) -> Iterable[list[str]]:
-        """Get grouped paths of imagery to load."""
-        return map(self._blue_band_path_to_band_paths, self._blue_band_paths)
+        """Find and group related band files together."""
+        base_files = filter(self._base_file_pattern.match, list_images(self.image_directory))
+        base_files = [Path(f) for f in base_files]
+
+        groups = []
+        for base_file in sorted(base_files):
+            # Get the original extension (preserving case)
+            original_ext = base_file.suffix
+            # Find corresponding band files using original extension
+            band_files = [str(base_file.with_name(f"{base_file.stem[:-1]}{i}{original_ext}")) for i in range(1, 6)]
+
+            # Verify all files exist
+            if all(Path(f).exists() for f in band_files):
+                groups.append(band_files)
+
+        return groups
 
 
 class DJIM3MLoader(MultiFileImageLoader):
     """Class responsible for loading imagery from DJI Mavic 3 MS sensors."""
 
-    _green_band_pattern = re.compile(r"(.*[\\/])?DJI_[0-9]+_[0-9]{4}_MS_G\.TIF", flags=re.IGNORECASE)
-    _bit_depth = 16
-
-    def _is_green_band_path(self, path: str | Path) -> bool:
-        return self._green_band_pattern.match(str(path)) is not None
-
-    @property
-    def _green_band_paths(self) -> Iterable[str]:
-        return filter(self._is_green_band_path, list_images(self.image_directory))
-
-    @staticmethod
-    def _green_band_path_to_band_paths(path: str | Path) -> list[str]:
-        path = Path(path)
-        stem = path.stem[:-1]
-        return [str(path.with_name(f"{stem}{b}.TIF")) for b in ["G", "R", "RE", "NIR"]]
+    _base_file_pattern = re.compile(r"(.*[\\/])?DJI_[0-9]+_[0-9]{4}_MS_G\.TIF", flags=re.IGNORECASE)
 
     @property
     def paths(self) -> Iterable[list[str]]:
-        """Get grouped paths of imagery to load."""
-        return map(self._green_band_path_to_band_paths, self._green_band_paths)
+        """Find and group related band files together."""
+        base_files = filter(self._base_file_pattern.match, list_images(self.image_directory))
+
+        groups = []
+        for base_file in sorted(base_files):
+            # Find corresponding band files
+            base_name = base_file.replace("_G.TIF", "")
+            band_files = [
+                f"{base_name}_G.TIF",
+                f"{base_name}_R.TIF",
+                f"{base_name}_RE.TIF",
+                f"{base_name}_NIR.TIF",
+            ]
+
+            # Verify all files exist
+            if all(Path(f).exists() for f in band_files):
+                groups.append(band_files)
+
+        return groups

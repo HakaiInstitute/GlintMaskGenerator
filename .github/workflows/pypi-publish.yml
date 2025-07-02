@@ -37,6 +37,6 @@ jobs:
         env:
           UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: |
-          sed -i "s/0.0.0/${{ env.tag }}/g" src/glint_mask_generator/__init__.py
+          sed -i "s/0.0.0/${{ env.tag }}/g" src/glint_mask_tools/__init__.py
           uv build
           uv publish
