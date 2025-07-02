@@ -1,7 +1,7 @@
 """Sensor configuration module for dynamic generation of CLI commands and GUI interfaces.
 
 This module defines sensor configurations that specify the bands and image loaders
-for different camera sensors. The configurations are used by both the CLI and GUI
+for different camera sensor_configs. The configurations are used by both the CLI and GUI
 to dynamically generate appropriate interfaces for each sensor type.
 
 Created by: Taylor Denouden
@@ -26,16 +26,27 @@ from glint_mask_generator.maskers import Masker
 
 
 @dataclass(frozen=True)
-class _BandConfig:
+class Band:
+    """A sensor band with a name and default threshold value."""
+
     name: str
     default_threshold: float
 
 
+B = Band("Blue", 0.875)
+G = Band("Green", 1.000)
+R = Band("Red", 1.000)
+RE = Band("Red Edge", 1.000)
+NIR = Band("Near-IR", 1.000)
+
+
 @dataclass
-class _SensorConfig:
+class Sensor:
+    """Sensor configuration class that specifies the name and band order, as well as loader class to handle imagery."""
+
     name: str
     cli_command: str
-    bands: list[_BandConfig]
+    bands: list[Band]
     loader_class: type[ImageLoader]
 
     def create_masker(self, img_dir: str, mask_dir: str, thresholds: list[float], pixel_buffer: int) -> Masker:
@@ -51,42 +62,35 @@ class _SensorConfig:
         return [band.default_threshold for band in self.bands]
 
 
-_bands = {
-    "B": _BandConfig("Blue", 0.875),
-    "G": _BandConfig("Green", 1.000),
-    "R": _BandConfig("Red", 1.000),
-    "RE": _BandConfig("Red Edge", 1.000),
-    "NIR": _BandConfig("Near-IR", 1.000),
-}
-sensors = (
-    _SensorConfig(
+sensor_configs = (
+    Sensor(
         name="RGB",
         cli_command="rgb",
-        bands=[_bands.get(b) for b in ["R", "G", "B"]],
+        bands=[R, G, B],
         loader_class=RGBLoader,
     ),
-    _SensorConfig(
+    Sensor(
         name="PhaseOne 4-band CIR",
         cli_command="cir",
-        bands=[_bands.get(b) for b in ["R", "G", "B", "NIR"]],
+        bands=[R, G, B, NIR],
         loader_class=CIRLoader,
     ),
-    _SensorConfig(
+    Sensor(
         name="DJI P4MS",
         cli_command="p4ms",
-        bands=[_bands.get(b) for b in ["B", "G", "R", "RE", "NIR"]],
+        bands=[B, G, R, RE, NIR],
         loader_class=P4MSLoader,
     ),
-    _SensorConfig(
+    Sensor(
         name="DJI M3M",
         cli_command="m3m",
-        bands=[_BandConfig("Green", 0.875)] + [_bands.get(b) for b in ["R", "RE", "NIR"]],
+        bands=[Band("Green", 0.875), R, RE, NIR],
         loader_class=DJIM3MLoader,
     ),
-    _SensorConfig(
+    Sensor(
         name="MicaSense RedEdge",
         cli_command="msre",
-        bands=[_bands.get(b) for b in ["B", "G", "R", "RE", "NIR"]],
+        bands=[B, G, R, RE, NIR],
         loader_class=MicasenseRedEdgeLoader,
     ),
 )

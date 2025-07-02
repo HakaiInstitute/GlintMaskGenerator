@@ -1,4 +1,4 @@
-"""Module containing the main Masker classes for different comninations of glint masking algorithms and sensors.
+"""Module containing the main Masker classes for different comninations of glint masking algorithms and sensor_configs.
 
 Created by: Taylor Denouden
 Organization: Hakai Institute

@@ -113,7 +113,7 @@ class SingleFileImageLoader(ImageLoader, metaclass=ABCMeta):
 
     @property
     def paths(self) -> Iterable[str]:
-        """Get grouped paths of imagery to load."""
+        """Get paths of images to load."""
         return list_images(self.image_directory)
 
 
@@ -210,7 +210,7 @@ class MultiFileImageLoader(ImageLoader, metaclass=ABCMeta):
 
 
 class MicasenseRedEdgeLoader(MultiFileImageLoader):
-    """Class responsible for loading imagery from Micasense Red Edge sensors."""
+    """Class responsible for loading imagery from Micasense Red Edge sensor_configs."""
 
     _blue_band_pattern = re.compile(
         "(.*[\\\\/])?IMG_[0-9]{4}_1.tif",
@@ -237,7 +237,7 @@ class MicasenseRedEdgeLoader(MultiFileImageLoader):
 
 
 class P4MSLoader(MultiFileImageLoader):
-    """Class responsible for loading imagery from Phantom 4 MS sensors."""
+    """Class responsible for loading imagery from Phantom 4 MS sensor_configs."""
 
     _blue_band_pattern = re.compile(
         "(.*[\\\\/])?DJI_[0-9]{3}1.TIF",
@@ -265,7 +265,7 @@ class P4MSLoader(MultiFileImageLoader):
 
 
 class DJIM3MLoader(MultiFileImageLoader):
-    """Class responsible for loading imagery from DJI Mavic 3 MS sensors."""
+    """Class responsible for loading imagery from DJI Mavic 3 MS sensor_configs."""
 
     _green_band_pattern = re.compile(r"(.*[\\/])?DJI_[0-9]+_[0-9]{4}_MS_G\.TIF", flags=re.IGNORECASE)
     _bit_depth = 16

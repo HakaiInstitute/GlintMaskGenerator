@@ -391,7 +391,7 @@ def sensor_test_images(tmp_path):
 
 
 def test_all_sensor_bit_depths(sensor_test_images):
-    """Test that all sensors report correct bit depths."""
+    """Test that all sensor_configs report correct bit depths."""
     tmp_path = sensor_test_images
     mask_dir = tmp_path / "masks"
 

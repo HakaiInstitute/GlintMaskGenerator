@@ -15,7 +15,7 @@ from PyQt6.QtCore import QObject, QRunnable, Qt, QThreadPool, pyqtSignal, pyqtSl
 from PyQt6.QtGui import QIcon
 
 from glint_mask_generator import __version__
-from glint_mask_generator.sensors import _SensorConfig, sensors
+from glint_mask_generator.sensors import Sensor, sensor_configs
 from gui.utils import resource_path
 from gui.widgets.threshold_ctrl import ThresholdCtrl
 
@@ -58,7 +58,7 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         self.setWindowIcon(QIcon(resource_path("resources/gmt.ico")))
 
         # Initialize sensor management
-        self.selected_sensor: _SensorConfig | None = None
+        self.selected_sensor: Sensor | None = None
         self.threshold_widgets: list[ThresholdCtrl] = []
         self.threshold_labels: list[QtWidgets.QLabel] = []
 
@@ -98,7 +98,7 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         self.sensor_combo.clear()
 
         # Add sensor options to dropdown
-        for sensor in sensors:
+        for sensor in sensor_configs:
             self.sensor_combo.addItem(sensor.name)
 
         # Connect signal
@@ -108,8 +108,8 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         """Handle sensor selection change."""
         # Get selected sensor from dropdown
         current_index = self.sensor_combo.currentIndex()
-        if 0 <= current_index < len(sensors):
-            self.selected_sensor = sensors[current_index]
+        if 0 <= current_index < len(sensor_configs):
+            self.selected_sensor = sensor_configs[current_index]
             # Update threshold sliders for the selected sensor
             self.create_threshold_sliders()
 
@@ -162,7 +162,7 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
                 self.threshold_widgets[i].value = band.default_threshold
 
     @property
-    def selected_sensor_config(self) -> _SensorConfig:
+    def selected_sensor_config(self) -> Sensor:
         """Get the currently selected sensor configuration."""
         if self.selected_sensor is None:
             msg = "No sensor selected"
