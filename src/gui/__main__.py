@@ -3,44 +3,26 @@ Organization: Hakai Institute
 Date: 2020-09-16.
 """
 
+from __future__ import annotations
+
 import os
 import sys
-from collections.abc import Sequence
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 from loguru import logger
 from PyQt6 import QtWidgets, uic
-from PyQt6.QtCore import QObject, QRunnable, QThreadPool, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import QObject, QRunnable, Qt, QThreadPool, pyqtSignal, pyqtSlot
 from PyQt6.QtGui import QIcon
 
-from glint_mask_generator import (
-    CIRThresholdMasker,
-    Masker,
-    MicasenseRedEdgeThresholdMasker,
-    P4MSThresholdMasker,
-    RGBThresholdMasker,
-)
-from gui import __version__
+from glint_mask_generator import __version__
+from glint_mask_generator.sensors import _SensorConfig, sensors
 from gui.utils import resource_path
+from gui.widgets.threshold_ctrl import ThresholdCtrl
 
-# String constants to eliminate silent errors due to typos
-BLUE = "BLUE"
-GREEN = "GREEN"
-RED = "RED"
-REDEDGE = "REDEDGE"
-NIR = "NIR"
+if TYPE_CHECKING:
+    from glint_mask_generator.maskers import Masker
 
-IMG_TYPE_RGB = "IMG_TYPE_RGB"
-IMG_TYPE_CIR = "IMG_TYPE_CIR"
-IMG_TYPE_P4MS = "IMG_TYPE_P4MS"
-IMG_TYPE_MICASENSE_REDEDGE = "IMG_TYPE_MICASENSE_REDEDGE"
 
-# Default slider values in GUI
-DEFAULT_BLUE_THRESH = 0.875
-DEFAULT_GREEN_THRESH = 1.000
-DEFAULT_RED_THRESH = 1.000
-DEFAULT_REDEDGE_THRESH = 1.000
-DEFAULT_NIR_THRESH = 1.000
 DEFAULT_PIXEL_BUFFER = 0
 DEFAULT_MAX_WORKERS = 0
 
@@ -75,13 +57,22 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         self.setWindowTitle(f"Glint Mask Generator v{__version__}")
         self.setWindowIcon(QIcon(resource_path("resources/gmt.ico")))
 
+        # Initialize sensor management
+        self.selected_sensor: _SensorConfig | None = None
+        self.threshold_widgets: list[ThresholdCtrl] = []
+        self.threshold_labels: list[QtWidgets.QLabel] = []
+
+        # Setup sensor dropdown
+        self.setup_sensor_dropdown()
+
+        # Set default sensor and thresholds
+        if self.sensor_combo.count() > 0:
+            self.sensor_combo.setCurrentIndex(0)
+            self.on_sensor_changed()
+
         # Set default values
-        self.reset_thresholds()
         self.pixel_buffer_w.value = DEFAULT_PIXEL_BUFFER
         self.max_workers_spinbox.setValue(DEFAULT_MAX_WORKERS)
-
-        # Enable/disable threshold controls based on imagery type
-        self.enable_available_thresholds()
 
         self.progress_val = 0
 
@@ -98,39 +89,85 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         # Connect signals/slots
         self.run_btn.released.connect(self.run_btn_clicked)
         self.reset_thresholds_btn.released.connect(self.reset_thresholds)
-        self.img_type_rgb_radio.clicked.connect(self.enable_available_thresholds)
-        self.img_type_cir_radio.clicked.connect(self.enable_available_thresholds)
-        self.img_type_p4ms_radio.clicked.connect(self.enable_available_thresholds)
-        self.img_type_micasense_radio.clicked.connect(self.enable_available_thresholds)
 
         self.show()
 
-    def enable_available_thresholds(self) -> None:
-        self.blue_thresh_w.setEnabled(BLUE in self.band_order)
-        self.green_thresh_w.setEnabled(GREEN in self.band_order)
-        self.red_thresh_w.setEnabled(RED in self.band_order)
-        self.rededge_thresh_w.setEnabled(REDEDGE in self.band_order)
-        self.nir_thresh_w.setEnabled(NIR in self.band_order)
+    def setup_sensor_dropdown(self) -> None:
+        """Setup the sensor dropdown with available sensor configurations."""
+        # Clear existing items
+        self.sensor_combo.clear()
+
+        # Add sensor options to dropdown
+        for sensor in sensors:
+            self.sensor_combo.addItem(sensor.name)
+
+        # Connect signal
+        self.sensor_combo.currentIndexChanged.connect(self.on_sensor_changed)
+
+    def on_sensor_changed(self) -> None:
+        """Handle sensor selection change."""
+        # Get selected sensor from dropdown
+        current_index = self.sensor_combo.currentIndex()
+        if 0 <= current_index < len(sensors):
+            self.selected_sensor = sensors[current_index]
+            # Update threshold sliders for the selected sensor
+            self.create_threshold_sliders()
+
+    def create_threshold_sliders(self) -> None:
+        """Dynamically create threshold sliders for the selected sensor's bands."""
+        if not self.selected_sensor:
+            return
+
+        # Clear existing threshold widgets
+        for widget in self.threshold_widgets:
+            widget.deleteLater()
+        for label in self.threshold_labels:
+            label.deleteLater()
+        self.threshold_widgets.clear()
+        self.threshold_labels.clear()
+
+        # Get the grid layout from the threshold group box
+        grid_layout = self.box_band_threshes.layout()
+
+        # Create threshold sliders for each band
+        for i, band in enumerate(self.selected_sensor.bands):
+            # Create label
+            label = QtWidgets.QLabel(band.name)
+            label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+            # Create threshold control
+            threshold_ctrl = ThresholdCtrl(self)
+            threshold_ctrl.value = band.default_threshold
+
+            # Add to layout (row i, columns 0 and 2)
+            grid_layout.addWidget(label, i, 0)
+            grid_layout.addWidget(threshold_ctrl, i, 2)
+
+            # Store references
+            self.threshold_labels.append(label)
+            self.threshold_widgets.append(threshold_ctrl)
+
+        # Keep the reset button at the bottom
+        reset_row = len(self.selected_sensor.bands)
+        if hasattr(self, "reset_thresholds_btn"):
+            grid_layout.addWidget(self.reset_thresholds_btn.parent(), reset_row, 2)
 
     def reset_thresholds(self) -> None:
-        self.blue_thresh_w.value = DEFAULT_BLUE_THRESH
-        self.green_thresh_w.value = DEFAULT_GREEN_THRESH
-        self.red_thresh_w.value = DEFAULT_RED_THRESH
-        self.rededge_thresh_w.value = DEFAULT_REDEDGE_THRESH
-        self.nir_thresh_w.value = DEFAULT_NIR_THRESH
+        """Reset all threshold sliders to their default values."""
+        if not self.selected_sensor:
+            return
+
+        for i, band in enumerate(self.selected_sensor.bands):
+            if i < len(self.threshold_widgets):
+                self.threshold_widgets[i].value = band.default_threshold
 
     @property
-    def img_type(self) -> str:
-        if self.img_type_cir_radio.isChecked():
-            return IMG_TYPE_CIR
-        if self.img_type_p4ms_radio.isChecked():
-            return IMG_TYPE_P4MS
-        if self.img_type_micasense_radio.isChecked():
-            return IMG_TYPE_MICASENSE_REDEDGE
-        if self.img_type_rgb_radio.isChecked():
-            return IMG_TYPE_RGB
-        msg = "Unknown image type."
-        raise (ValueError(msg))
+    def selected_sensor_config(self) -> _SensorConfig:
+        """Get the currently selected sensor configuration."""
+        if self.selected_sensor is None:
+            msg = "No sensor selected"
+            raise ValueError(msg)
+        return self.selected_sensor
 
     @property
     def max_workers(self) -> int:
@@ -141,56 +178,18 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         self.max_workers_spinbox.setValue(v)
 
     @property
-    def band_order_ints(self) -> Sequence[int]:
-        return [{BLUE: 0, GREEN: 1, RED: 2, REDEDGE: 3, NIR: 4}[k] for k in self.band_order]
-
-    @property
-    def band_order(self) -> Sequence[str]:
-        if self.img_type == IMG_TYPE_RGB:
-            return RED, GREEN, BLUE
-        if self.img_type == IMG_TYPE_CIR:
-            return RED, GREEN, BLUE, NIR
-        if self.img_type == IMG_TYPE_P4MS:
-            return BLUE, GREEN, RED, REDEDGE, NIR
-        if self.img_type == IMG_TYPE_MICASENSE_REDEDGE:
-            return BLUE, GREEN, RED, NIR, REDEDGE
-        return None
-
-    @property
-    def threshold_values(self) -> Sequence[float]:
-        """Returns the thresholds in the order corresponding to the imagery type band
-        order.
-        """
-        thresholds: list[float] = [
-            self.blue_thresh_w.value,
-            self.green_thresh_w.value,
-            self.red_thresh_w.value,
-            self.rededge_thresh_w.value,
-            self.nir_thresh_w.value,
-        ]
-        return [thresholds[i] for i in self.band_order_ints]
+    def threshold_values(self) -> list[float]:
+        """Returns the current threshold values for all bands."""
+        return [widget.value for widget in self.threshold_widgets]
 
     def create_masker(self) -> Masker:
-        """Returns an instance of the appropriate glint mask generator given selected
-        options.
-        """
-        threshold_params = {
-            "img_dir": self.img_dir_w.value,
-            "mask_dir": self.mask_dir_w.value,
-            "thresholds": self.threshold_values,
-            "pixel_buffer": self.pixel_buffer_w.value,
-        }
-
-        if self.img_type == IMG_TYPE_RGB:
-            return RGBThresholdMasker(**threshold_params)
-        if self.img_type == IMG_TYPE_CIR:
-            return CIRThresholdMasker(**threshold_params)
-        if self.img_type == IMG_TYPE_P4MS:
-            return P4MSThresholdMasker(**threshold_params)
-        if self.img_type == IMG_TYPE_MICASENSE_REDEDGE:
-            return MicasenseRedEdgeThresholdMasker(**threshold_params)
-        msg = f"No masker available for img type {self.img_type}"
-        raise ValueError(msg)
+        """Returns an instance of the appropriate glint mask generator given selected options."""
+        return self.selected_sensor_config.create_masker(
+            img_dir=self.img_dir_w.value,
+            mask_dir=self.mask_dir_w.value,
+            thresholds=self.threshold_values,
+            pixel_buffer=self.pixel_buffer_w.value,
+        )
 
     @property
     def progress_val(self) -> int:
@@ -246,7 +245,7 @@ class Signals(QObject):
 
 
 class Worker(QRunnable):
-    def __init__(self, fn: Callable[Any, Any], *args: list[Any], **kwargs: dict[str, Any]) -> None:
+    def __init__(self, fn: Callable[[Any], Any], *args: list[Any], **kwargs: dict[str, Any]) -> None:
         super().__init__()
         self.fn = fn
         self.args = args

@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import numpy as np
+import tifffile
 from PIL import Image
 
 from .utils import list_images, normalize_img
@@ -155,41 +156,40 @@ class CIRLoader(SingleFileImageLoader):
         img_path = img_paths
         mask_path = next(self.get_mask_save_paths(img_paths))
 
-        with Image.open(img_path, "r") as src:
-            height = src.height
-            width = src.width
+        src = tifffile.imread(img_path)
+        height, width, bands = src.shape
 
-            pad = masker.pixel_buffer
+        pad = masker.pixel_buffer
 
-            # Make an all black image to store the data
-            with Image.new("L", (width, height)) as dest:
-                for y in range(0, height, self._crop_size):
-                    for x in range(0, width, self._crop_size):
-                        xc = min(x + self._crop_size, width)
-                        yc = min(y + self._crop_size, height)
+        # Make an all black image to store the data
+        with Image.new("L", (width, height)) as dest:
+            for y in range(0, height, self._crop_size):
+                for x in range(0, width, self._crop_size):
+                    xc = min(x + self._crop_size, width)
+                    yc = min(y + self._crop_size, height)
 
-                        x0 = max(x - pad, 0)
-                        x1 = min(xc + pad, width)
-                        y0 = max(y - pad, 0)
-                        y1 = min(yc + pad, height)
+                    x0 = max(x - pad, 0)
+                    x1 = min(xc + pad, width)
+                    y0 = max(y - pad, 0)
+                    y1 = min(yc + pad, height)
 
-                        # noinspection PyTypeChecker
-                        img = np.array(src.crop((x0, y0, x1, y1)))
-                        img = self.preprocess_image(img)
-                        mask = masker.algorithm(img)
-                        mask = masker.postprocess_mask(mask)
-                        mask = masker.to_metashape_mask(mask)
+                    # noinspection PyTypeChecker
+                    img = src[y0:y1, x0:x1, :4]
+                    img = self.preprocess_image(img)
+                    mask = masker.algorithm(img)
+                    mask = masker.postprocess_mask(mask)
+                    mask = masker.to_metashape_mask(mask)
 
-                        # Remove padding
-                        mask = mask[(y - y0) :, (x - x0) :]
-                        mask = mask[
-                            : self._crop_size + pad - (y1 - yc),
-                            : self._crop_size + pad - (x1 - xc),
-                        ]
+                    # Remove padding
+                    mask = mask[(y - y0) :, (x - x0) :]
+                    mask = mask[
+                        : self._crop_size + pad - (y1 - yc),
+                        : self._crop_size + pad - (x1 - xc),
+                    ]
 
-                        # Write the mask section
-                        dest.paste(Image.fromarray(mask), (x, y))
-                dest.save(mask_path)
+                    # Write the mask section
+                    dest.paste(Image.fromarray(mask), (x, y))
+            dest.save(mask_path)
 
 
 class MultiFileImageLoader(ImageLoader, metaclass=ABCMeta):
@@ -254,8 +254,9 @@ class P4MSLoader(MultiFileImageLoader):
 
     @staticmethod
     def _blue_band_path_to_band_paths(path: str | Path) -> list[str]:
-        in_path_root = Path(path).stem[:-1]
-        return [str(Path(path).with_name(f"{in_path_root}{i}.TIF")) for i in range(1, 6)]
+        path = Path(path)
+        stem = path.stem[:-1]
+        return [str(path.with_name(f"{stem}{i}.TIF")) for i in range(1, 6)]
 
     @property
     def paths(self) -> Iterable[list[str]]:
