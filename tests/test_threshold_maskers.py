@@ -116,7 +116,7 @@ def djim3m_test_data(tmp_path):
         for band in ["G", "R", "RE", "NIR"]:
             # Green band gets glint, others don't
             img = create_test_image_16bit(height=64, width=64, add_glint=(band == "G"))
-            img.save(tmp_path / f"DJI_{capture_id}_{band}.TIF")
+            img.save(tmp_path / f"DJI_{capture_id}_MS_{band}.TIF")
 
     return tmp_path
 

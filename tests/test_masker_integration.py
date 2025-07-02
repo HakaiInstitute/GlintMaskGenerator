@@ -93,7 +93,7 @@ def complete_sensor_suite(tmp_path):
     for capture_id in ["20221208115250_0001", "20221208115253_0002"]:
         for band in ["G", "R", "RE", "NIR"]:
             img = create_realistic_test_image(128, 128, 1, 16, add_glint_pattern=(band == "G"))
-            img.save(djim3m_dir / f"DJI_{capture_id}_{band}.TIF")
+            img.save(djim3m_dir / f"DJI_{capture_id}_MS_{band}.TIF")
 
     return {
         "rgb_dir": rgb_dir,

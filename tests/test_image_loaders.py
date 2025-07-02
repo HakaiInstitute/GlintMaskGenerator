@@ -289,14 +289,14 @@ def test_djim3m_loader(tmp_path):
     """Test DJI M3M image loader functionality."""
     # Create test files with DJI M3M naming pattern
     test_files = [
-        "DJI_20221208115250_0001_G.TIF",
-        "DJI_20221208115250_0001_R.TIF",
-        "DJI_20221208115250_0001_RE.TIF",
-        "DJI_20221208115250_0001_NIR.TIF",
-        "DJI_20221208115253_0002_G.TIF",
-        "DJI_20221208115253_0002_R.TIF",
-        "DJI_20221208115253_0002_RE.TIF",
-        "DJI_20221208115253_0002_NIR.TIF",
+        "DJI_20221208115250_0001_MS_G.TIF",
+        "DJI_20221208115250_0001_MS_R.TIF",
+        "DJI_20221208115250_0001_MS_RE.TIF",
+        "DJI_20221208115250_0001_MS_NIR.TIF",
+        "DJI_20221208115253_0002_MS_G.TIF",
+        "DJI_20221208115253_0002_MS_R.TIF",
+        "DJI_20221208115253_0002_MS_RE.TIF",
+        "DJI_20221208115253_0002_MS_NIR.TIF",
         "other_file.txt",  # Should be ignored
     ]
 
@@ -314,28 +314,28 @@ def test_djim3m_loader(tmp_path):
     assert image_loader._bit_depth == 16
 
     # Test green band pattern matching
-    assert image_loader._is_green_band_path("DJI_20221208115250_0001_G.TIF")
-    assert image_loader._is_green_band_path("/path/to/DJI_20221208115250_0001_G.TIF")
-    assert image_loader._is_green_band_path(Path("DJI_20221208115250_0001_G.TIF"))
-    assert not image_loader._is_green_band_path("DJI_20221208115250_0001_R.TIF")
+    assert image_loader._is_green_band_path("DJI_20221208115250_0001_MS_G.TIF")
+    assert image_loader._is_green_band_path("/path/to/DJI_20221208115250_0001_MS_G.TIF")
+    assert image_loader._is_green_band_path(Path("DJI_20221208115250_0001_MS_G.TIF"))
+    assert not image_loader._is_green_band_path("DJI_20221208115250_0001_MS_R.TIF")
     assert not image_loader._is_green_band_path("other_file.txt")
 
     # Test green band path extraction
     green_band_paths = list(image_loader._green_band_paths)
     expected_green_paths = [
-        str(tmp_path / "DJI_20221208115250_0001_G.TIF"),
-        str(tmp_path / "DJI_20221208115253_0002_G.TIF"),
+        str(tmp_path / "DJI_20221208115250_0001_MS_G.TIF"),
+        str(tmp_path / "DJI_20221208115253_0002_MS_G.TIF"),
     ]
     assert sorted(green_band_paths) == sorted(expected_green_paths)
 
     # Test band path generation from green band path
-    green_path = tmp_path / "DJI_20221208115250_0001_G.TIF"
+    green_path = tmp_path / "DJI_20221208115250_0001_MS_G.TIF"
     band_paths = DJIM3MLoader._green_band_path_to_band_paths(green_path)
     expected_band_paths = [
-        str(tmp_path / "DJI_20221208115250_0001_G.TIF"),
-        str(tmp_path / "DJI_20221208115250_0001_R.TIF"),
-        str(tmp_path / "DJI_20221208115250_0001_RE.TIF"),
-        str(tmp_path / "DJI_20221208115250_0001_NIR.TIF"),
+        str(tmp_path / "DJI_20221208115250_0001_MS_G.TIF"),
+        str(tmp_path / "DJI_20221208115250_0001_MS_R.TIF"),
+        str(tmp_path / "DJI_20221208115250_0001_MS_RE.TIF"),
+        str(tmp_path / "DJI_20221208115250_0001_MS_NIR.TIF"),
     ]
     assert band_paths == expected_band_paths
 
@@ -347,10 +347,10 @@ def test_djim3m_loader(tmp_path):
 
     # Test image loading with all 4 bands
     capture_paths = [
-        str(tmp_path / "DJI_20221208115250_0001_G.TIF"),
-        str(tmp_path / "DJI_20221208115250_0001_R.TIF"),
-        str(tmp_path / "DJI_20221208115250_0001_RE.TIF"),
-        str(tmp_path / "DJI_20221208115250_0001_NIR.TIF"),
+        str(tmp_path / "DJI_20221208115250_0001_MS_G.TIF"),
+        str(tmp_path / "DJI_20221208115250_0001_MS_R.TIF"),
+        str(tmp_path / "DJI_20221208115250_0001_MS_RE.TIF"),
+        str(tmp_path / "DJI_20221208115250_0001_MS_NIR.TIF"),
     ]
     loaded_img = image_loader.load_image(capture_paths)
     assert loaded_img.shape[2] == 4  # Four bands (G, R, RE, NIR)
@@ -385,7 +385,7 @@ def sensor_test_images(tmp_path):
     for capture_id in ["20221208115250_0001", "20221208115253_0002"]:
         for band in ["G", "R", "RE", "NIR"]:
             img = create_test_image_16bit(height=32, width=32, add_glint=(band == "G"))
-            img.save(tmp_path / f"DJI_{capture_id}_{band}.TIF")
+            img.save(tmp_path / f"DJI_{capture_id}_MS_{band}.TIF")
 
     return tmp_path
 

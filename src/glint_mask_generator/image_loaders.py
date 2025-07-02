@@ -267,7 +267,7 @@ class P4MSLoader(MultiFileImageLoader):
 class DJIM3MLoader(MultiFileImageLoader):
     """Class responsible for loading imagery from DJI Mavic 3 MS sensors."""
 
-    _green_band_pattern = re.compile(r"(.*[\\/])?DJI_[0-9]+_[0-9]{4}_G\.TIF", flags=re.IGNORECASE)
+    _green_band_pattern = re.compile(r"(.*[\\/])?DJI_[0-9]+_[0-9]{4}_MS_G\.TIF", flags=re.IGNORECASE)
     _bit_depth = 16
 
     def _is_green_band_path(self, path: str | Path) -> bool:
