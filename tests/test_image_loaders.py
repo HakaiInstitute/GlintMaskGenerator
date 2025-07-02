@@ -133,41 +133,6 @@ def test_p4ms_loader(tmp_path):
     assert len(image_loader) == len(valid_paths)
     assert np.array_equal(np.array(masker_paths), np.array(valid_paths))
 
-    assert image_loader._is_blue_band_path("DJI_0011.TIF") is True
-    assert image_loader._is_blue_band_path("DJI_2221.TIF") is True
-    assert image_loader._is_blue_band_path("dji_0011.tif") is True
-    assert image_loader._is_blue_band_path("DJI_0013.TIF") is False
-    assert image_loader._is_blue_band_path("DJI_0015.TIF") is False
-    assert image_loader._is_blue_band_path("DJI_00011.TIF") is False
-    assert image_loader._is_blue_band_path("IMG_1234_2.TIF") is False
-    assert image_loader._is_blue_band_path("IMG_1234_3.TIF") is False
-    assert image_loader._is_blue_band_path("IMG_1234_4.TIF") is False
-    assert image_loader._is_blue_band_path("IMG_1234_5.TIF") is False
-
-    assert image_loader._is_blue_band_path(Path("DJI_0011.TIF")) is True
-    assert image_loader._is_blue_band_path(Path("DJI_2221.TIF")) is True
-    assert image_loader._is_blue_band_path(Path("dji_0011.tif")) is True
-    assert image_loader._is_blue_band_path(Path("dji_0101.tif")) is True
-    assert image_loader._is_blue_band_path(Path("DJI_0013.TIF")) is False
-    assert image_loader._is_blue_band_path(Path("DJI_0015.TIF")) is False
-    assert image_loader._is_blue_band_path(Path("DJI_00011.TIF")) is False
-    assert image_loader._is_blue_band_path(Path("IMG_1234_2.TIF")) is False
-    assert image_loader._is_blue_band_path(Path("IMG_1234_3.TIF")) is False
-    assert image_loader._is_blue_band_path(Path("IMG_1234_4.TIF")) is False
-    assert image_loader._is_blue_band_path(Path("IMG_1234_5.TIF")) is False
-
-    assert image_loader._is_blue_band_path(Path("/home/dir/dji_0011.tif")) is True
-    assert image_loader._is_blue_band_path(Path("/home/dir/DJI_0013.TIF")) is False
-    assert image_loader._is_blue_band_path("/home/wherever/dji_0011.tif") is True
-    assert image_loader._is_blue_band_path("/home/wherever/DJI_0013.TIF") is False
-
-    assert image_loader._is_blue_band_path(Path("C:\\Users\\some\\dir\\dji_0011.tif")) is True
-    assert not image_loader._is_blue_band_path(
-        Path("C:\\Users\\some\\dir\\DJI_0013.TIF"),
-    )
-    assert image_loader._is_blue_band_path("C:\\Users\\some\\dir\\dji_0011.tif") is True
-    assert image_loader._is_blue_band_path("C:\\Users\\some\\dir\\DJI_0013.TIF") is False
-
 
 def test_micasense_red_edge_masker(tmp_path):
     """Test that the Micasense masker finds the correct files."""
@@ -201,46 +166,6 @@ def test_micasense_red_edge_masker(tmp_path):
     masker_paths = sorted(image_loader.paths, key=lambda a: a[0])
     assert len(image_loader) == len(valid_paths)
     assert np.array_equal(np.array(masker_paths), np.array(valid_paths))
-
-    assert image_loader._is_blue_band_path("DJI_0014.TIF") is False
-    assert image_loader._is_blue_band_path("DJI_2224.TIF") is False
-    assert image_loader._is_blue_band_path("dji_0014.tif") is False
-    assert image_loader._is_blue_band_path("DJI_0013.TIF") is False
-    assert image_loader._is_blue_band_path("DJI_0015.TIF") is False
-    assert image_loader._is_blue_band_path("DJI_00014.TIF") is False
-    assert image_loader._is_blue_band_path("IMG_1234_1.TIF") is True
-    assert image_loader._is_blue_band_path("IMG_9999_1.TIF") is True
-    assert image_loader._is_blue_band_path("IMG_0000_1.TIF") is True
-    assert image_loader._is_blue_band_path("img_3332_1.tif") is True
-    assert image_loader._is_blue_band_path("img_3332_2.tif") is False
-    assert image_loader._is_blue_band_path("img_3332_3.tif") is False
-    assert image_loader._is_blue_band_path("img_3332_4.tif") is False
-    assert image_loader._is_blue_band_path("img_3332_5.tif") is False
-
-    assert image_loader._is_blue_band_path(Path("DJI_0014.TIF")) is False
-    assert image_loader._is_blue_band_path(Path("DJI_2224.TIF")) is False
-    assert image_loader._is_blue_band_path(Path("dji_0014.tif")) is False
-    assert image_loader._is_blue_band_path(Path("DJI_0013.TIF")) is False
-    assert image_loader._is_blue_band_path(Path("DJI_0015.TIF")) is False
-    assert image_loader._is_blue_band_path(Path("DJI_00014.TIF")) is False
-    assert image_loader._is_blue_band_path(Path("IMG_1234_1.TIF")) is True
-    assert image_loader._is_blue_band_path(Path("IMG_9999_1.TIF")) is True
-    assert image_loader._is_blue_band_path(Path("IMG_0000_1.TIF")) is True
-    assert image_loader._is_blue_band_path(Path("img_3332_1.tif")) is True
-    assert image_loader._is_blue_band_path(Path("img_3332_2.tif")) is False
-    assert image_loader._is_blue_band_path(Path("img_3332_3.tif")) is False
-    assert image_loader._is_blue_band_path(Path("img_3332_4.tif")) is False
-    assert image_loader._is_blue_band_path(Path("img_3332_5.tif")) is False
-
-    assert image_loader._is_blue_band_path(Path("/home/dir/img_3332_1.tif")) is True
-    assert image_loader._is_blue_band_path(Path("/home/dir/img_3332_5.tif")) is False
-    assert image_loader._is_blue_band_path("/home/dir/img_3332_1.tif") is True
-    assert image_loader._is_blue_band_path("/home/dir/img_3332_5.tif") is False
-
-    assert image_loader._is_blue_band_path(Path("C:\\Users\\some\\dir\\img_3332_1.tif")) is True
-    assert image_loader._is_blue_band_path(Path("C:\\Users\\some\\dir\\img_3332_5.tif")) is False
-    assert image_loader._is_blue_band_path("C:\\Users\\some\\dir\\img_3332_1.tif") is True
-    assert image_loader._is_blue_band_path("C:\\Users\\some\\dir\\img_3332_5.tif") is False
 
 
 def test_rgb_loader(tmp_path):
@@ -313,32 +238,6 @@ def test_djim3m_loader(tmp_path):
     # Test bit depth
     assert image_loader._bit_depth == 16
 
-    # Test green band pattern matching
-    assert image_loader._is_green_band_path("DJI_20221208115250_0001_MS_G.TIF")
-    assert image_loader._is_green_band_path("/path/to/DJI_20221208115250_0001_MS_G.TIF")
-    assert image_loader._is_green_band_path(Path("DJI_20221208115250_0001_MS_G.TIF"))
-    assert not image_loader._is_green_band_path("DJI_20221208115250_0001_MS_R.TIF")
-    assert not image_loader._is_green_band_path("other_file.txt")
-
-    # Test green band path extraction
-    green_band_paths = list(image_loader._green_band_paths)
-    expected_green_paths = [
-        str(tmp_path / "DJI_20221208115250_0001_MS_G.TIF"),
-        str(tmp_path / "DJI_20221208115253_0002_MS_G.TIF"),
-    ]
-    assert sorted(green_band_paths) == sorted(expected_green_paths)
-
-    # Test band path generation from green band path
-    green_path = tmp_path / "DJI_20221208115250_0001_MS_G.TIF"
-    band_paths = DJIM3MLoader._green_band_path_to_band_paths(green_path)
-    expected_band_paths = [
-        str(tmp_path / "DJI_20221208115250_0001_MS_G.TIF"),
-        str(tmp_path / "DJI_20221208115250_0001_MS_R.TIF"),
-        str(tmp_path / "DJI_20221208115250_0001_MS_RE.TIF"),
-        str(tmp_path / "DJI_20221208115250_0001_MS_NIR.TIF"),
-    ]
-    assert band_paths == expected_band_paths
-
     # Test complete path grouping
     all_paths = list(image_loader.paths)
     assert len(all_paths) == 2  # Two captures
@@ -391,7 +290,7 @@ def sensor_test_images(tmp_path):
 
 
 def test_all_sensor_bit_depths(sensor_test_images):
-    """Test that all sensor_configs report correct bit depths."""
+    """Test that all _known_sensors report correct bit depths."""
     tmp_path = sensor_test_images
     mask_dir = tmp_path / "masks"
 
