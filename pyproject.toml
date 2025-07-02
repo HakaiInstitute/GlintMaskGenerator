@@ -10,11 +10,13 @@ authors = [
 ]
 requires-python = ">=3.9"
 dependencies = [
+    "imagecodecs>=2024.12.30",
     "loguru>=0.7.3",
     "numpy>=2.0.2",
     "pillow>=11.2.1",
     "pyqt6>=6.9.1",
     "scipy>=1.13.1",
+    "tifffile>=2024.8.30",
     "tqdm>=4.67.1",
     "typer>=0.16.0",
 ]
