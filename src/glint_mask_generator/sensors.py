@@ -34,6 +34,7 @@ class _BandConfig:
 @dataclass
 class _SensorConfig:
     name: str
+    cli_command: str
     bands: list[_BandConfig]
     loader_class: type[ImageLoader]
 
@@ -58,24 +59,33 @@ _bands = {
     "NIR": _BandConfig("Near-IR", 1.000),
 }
 sensors = (
-    _SensorConfig(name="RGB", bands=[_bands.get(b) for b in ["R", "G", "B"]], loader_class=RGBLoader),
+    _SensorConfig(
+        name="RGB",
+        cli_command="rgb",
+        bands=[_bands.get(b) for b in ["R", "G", "B"]],
+        loader_class=RGBLoader,
+    ),
     _SensorConfig(
         name="PhaseOne 4-band CIR",
+        cli_command="cir",
         bands=[_bands.get(b) for b in ["R", "G", "B", "NIR"]],
         loader_class=CIRLoader,
     ),
     _SensorConfig(
         name="DJI P4MS",
+        cli_command="p4ms",
         bands=[_bands.get(b) for b in ["B", "G", "R", "RE", "NIR"]],
         loader_class=P4MSLoader,
     ),
     _SensorConfig(
         name="DJI M3M",
+        cli_command="m3m",
         bands=[_BandConfig("Green", 0.875)] + [_bands.get(b) for b in ["R", "RE", "NIR"]],
         loader_class=DJIM3MLoader,
     ),
     _SensorConfig(
         name="MicaSense RedEdge",
+        cli_command="msre",
         bands=[_bands.get(b) for b in ["B", "G", "R", "RE", "NIR"]],
         loader_class=MicasenseRedEdgeLoader,
     ),
