@@ -1,7 +1,7 @@
 """Sensor configuration module for dynamic generation of CLI commands and GUI interfaces.
 
 This module defines sensor configurations that specify the bands and image loaders
-for different camera sensor_configs. The configurations are used by both the CLI and GUI
+for different camera _known_sensors. The configurations are used by both the CLI and GUI
 to dynamically generate appropriate interfaces for each sensor type.
 
 Created by: Taylor Denouden
@@ -45,7 +45,6 @@ class Sensor:
     """Sensor configuration class that specifies the name and band order, as well as loader class to handle imagery."""
 
     name: str
-    cli_command: str
     bands: list[Band]
     loader_class: type[ImageLoader]
 
@@ -62,35 +61,44 @@ class Sensor:
         return [band.default_threshold for band in self.bands]
 
 
-sensor_configs = (
-    Sensor(
-        name="RGB",
-        cli_command="rgb",
-        bands=[R, G, B],
-        loader_class=RGBLoader,
-    ),
-    Sensor(
-        name="PhaseOne 4-band CIR",
-        cli_command="cir",
-        bands=[R, G, B, NIR],
-        loader_class=CIRLoader,
-    ),
-    Sensor(
-        name="DJI P4MS",
-        cli_command="p4ms",
-        bands=[B, G, R, RE, NIR],
-        loader_class=P4MSLoader,
-    ),
-    Sensor(
-        name="DJI M3M",
-        cli_command="m3m",
-        bands=[Band("Green", 0.875), R, RE, NIR],
-        loader_class=DJIM3MLoader,
-    ),
-    Sensor(
-        name="MicaSense RedEdge",
-        cli_command="msre",
-        bands=[B, G, R, RE, NIR],
-        loader_class=MicasenseRedEdgeLoader,
-    ),
+rgb_sensor = Sensor(
+    name="RGB",
+    bands=[R, G, B],
+    loader_class=RGBLoader,
+)
+cir_sensor = Sensor(
+    name="PhaseOne 4-band CIR",
+    bands=[R, G, B, NIR],
+    loader_class=CIRLoader,
+)
+p4ms_sensor = Sensor(
+    name="DJI P4MS",
+    bands=[B, G, R, RE, NIR],
+    loader_class=P4MSLoader,
+)
+m3m_sensor = Sensor(
+    name="DJI M3M",
+    bands=[Band("Green", 0.875), R, RE, NIR],
+    loader_class=DJIM3MLoader,
+)
+msre_sensor = Sensor(
+    name="MicaSense RedEdge",
+    bands=[B, G, R, RE, NIR],
+    loader_class=MicasenseRedEdgeLoader,
+)
+
+
+# Auto populate GUI and CLI options
+@dataclass(frozen=True)
+class _KnownSensor:
+    sensor: Sensor
+    cli_name: str
+
+
+_known_sensors = (
+    _KnownSensor(rgb_sensor, cli_name="rgb"),
+    _KnownSensor(cir_sensor, cli_name="cir"),
+    _KnownSensor(p4ms_sensor, cli_name="p4ms"),
+    _KnownSensor(m3m_sensor, cli_name="m3m"),
+    _KnownSensor(msre_sensor, cli_name="msre"),
 )

@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Annotated, Callable
 import typer
 from tqdm import tqdm
 
-from .sensors import Sensor, sensor_configs
+from .sensors import Sensor, _known_sensors
 
 if TYPE_CHECKING:
     from .maskers import Masker
@@ -88,9 +88,9 @@ def _create_sensor_command(sensor_cfg: Sensor) -> Callable[..., None]:
 
 
 # Dynamically register sensor commands
-for sensor_config in sensor_configs:
-    command_func = _create_sensor_command(sensor_config)
-    app.command(name=sensor_config.cli_command)(command_func)
+for cfg in _known_sensors:
+    command_func = _create_sensor_command(cfg.sensor)
+    app.command(name=cfg.cli_name)(command_func)
 
 
 if __name__ == "__main__":

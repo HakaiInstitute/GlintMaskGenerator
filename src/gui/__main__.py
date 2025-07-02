@@ -15,7 +15,7 @@ from PyQt6.QtCore import QObject, QRunnable, Qt, QThreadPool, pyqtSignal, pyqtSl
 from PyQt6.QtGui import QIcon
 
 from glint_mask_generator import __version__
-from glint_mask_generator.sensors import Sensor, sensor_configs
+from glint_mask_generator.sensors import Sensor, _known_sensors
 from gui.utils import resource_path
 from gui.widgets.threshold_ctrl import ThresholdCtrl
 
@@ -98,8 +98,8 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         self.sensor_combo.clear()
 
         # Add sensor options to dropdown
-        for sensor in sensor_configs:
-            self.sensor_combo.addItem(sensor.name)
+        for cfg in _known_sensors:
+            self.sensor_combo.addItem(cfg.sensor.name)
 
         # Connect signal
         self.sensor_combo.currentIndexChanged.connect(self.on_sensor_changed)
@@ -108,8 +108,8 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         """Handle sensor selection change."""
         # Get selected sensor from dropdown
         current_index = self.sensor_combo.currentIndex()
-        if 0 <= current_index < len(sensor_configs):
-            self.selected_sensor = sensor_configs[current_index]
+        if 0 <= current_index < len(_known_sensors):
+            self.selected_sensor = _known_sensors[current_index].sensor
             # Update threshold sliders for the selected sensor
             self.create_threshold_sliders()
 
