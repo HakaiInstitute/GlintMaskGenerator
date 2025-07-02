@@ -51,16 +51,11 @@ class _SensorConfig:
 
 
 _bands = {
-    "CB": _BandConfig("Coastal Blue", 1.000),
     "B": _BandConfig("Blue", 0.875),
     "G": _BandConfig("Green", 1.000),
-    "G2": _BandConfig("Green 2", 1.000),
     "R": _BandConfig("Red", 1.000),
-    "R2": _BandConfig("Red 2", 1.000),
     "RE": _BandConfig("Red Edge", 1.000),
-    "RE2": _BandConfig("Red Edge 2", 1.000),
-    "NIR": _BandConfig("NIR", 1.000),
-    "NIR2": _BandConfig("NIR 2", 1.000),
+    "NIR": _BandConfig("Near-IR", 1.000),
 }
 sensors = (
     _SensorConfig(name="RGB", bands=[_bands.get(b) for b in ["R", "G", "B"]], loader_class=RGBLoader),
