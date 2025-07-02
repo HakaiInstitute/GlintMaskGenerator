@@ -11,6 +11,7 @@ from PIL import Image
 
 from glint_mask_generator.image_loaders import (
     CIRLoader,
+    DJIM3MLoader,
     MicasenseRedEdgeLoader,
     P4MSLoader,
     RGBLoader,
@@ -130,7 +131,7 @@ def test_p4ms_loader(tmp_path):
 
     masker_paths = sorted(image_loader.paths, key=lambda a: a[0])
     assert len(image_loader) == len(valid_paths)
-    assert (np.array(masker_paths) == np.array(valid_paths)).all()
+    assert np.array_equal(np.array(masker_paths), np.array(valid_paths))
 
     assert image_loader._is_blue_band_path("DJI_0011.TIF") is True
     assert image_loader._is_blue_band_path("DJI_2221.TIF") is True
@@ -199,7 +200,7 @@ def test_micasense_red_edge_masker(tmp_path):
 
     masker_paths = sorted(image_loader.paths, key=lambda a: a[0])
     assert len(image_loader) == len(valid_paths)
-    assert (np.array(masker_paths) == np.array(valid_paths)).all()
+    assert np.array_equal(np.array(masker_paths), np.array(valid_paths))
 
     assert image_loader._is_blue_band_path("DJI_0014.TIF") is False
     assert image_loader._is_blue_band_path("DJI_2224.TIF") is False
@@ -284,6 +285,77 @@ def test_cir_loader(tmp_path):
     assert loaded_img.shape[2] == 4  # CIR channels
 
 
+def test_djim3m_loader(tmp_path):
+    """Test DJI M3M image loader functionality."""
+    # Create test files with DJI M3M naming pattern
+    test_files = [
+        "DJI_20221208115250_0001_G.TIF",
+        "DJI_20221208115250_0001_R.TIF",
+        "DJI_20221208115250_0001_RE.TIF",
+        "DJI_20221208115250_0001_NIR.TIF",
+        "DJI_20221208115253_0002_G.TIF",
+        "DJI_20221208115253_0002_R.TIF",
+        "DJI_20221208115253_0002_RE.TIF",
+        "DJI_20221208115253_0002_NIR.TIF",
+        "other_file.txt",  # Should be ignored
+    ]
+
+    for filename in test_files:
+        if filename.endswith(".TIF"):
+            img = create_test_image_16bit(height=32, width=32, add_glint=True)
+            img.save(tmp_path / filename)
+        else:
+            (tmp_path / filename).write_text("not an image")
+
+    mask_dir = tmp_path / "masks"
+    image_loader = DJIM3MLoader(tmp_path, mask_dir)
+
+    # Test bit depth
+    assert image_loader._bit_depth == 16
+
+    # Test green band pattern matching
+    assert image_loader._is_green_band_path("DJI_20221208115250_0001_G.TIF")
+    assert image_loader._is_green_band_path("/path/to/DJI_20221208115250_0001_G.TIF")
+    assert image_loader._is_green_band_path(Path("DJI_20221208115250_0001_G.TIF"))
+    assert not image_loader._is_green_band_path("DJI_20221208115250_0001_R.TIF")
+    assert not image_loader._is_green_band_path("other_file.txt")
+
+    # Test green band path extraction
+    green_band_paths = list(image_loader._green_band_paths)
+    expected_green_paths = [
+        str(tmp_path / "DJI_20221208115250_0001_G.TIF"),
+        str(tmp_path / "DJI_20221208115253_0002_G.TIF"),
+    ]
+    assert sorted(green_band_paths) == sorted(expected_green_paths)
+
+    # Test band path generation from green band path
+    green_path = tmp_path / "DJI_20221208115250_0001_G.TIF"
+    band_paths = DJIM3MLoader._green_band_path_to_band_paths(green_path)
+    expected_band_paths = [
+        str(tmp_path / "DJI_20221208115250_0001_G.TIF"),
+        str(tmp_path / "DJI_20221208115250_0001_R.TIF"),
+        str(tmp_path / "DJI_20221208115250_0001_RE.TIF"),
+        str(tmp_path / "DJI_20221208115250_0001_NIR.TIF"),
+    ]
+    assert band_paths == expected_band_paths
+
+    # Test complete path grouping
+    all_paths = list(image_loader.paths)
+    assert len(all_paths) == 2  # Two captures
+    assert len(all_paths[0]) == 4  # Four bands per capture
+    assert len(all_paths[1]) == 4  # Four bands per capture
+
+    # Test image loading with all 4 bands
+    capture_paths = [
+        str(tmp_path / "DJI_20221208115250_0001_G.TIF"),
+        str(tmp_path / "DJI_20221208115250_0001_R.TIF"),
+        str(tmp_path / "DJI_20221208115250_0001_RE.TIF"),
+        str(tmp_path / "DJI_20221208115250_0001_NIR.TIF"),
+    ]
+    loaded_img = image_loader.load_image(capture_paths)
+    assert loaded_img.shape[2] == 4  # Four bands (G, R, RE, NIR)
+
+
 @pytest.fixture
 def sensor_test_images(tmp_path):
     """Fixture that creates test images for all sensor types."""
@@ -309,6 +381,12 @@ def sensor_test_images(tmp_path):
             img = create_test_image_16bit(height=32, width=32, add_glint=(band == 1))
             img.save(tmp_path / f"DJI_{capture_id}{band}.TIF")
 
+    # DJI M3M files
+    for capture_id in ["20221208115250_0001", "20221208115253_0002"]:
+        for band in ["G", "R", "RE", "NIR"]:
+            img = create_test_image_16bit(height=32, width=32, add_glint=(band == "G"))
+            img.save(tmp_path / f"DJI_{capture_id}_{band}.TIF")
+
     return tmp_path
 
 
@@ -322,6 +400,7 @@ def test_all_sensor_bit_depths(sensor_test_images):
         (CIRLoader(tmp_path, mask_dir), 8),
         (MicasenseRedEdgeLoader(tmp_path, mask_dir), 16),
         (P4MSLoader(tmp_path, mask_dir), 16),
+        (DJIM3MLoader(tmp_path, mask_dir), 16),
     ]
 
     for loader, expected_bit_depth in loaders:

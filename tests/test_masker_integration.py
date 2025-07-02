@@ -13,6 +13,7 @@ from PIL import Image
 
 from glint_mask_generator.glint_algorithms import IntensityRatioAlgorithm, ThresholdAlgorithm
 from glint_mask_generator.image_loaders import (
+    DJIM3MLoader,
     MicasenseRedEdgeLoader,
     P4MSLoader,
     RGBLoader,
@@ -86,11 +87,20 @@ def complete_sensor_suite(tmp_path):
             img = create_realistic_test_image(128, 128, 1, 16, add_glint_pattern=(band == 1))
             img.save(p4ms_dir / f"DJI_{capture_id}{band}.TIF")
 
+    # DJI M3M images
+    djim3m_dir = tmp_path / "djim3m"
+    djim3m_dir.mkdir()
+    for capture_id in ["20221208115250_0001", "20221208115253_0002"]:
+        for band in ["G", "R", "RE", "NIR"]:
+            img = create_realistic_test_image(128, 128, 1, 16, add_glint_pattern=(band == "G"))
+            img.save(djim3m_dir / f"DJI_{capture_id}_{band}.TIF")
+
     return {
         "rgb_dir": rgb_dir,
         "cir_dir": cir_dir,
         "micasense_dir": micasense_dir,
         "p4ms_dir": p4ms_dir,
+        "djim3m_dir": djim3m_dir,
         "mask_dir": mask_dir,
     }
 
@@ -286,13 +296,14 @@ def test_metashape_mask_conversion():
         ("rgb", 3),
         ("micasense", 5),
         ("p4ms", 5),
+        ("djim3m", 4),
     ],
 )
 def test_all_sensors_produce_valid_masks(complete_sensor_suite, sensor_type, expected_bands):
     """Test that all sensor types produce valid mask outputs."""
     dirs = complete_sensor_suite
 
-    # Setup based on sensor typef
+    # Setup based on sensor type
     if sensor_type == "rgb":
         loader = RGBLoader(dirs["rgb_dir"], dirs["mask_dir"])
         algorithm = ThresholdAlgorithm([0.8] * 3)
@@ -302,6 +313,9 @@ def test_all_sensors_produce_valid_masks(complete_sensor_suite, sensor_type, exp
     elif sensor_type == "p4ms":
         loader = P4MSLoader(dirs["p4ms_dir"], dirs["mask_dir"])
         algorithm = ThresholdAlgorithm([0.8] * 5)
+    elif sensor_type == "djim3m":
+        loader = DJIM3MLoader(dirs["djim3m_dir"], dirs["mask_dir"])
+        algorithm = ThresholdAlgorithm([0.8] * 4)
 
     masker = Masker(algorithm, loader)
 
@@ -327,3 +341,87 @@ def test_all_sensors_produce_valid_masks(complete_sensor_suite, sensor_type, exp
         assert metashape_mask.dtype == np.uint8
         assert metashape_mask.min() >= 0
         assert metashape_mask.max() <= 255
+
+
+def test_djim3m_complete_workflow(complete_sensor_suite):
+    """Test complete DJI M3M masking workflow."""
+    dirs = complete_sensor_suite
+
+    # Setup loader and masker
+    loader = DJIM3MLoader(dirs["djim3m_dir"], dirs["mask_dir"])
+    algorithm = ThresholdAlgorithm([0.85, 0.85, 0.85, 0.85])  # G, R, RE, NIR
+    masker = Masker(algorithm, loader, pixel_buffer=2)
+
+    # Test workflow
+    assert len(masker) == 2  # Two captures
+
+    # Process one image manually to test the workflow
+    img_paths = list(loader.paths)
+    capture_paths = img_paths[0]  # First capture (4 bands)
+
+    # Load and preprocess
+    img = loader.load_image(capture_paths)
+    assert img.shape[2] == 4  # G, R, RE, NIR bands
+    assert img.dtype == float
+
+    normalized_img = loader.preprocess_image(img)
+    assert normalized_img.min() >= 0
+    assert normalized_img.max() <= 1
+
+    # Apply algorithm
+    mask = algorithm(normalized_img)
+    assert mask.dtype == bool
+    assert mask.shape == normalized_img.shape[:2]
+
+    # Post-process mask
+    processed_mask = masker.postprocess_mask(mask)
+    assert processed_mask.dtype == int  # postprocess_mask returns int when pixel_buffer > 0
+    assert processed_mask.shape == mask.shape
+
+    # Convert to Metashape format
+    metashape_mask = masker.to_metashape_mask(processed_mask)
+    assert metashape_mask.dtype == np.uint8
+    assert metashape_mask.min() >= 0
+    assert metashape_mask.max() <= 255
+
+    # Test that we can process all images
+    mask_count = 0
+    for capture_paths in loader.paths:
+        img = loader.load_image(capture_paths)
+        normalized_img = loader.preprocess_image(img)
+        mask = algorithm(normalized_img)
+        processed_mask = masker.postprocess_mask(mask)
+        metashape_mask = masker.to_metashape_mask(processed_mask)
+        mask_count += 1
+
+    assert mask_count == 2  # Both captures processed successfully
+
+
+def test_djim3m_with_intensity_ratio_algorithm(complete_sensor_suite):
+    """Test DJI M3M with intensity ratio algorithm."""
+    dirs = complete_sensor_suite
+
+    # Setup loader and masker with intensity ratio algorithm
+    loader = DJIM3MLoader(dirs["djim3m_dir"], dirs["mask_dir"])
+    algorithm = IntensityRatioAlgorithm(threshold=0.8)  # Uses default percent_diffuse=0.95
+    masker = Masker(algorithm, loader)
+
+    # Test workflow
+    assert len(masker) == 2
+
+    # Process one image
+    img_paths = list(loader.paths)
+    capture_paths = img_paths[0]
+
+    img = loader.load_image(capture_paths)
+    assert img.shape[2] == 4  # G, R, RE, NIR bands
+
+    normalized_img = loader.preprocess_image(img)
+    mask = algorithm(normalized_img)
+    assert mask.dtype == bool
+    assert mask.shape == normalized_img.shape[:2]
+
+    # Test post-processing
+    processed_mask = masker.postprocess_mask(mask)
+    metashape_mask = masker.to_metashape_mask(processed_mask)
+    assert metashape_mask.dtype == np.uint8
