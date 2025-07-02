@@ -76,7 +76,7 @@ sensors = (
     ),
     _SensorConfig(
         name="DJI M3M",
-        bands=[_bands.get(b) for b in ["G", "R", "RE", "NIR"]],
+        bands=[_BandConfig("Green", 0.875)] + [_bands.get(b) for b in ["R", "RE", "NIR"]],
         loader_class=DJIM3MLoader,
     ),
     _SensorConfig(
