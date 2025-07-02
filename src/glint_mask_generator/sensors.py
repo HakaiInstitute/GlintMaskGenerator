@@ -80,7 +80,7 @@ sensors = (
         loader_class=DJIM3MLoader,
     ),
     _SensorConfig(
-        name="MicaSense RedEdge-P",
+        name="MicaSense RedEdge",
         bands=[_bands.get(b) for b in ["B", "G", "R", "RE", "NIR"]],
         loader_class=MicasenseRedEdgeLoader,
     ),
