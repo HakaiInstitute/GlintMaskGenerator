@@ -14,7 +14,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from glint_mask_generator.glint_algorithms import ThresholdAlgorithm
-from glint_mask_generator.image_loaders import CIRLoader, ImageLoader, MicasenseRedEdgeLoader, P4MSLoader, RGBLoader
+from glint_mask_generator.image_loaders import (
+    CIRLoader,
+    DJIM3MLoader,
+    ImageLoader,
+    MicasenseRedEdgeLoader,
+    P4MSLoader,
+    RGBLoader,
+)
 from glint_mask_generator.maskers import Masker
 
 
@@ -66,6 +73,11 @@ sensors = (
         name="DJI P4MS",
         bands=[_bands.get(b) for b in ["B", "G", "R", "RE", "NIR"]],
         loader_class=P4MSLoader,
+    ),
+    _SensorConfig(
+        name="DJI M3M",
+        bands=[_BandConfig("Green", 0.875)] + [_bands.get(b) for b in ["R", "RE", "NIR"]],
+        loader_class=DJIM3MLoader,
     ),
     _SensorConfig(
         name="MicaSense RedEdge-P",

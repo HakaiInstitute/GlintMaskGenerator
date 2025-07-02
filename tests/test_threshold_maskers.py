@@ -12,6 +12,7 @@ from PIL import Image
 from glint_mask_generator.glint_algorithms import ThresholdAlgorithm
 from glint_mask_generator.image_loaders import (
     CIRLoader,
+    DJIM3MLoader,
     MicasenseRedEdgeLoader,
     P4MSLoader,
     RGBLoader,
@@ -103,6 +104,19 @@ def p4ms_test_data(tmp_path):
             # Band 1 (blue) gets glint, others don't
             img = create_test_image_16bit(height=64, width=64, add_glint=(band == 1))
             img.save(tmp_path / f"DJI_{capture_id}{band}.TIF")
+
+    return tmp_path
+
+
+@pytest.fixture
+def djim3m_test_data(tmp_path):
+    """Create test DJI M3M images with known glint patterns."""
+    # Create DJI M3M images with 4 bands: G, R, RE, NIR
+    for capture_id in ["20221208115250_0001", "20221208115253_0002"]:
+        for band in ["G", "R", "RE", "NIR"]:
+            # Green band gets glint, others don't
+            img = create_test_image_16bit(height=64, width=64, add_glint=(band == "G"))
+            img.save(tmp_path / f"DJI_{capture_id}_MS_{band}.TIF")
 
     return tmp_path
 
@@ -294,3 +308,63 @@ def test_bit_depth_specific_glint_detection():
     # Should detect glint in the bright region
     assert mask_16bit[3, 3]
     assert not mask_16bit[0, 0]
+
+
+def test_djim3m_threshold_masker(djim3m_test_data):
+    """Test threshold masker with DJI M3M sensor."""
+    mask_dir = djim3m_test_data / "masks"
+    mask_dir.mkdir()
+
+    # Setup loader and masker
+    loader = DJIM3MLoader(djim3m_test_data, mask_dir)
+    algorithm = ThresholdAlgorithm([0.8, 0.8, 0.8, 0.8])  # G, R, RE, NIR thresholds
+    masker = Masker(algorithm, loader)
+
+    # Test basic functionality
+    assert len(masker) == 2  # Two captures created
+
+    # Test image loading and processing
+    img_paths = list(loader.paths)
+    capture_paths = img_paths[0]  # First capture with 4 bands
+
+    # Load image
+    img = loader.load_image(capture_paths)
+    assert img.shape[2] == 4  # G, R, RE, NIR bands
+    assert img.dtype == float
+
+    # Preprocess image
+    normalized_img = loader.preprocess_image(img)
+    assert normalized_img.min() >= 0
+    assert normalized_img.max() <= 1
+    assert normalized_img.shape == img.shape
+
+    # Apply threshold algorithm
+    mask = algorithm(normalized_img)
+    assert mask.dtype == bool
+    assert mask.shape == normalized_img.shape[:2]
+
+    # Test that green band glint is detected (we added glint to green band)
+    # Since we created the test images with glint in the green band,
+    # there should be some detected glint
+    assert mask.any(), "No glint detected despite adding glint to test images"
+
+    # Test post-processing
+    processed_mask = masker.postprocess_mask(mask)
+    assert processed_mask.dtype == bool
+    assert processed_mask.shape == mask.shape
+
+    # Test Metashape mask conversion
+    metashape_mask = masker.to_metashape_mask(processed_mask)
+    assert metashape_mask.dtype == np.uint8
+    assert metashape_mask.min() >= 0
+    assert metashape_mask.max() <= 255
+
+    # Test processing all captures
+    mask_count = 0
+    for capture_paths in loader.paths:
+        img = loader.load_image(capture_paths)
+        normalized_img = loader.preprocess_image(img)
+        mask = algorithm(normalized_img)
+        mask_count += 1
+
+    assert mask_count == 2  # Both captures processed
