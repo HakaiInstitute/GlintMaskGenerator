@@ -14,13 +14,13 @@ from PyQt6 import QtWidgets, uic
 from PyQt6.QtCore import QObject, QRunnable, Qt, QThreadPool, pyqtSignal, pyqtSlot
 from PyQt6.QtGui import QIcon
 
-from glint_mask_generator import __version__
-from glint_mask_generator.sensors import Sensor, _known_sensors
+from glint_mask_tools import __version__
+from glint_mask_tools.sensors import Sensor, _known_sensors
 from gui.utils import resource_path
 from gui.widgets.threshold_ctrl import ThresholdCtrl
 
 if TYPE_CHECKING:
-    from glint_mask_generator.maskers import Masker
+    from glint_mask_tools.maskers import Masker
 
 
 DEFAULT_PIXEL_BUFFER = 0

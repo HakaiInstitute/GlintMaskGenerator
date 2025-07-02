@@ -9,12 +9,12 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from glint_mask_generator.image_loaders import (
-    CIRLoader,
+from glint_mask_tools.image_loaders import (
+    BigTiffLoader,
     DJIM3MLoader,
     MicasenseRedEdgeLoader,
     P4MSLoader,
-    RGBLoader,
+    SingleFileImageLoader,
 )
 
 
@@ -178,10 +178,9 @@ def test_rgb_loader(tmp_path):
         img.save(tmp_path / filename)
 
     # Test the class
-    image_loader = RGBLoader(tmp_path, tmp_path / "masks")
+    image_loader = SingleFileImageLoader(tmp_path, tmp_path / "masks")
 
     assert len(image_loader) == len(test_files)
-    assert image_loader._bit_depth == 8
 
     # Test image loading
     img_path = str(tmp_path / test_files[0])
@@ -198,10 +197,9 @@ def test_cir_loader(tmp_path):
     img.save(tmp_path / test_file)
 
     # Test the class
-    image_loader = CIRLoader(tmp_path, tmp_path / "masks")
+    image_loader = BigTiffLoader(tmp_path, tmp_path / "masks")
 
     assert len(image_loader) == 1
-    assert image_loader._bit_depth == 8
     assert image_loader._crop_size == 256
 
     # Test image loading
@@ -234,9 +232,6 @@ def test_djim3m_loader(tmp_path):
 
     mask_dir = tmp_path / "masks"
     image_loader = DJIM3MLoader(tmp_path, mask_dir)
-
-    # Test bit depth
-    assert image_loader._bit_depth == 16
 
     # Test complete path grouping
     all_paths = list(image_loader.paths)
@@ -287,20 +282,3 @@ def sensor_test_images(tmp_path):
             img.save(tmp_path / f"DJI_{capture_id}_MS_{band}.TIF")
 
     return tmp_path
-
-
-def test_all_sensor_bit_depths(sensor_test_images):
-    """Test that all _known_sensors report correct bit depths."""
-    tmp_path = sensor_test_images
-    mask_dir = tmp_path / "masks"
-
-    loaders = [
-        (RGBLoader(tmp_path, mask_dir), 8),
-        (CIRLoader(tmp_path, mask_dir), 8),
-        (MicasenseRedEdgeLoader(tmp_path, mask_dir), 16),
-        (P4MSLoader(tmp_path, mask_dir), 16),
-        (DJIM3MLoader(tmp_path, mask_dir), 16),
-    ]
-
-    for loader, expected_bit_depth in loaders:
-        assert loader._bit_depth == expected_bit_depth

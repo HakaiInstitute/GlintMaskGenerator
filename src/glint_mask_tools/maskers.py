@@ -28,11 +28,13 @@ class Masker:
         self,
         algorithm: GlintAlgorithm,
         image_loader: ImageLoader,
+        image_preprocessor: Callable[[np.ndarray], np.ndarray],
         pixel_buffer: int = 0,
     ) -> None:
         """Create the Masker object."""
         self.algorithm = algorithm
         self.image_loader = image_loader
+        self.image_preprocessor = image_preprocessor
         self.pixel_buffer = pixel_buffer
         self.buffer_kernel = make_circular_kernel(self.pixel_buffer)
 
@@ -154,4 +156,11 @@ class Masker:
             path to multiple files
 
         """
-        self.image_loader.apply_masker(paths, self)
+        img = self.image_loader.load_image(paths)
+
+        img = self.image_preprocessor(img)
+        mask = self.algorithm(img)
+        mask = self.postprocess_mask(mask)
+        mask = self.to_metashape_mask(mask)
+
+        self.image_loader.save_masks(mask, paths)

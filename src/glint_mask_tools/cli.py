@@ -63,11 +63,11 @@ def _create_sensor_command(sensor_cfg: Sensor) -> Callable[..., None]:
             ),
         ],
         thresholds: Annotated[
-            list[float] | None,
+            list[float],
             typer.Option(
                 help="The pixel band thresholds indicating glint. Domain for values is (0.0, 1.0).",
             ),
-        ] = None,
+        ] = tuple(b.default_threshold for b in sensor_cfg.bands),
         pixel_buffer: Annotated[
             int,
             typer.Option(help="The pixel distance to buffer out the mask."),

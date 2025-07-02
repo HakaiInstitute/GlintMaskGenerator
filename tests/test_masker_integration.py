@@ -11,14 +11,15 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from glint_mask_generator.glint_algorithms import IntensityRatioAlgorithm, ThresholdAlgorithm
-from glint_mask_generator.image_loaders import (
+from glint_mask_tools.glint_algorithms import IntensityRatioAlgorithm, ThresholdAlgorithm
+from glint_mask_tools.image_loaders import (
     DJIM3MLoader,
     MicasenseRedEdgeLoader,
     P4MSLoader,
-    RGBLoader,
+    SingleFileImageLoader,
 )
-from glint_mask_generator.maskers import Masker
+from glint_mask_tools.maskers import Masker
+from glint_mask_tools.utils import normalize_8bit_img, normalize_16bit_img
 
 
 def create_realistic_test_image(height, width, channels, bit_depth, add_glint_pattern=True):
@@ -110,9 +111,9 @@ def test_rgb_complete_workflow(complete_sensor_suite):
     dirs = complete_sensor_suite
 
     # Setup loader and masker
-    loader = RGBLoader(dirs["rgb_dir"], dirs["mask_dir"])
+    loader = SingleFileImageLoader(dirs["rgb_dir"], dirs["mask_dir"])
     algorithm = ThresholdAlgorithm([0.85, 0.85, 0.85])
-    masker = Masker(algorithm, loader, pixel_buffer=2)
+    masker = Masker(algorithm, loader, normalize_8bit_img, pixel_buffer=2)
 
     # Test workflow
     assert len(masker) == 2
@@ -126,7 +127,7 @@ def test_rgb_complete_workflow(complete_sensor_suite):
     assert img.shape[2] == 3
     assert img.dtype == float
 
-    normalized_img = loader.preprocess_image(img)
+    normalized_img = masker.image_preprocessor(img)
     assert normalized_img.min() >= 0
     assert normalized_img.max() <= 1
 
@@ -147,7 +148,7 @@ def test_rgb_complete_workflow(complete_sensor_suite):
     mask_paths = list(loader.get_mask_save_paths(img_path))
     assert len(mask_paths) == 1
 
-    loader.save_mask(metashape_mask, mask_paths[0])
+    loader.save_masks(metashape_mask, img_path)
     assert Path(mask_paths[0]).exists()
 
     # Verify saved mask
@@ -163,7 +164,7 @@ def test_micasense_complete_workflow(complete_sensor_suite):
     # Setup loader and masker
     loader = MicasenseRedEdgeLoader(dirs["micasense_dir"], dirs["mask_dir"])
     algorithm = ThresholdAlgorithm([0.8] * 5)
-    masker = Masker(algorithm, loader, pixel_buffer=3)
+    masker = Masker(algorithm, loader, normalize_16bit_img, pixel_buffer=3)
 
     # Test workflow
     assert len(masker) == 2
@@ -177,7 +178,7 @@ def test_micasense_complete_workflow(complete_sensor_suite):
     assert img.shape[2] == 5  # 5 bands
     assert img.dtype == float
 
-    normalized_img = loader.preprocess_image(img)
+    normalized_img = masker.image_preprocessor(img)
     assert normalized_img.min() >= 0
     assert normalized_img.max() <= 1
 
@@ -194,7 +195,7 @@ def test_micasense_complete_workflow(complete_sensor_suite):
     assert len(mask_paths) == 5  # One mask per band file
 
     for mask_path in mask_paths:
-        loader.save_mask(metashape_mask, mask_path)
+        loader.save_masks(metashape_mask, capture_paths)
         assert Path(mask_path).exists()
 
 
@@ -205,7 +206,7 @@ def test_p4ms_complete_workflow(complete_sensor_suite):
     # Setup loader and masker
     loader = P4MSLoader(dirs["p4ms_dir"], dirs["mask_dir"])
     algorithm = ThresholdAlgorithm([0.8] * 5)
-    masker = Masker(algorithm, loader)
+    masker = Masker(algorithm, loader, normalize_8bit_img)
 
     # Test workflow
     assert len(masker) == 2
@@ -226,16 +227,16 @@ def test_intensity_ratio_algorithm_workflow(complete_sensor_suite):
     dirs = complete_sensor_suite
 
     # Setup with intensity ratio algorithm
-    loader = RGBLoader(dirs["rgb_dir"], dirs["mask_dir"])
+    loader = SingleFileImageLoader(dirs["rgb_dir"], dirs["mask_dir"])
     algorithm = IntensityRatioAlgorithm(percent_diffuse=0.9, threshold=0.8)
-    masker = Masker(algorithm, loader)
+    masker = Masker(algorithm, loader, normalize_8bit_img)
 
     # Test workflow
     img_paths = list(loader.paths)
     img_path = img_paths[0]
 
     img = loader.load_image(img_path)
-    normalized_img = loader.preprocess_image(img)
+    normalized_img = masker.image_preprocessor(img)
 
     # Apply intensity ratio algorithm
     mask = algorithm(normalized_img)
@@ -257,7 +258,7 @@ def test_pixel_buffer_effects():
     algorithm = ThresholdAlgorithm([0.5, 0.5, 0.5])
 
     # Test without buffer
-    masker_no_buffer = Masker(algorithm, None, pixel_buffer=0)
+    masker_no_buffer = Masker(algorithm, None, normalize_8bit_img, pixel_buffer=0)
     mask_no_buffer = algorithm(img)
     processed_no_buffer = masker_no_buffer.postprocess_mask(mask_no_buffer)
 
@@ -267,7 +268,7 @@ def test_pixel_buffer_effects():
     assert processed_no_buffer[11, 10] == 0
 
     # Test with buffer
-    masker_with_buffer = Masker(algorithm, None, pixel_buffer=2)
+    masker_with_buffer = Masker(algorithm, None, normalize_8bit_img, pixel_buffer=2)
     processed_with_buffer = masker_with_buffer.postprocess_mask(mask_no_buffer)
 
     # Center and surrounding pixels should be masked due to buffer
@@ -281,7 +282,7 @@ def test_metashape_mask_conversion():
     # Create test mask
     mask = np.array([[True, False], [False, True]], dtype=bool)
 
-    masker = Masker(None, None)
+    masker = Masker(None, None, None)
     metashape_mask = masker.to_metashape_mask(mask)
 
     # Metashape expects inverted mask (0 for masked, 255 for unmasked)
@@ -305,19 +306,23 @@ def test_all_sensors_produce_valid_masks(complete_sensor_suite, sensor_type, exp
 
     # Setup based on sensor type
     if sensor_type == "rgb":
-        loader = RGBLoader(dirs["rgb_dir"], dirs["mask_dir"])
+        loader = SingleFileImageLoader(dirs["rgb_dir"], dirs["mask_dir"])
         algorithm = ThresholdAlgorithm([0.8] * 3)
+        pre_processor = normalize_8bit_img
     elif sensor_type == "micasense":
         loader = MicasenseRedEdgeLoader(dirs["micasense_dir"], dirs["mask_dir"])
         algorithm = ThresholdAlgorithm([0.8] * 5)
+        pre_processor = normalize_16bit_img
     elif sensor_type == "p4ms":
         loader = P4MSLoader(dirs["p4ms_dir"], dirs["mask_dir"])
         algorithm = ThresholdAlgorithm([0.8] * 5)
+        pre_processor = normalize_16bit_img
     elif sensor_type == "djim3m":
         loader = DJIM3MLoader(dirs["djim3m_dir"], dirs["mask_dir"])
         algorithm = ThresholdAlgorithm([0.8] * 4)
+        pre_processor = normalize_16bit_img
 
-    masker = Masker(algorithm, loader)
+    masker = Masker(algorithm, loader, pre_processor)
 
     if len(masker) > 0:
         # Test one capture
@@ -327,7 +332,7 @@ def test_all_sensors_produce_valid_masks(complete_sensor_suite, sensor_type, exp
         img = loader.load_image(capture_paths)
         assert img.shape[2] == expected_bands
 
-        normalized_img = loader.preprocess_image(img)
+        normalized_img = masker.image_preprocessor(img)
         mask = algorithm(normalized_img)
 
         # Validate mask properties
@@ -350,7 +355,7 @@ def test_djim3m_complete_workflow(complete_sensor_suite):
     # Setup loader and masker
     loader = DJIM3MLoader(dirs["djim3m_dir"], dirs["mask_dir"])
     algorithm = ThresholdAlgorithm([0.85, 0.85, 0.85, 0.85])  # G, R, RE, NIR
-    masker = Masker(algorithm, loader, pixel_buffer=2)
+    masker = Masker(algorithm, loader, normalize_16bit_img, pixel_buffer=2)
 
     # Test workflow
     assert len(masker) == 2  # Two captures
@@ -364,7 +369,7 @@ def test_djim3m_complete_workflow(complete_sensor_suite):
     assert img.shape[2] == 4  # G, R, RE, NIR bands
     assert img.dtype == float
 
-    normalized_img = loader.preprocess_image(img)
+    normalized_img = masker.image_preprocessor(img)
     assert normalized_img.min() >= 0
     assert normalized_img.max() <= 1
 
@@ -388,7 +393,7 @@ def test_djim3m_complete_workflow(complete_sensor_suite):
     mask_count = 0
     for capture_paths in loader.paths:
         img = loader.load_image(capture_paths)
-        normalized_img = loader.preprocess_image(img)
+        normalized_img = masker.image_preprocessor(img)
         mask = algorithm(normalized_img)
         processed_mask = masker.postprocess_mask(mask)
         metashape_mask = masker.to_metashape_mask(processed_mask)
@@ -404,7 +409,7 @@ def test_djim3m_with_intensity_ratio_algorithm(complete_sensor_suite):
     # Setup loader and masker with intensity ratio algorithm
     loader = DJIM3MLoader(dirs["djim3m_dir"], dirs["mask_dir"])
     algorithm = IntensityRatioAlgorithm(threshold=0.8)  # Uses default percent_diffuse=0.95
-    masker = Masker(algorithm, loader)
+    masker = Masker(algorithm, loader, normalize_16bit_img)
 
     # Test workflow
     assert len(masker) == 2
@@ -416,7 +421,7 @@ def test_djim3m_with_intensity_ratio_algorithm(complete_sensor_suite):
     img = loader.load_image(capture_paths)
     assert img.shape[2] == 4  # G, R, RE, NIR bands
 
-    normalized_img = loader.preprocess_image(img)
+    normalized_img = masker.image_preprocessor(img)
     mask = algorithm(normalized_img)
     assert mask.dtype == bool
     assert mask.shape == normalized_img.shape[:2]

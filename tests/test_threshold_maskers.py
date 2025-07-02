@@ -9,15 +9,16 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from glint_mask_generator.glint_algorithms import ThresholdAlgorithm
-from glint_mask_generator.image_loaders import (
-    CIRLoader,
+from glint_mask_tools.glint_algorithms import ThresholdAlgorithm
+from glint_mask_tools.image_loaders import (
+    BigTiffLoader,
     DJIM3MLoader,
     MicasenseRedEdgeLoader,
     P4MSLoader,
-    RGBLoader,
+    SingleFileImageLoader,
 )
-from glint_mask_generator.maskers import Masker
+from glint_mask_tools.maskers import Masker
+from glint_mask_tools.utils import normalize_8bit_img, normalize_16bit_img
 
 
 def create_test_image_8bit(height=32, width=32, channels=3, add_glint=False):
@@ -121,7 +122,7 @@ def djim3m_test_data(tmp_path):
     return tmp_path
 
 
-def test_threshold_algorithm_8bit():
+def test_threshold_algorithm():
     """Test threshold algorithm with 8-bit data."""
     # Create test image with known values
     img = np.array([[[100, 150, 200], [50, 75, 100]], [[200, 250, 255], [25, 50, 75]]], dtype=float)
@@ -136,38 +137,22 @@ def test_threshold_algorithm_8bit():
     assert np.array_equal(mask, expected)
 
 
-def test_threshold_algorithm_16bit():
-    """Test threshold algorithm with 16-bit data."""
-    # Create test image with known values (normalized to 0-1 range)
-    img = np.array([[[0.3, 0.5, 0.7], [0.1, 0.2, 0.3]], [[0.8, 0.9, 1.0], [0.05, 0.1, 0.15]]], dtype=float)
-
-    # Test with threshold
-    thresholds = [0.75, 0.75, 0.75]  # Should mask pixels > 0.75 in any channel
-    algorithm = ThresholdAlgorithm(thresholds)
-    mask = algorithm(img)
-
-    # Check expected results
-    expected = np.array([[False, False], [True, False]])  # Only pixel (1,0) should be masked
-    assert np.array_equal(mask, expected)
-
-
 def test_rgb_threshold_masker(rgb_test_data):
     """Test threshold masker with RGB sensor."""
     mask_dir = rgb_test_data / "masks"
     mask_dir.mkdir()
 
     # Setup loader and masker
-    loader = RGBLoader(rgb_test_data, mask_dir)
+    loader = SingleFileImageLoader(rgb_test_data, mask_dir)
     algorithm = ThresholdAlgorithm([0.8, 0.8, 0.8])  # High threshold for 8-bit normalized data
-    masker = Masker(algorithm, loader)
+    masker = Masker(algorithm, loader, normalize_8bit_img)
 
     assert len(masker) == 2  # Two RGB images
-    assert loader._bit_depth == 8
 
     # Test single image processing
     img_paths = list(loader.paths)
     img = loader.load_image(img_paths[0])
-    normalized_img = loader.preprocess_image(img)
+    normalized_img = masker.image_preprocessor(img)
 
     # Check that image is properly normalized
     assert normalized_img.min() >= 0
@@ -185,17 +170,16 @@ def test_cir_threshold_masker(cir_test_data):
     mask_dir.mkdir()
 
     # Setup loader and masker
-    loader = CIRLoader(cir_test_data, mask_dir)
+    loader = BigTiffLoader(cir_test_data, mask_dir)
     algorithm = ThresholdAlgorithm([0.8, 0.8, 0.8, 0.8])  # Threshold for 4 bands
-    masker = Masker(algorithm, loader)
+    masker = Masker(algorithm, loader, normalize_8bit_img)
 
     assert len(masker) == 1
-    assert loader._bit_depth == 8
 
     # Test image processing
     img_paths = list(loader.paths)
     img = loader.load_image(img_paths[0])
-    normalized_img = loader.preprocess_image(img)
+    normalized_img = masker.image_preprocessor(img)
 
     assert normalized_img.shape[2] == 4  # 4 CIR bands
     assert normalized_img.min() >= 0
@@ -210,15 +194,14 @@ def test_micasense_threshold_masker(micasense_test_data):
     # Setup loader and masker
     loader = MicasenseRedEdgeLoader(micasense_test_data, mask_dir)
     algorithm = ThresholdAlgorithm([0.8] * 5)  # Threshold for 5 bands
-    masker = Masker(algorithm, loader)
+    masker = Masker(algorithm, loader, normalize_16bit_img)
 
     assert len(masker) == 2  # Two capture sets
-    assert loader._bit_depth == 16
 
     # Test image processing
     img_paths = list(loader.paths)
     img = loader.load_image(img_paths[0])
-    normalized_img = loader.preprocess_image(img)
+    normalized_img = masker.image_preprocessor(img)
 
     assert normalized_img.shape[2] == 5  # 5 MicaSense bands
     assert normalized_img.min() >= 0
@@ -233,15 +216,14 @@ def test_p4ms_threshold_masker(p4ms_test_data):
     # Setup loader and masker
     loader = P4MSLoader(p4ms_test_data, mask_dir)
     algorithm = ThresholdAlgorithm([0.8] * 5)  # Threshold for 5 bands
-    masker = Masker(algorithm, loader)
+    masker = Masker(algorithm, loader, normalize_16bit_img)
 
     assert len(masker) == 2  # Two capture sets
-    assert loader._bit_depth == 16
 
     # Test image processing
     img_paths = list(loader.paths)
     img = loader.load_image(img_paths[0])
-    normalized_img = loader.preprocess_image(img)
+    normalized_img = masker.image_preprocessor(img)
 
     assert normalized_img.shape[2] == 5  # 5 P4MS bands
     assert normalized_img.min() >= 0
@@ -318,7 +300,7 @@ def test_djim3m_threshold_masker(djim3m_test_data):
     # Setup loader and masker
     loader = DJIM3MLoader(djim3m_test_data, mask_dir)
     algorithm = ThresholdAlgorithm([0.8, 0.8, 0.8, 0.8])  # G, R, RE, NIR thresholds
-    masker = Masker(algorithm, loader)
+    masker = Masker(algorithm, loader, normalize_16bit_img)
 
     # Test basic functionality
     assert len(masker) == 2  # Two captures created
@@ -333,7 +315,7 @@ def test_djim3m_threshold_masker(djim3m_test_data):
     assert img.dtype == float
 
     # Preprocess image
-    normalized_img = loader.preprocess_image(img)
+    normalized_img = masker.image_preprocessor(img)
     assert normalized_img.min() >= 0
     assert normalized_img.max() <= 1
     assert normalized_img.shape == img.shape
@@ -363,8 +345,7 @@ def test_djim3m_threshold_masker(djim3m_test_data):
     mask_count = 0
     for capture_paths in loader.paths:
         img = loader.load_image(capture_paths)
-        normalized_img = loader.preprocess_image(img)
-        mask = algorithm(normalized_img)
+        normalized_img = masker.image_preprocessor(img)
         mask_count += 1
 
     assert mask_count == 2  # Both captures processed
