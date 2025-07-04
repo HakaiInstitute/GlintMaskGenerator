@@ -6,12 +6,12 @@ Date: 2020-06-12
 from pathlib import Path
 
 import numpy as np
-import pytest
 from PIL import Image
 
 from glint_mask_tools.image_loaders import (
     BigTiffLoader,
     DJIM3MLoader,
+    MicasenseRedEdgeDualLoader,
     MicasenseRedEdgeLoader,
     P4MSLoader,
     SingleFileImageLoader,
@@ -168,6 +168,32 @@ def test_micasense_red_edge_masker(tmp_path):
     assert np.array_equal(np.array(masker_paths), np.array(valid_paths))
 
 
+def test_micasense_red_edge_dual_loader(tmp_path):
+    """Test that Micasense Red Edge Dual loader finds the correct files and has 10 bands."""
+    # Create dummy files for dual sensor (10 bands)
+    test_files = [f"IMG_1234_{i}.tif" for i in range(1, 11)] + [f"IMG_5678_{i}.tif" for i in range(1, 11)]
+
+    for filename in test_files:
+        img = create_test_image_16bit(height=32, width=32)
+        img.save(tmp_path / filename)
+
+    # Test the class
+    image_loader = MicasenseRedEdgeDualLoader(tmp_path, tmp_path / "masks")
+
+    assert len(image_loader) == 2  # Two capture sets
+    assert image_loader._num_bands == 10
+
+    # Test paths grouping
+    paths = list(image_loader.paths)
+    assert len(paths) == 2
+    assert len(paths[0]) == 10  # 10 bands per capture
+    assert len(paths[1]) == 10
+
+    # Test image loading
+    loaded_img = image_loader.load_image(paths[0])
+    assert loaded_img.shape[2] == 10  # 10 bands
+
+
 def test_rgb_loader(tmp_path):
     """Test that RGB loader works with 8-bit images."""
     # Create test RGB images
@@ -248,37 +274,3 @@ def test_djim3m_loader(tmp_path):
     ]
     loaded_img = image_loader.load_image(capture_paths)
     assert loaded_img.shape[2] == 4  # Four bands (G, R, RE, NIR)
-
-
-@pytest.fixture
-def sensor_test_images(tmp_path):
-    """Fixture that creates test images for all sensor types."""
-    # RGB images
-    rgb_files = ["rgb1.jpg", "rgb2.png"]
-    for filename in rgb_files:
-        img = create_test_image_8bit(height=64, width=64, channels=3, add_glint=True)
-        img.save(tmp_path / filename)
-
-    # CIR image
-    cir_img = create_test_image_8bit(height=256, width=256, channels=4, add_glint=True)
-    cir_img.save(tmp_path / "cir_large.tif")
-
-    # MicaSense RedEdge files (5 bands)
-    for capture_id in [1234, 5678]:
-        for band in range(1, 6):
-            img = create_test_image_16bit(height=32, width=32, add_glint=(band == 1))
-            img.save(tmp_path / f"IMG_{capture_id}_{band}.tif")
-
-    # P4MS files - Use 3-digit capture IDs and proper band naming
-    for capture_id in [101, 201]:  # 3-digit capture IDs for P4MS
-        for band in range(1, 6):
-            img = create_test_image_16bit(height=32, width=32, add_glint=(band == 1))
-            img.save(tmp_path / f"DJI_{capture_id}{band}.TIF")
-
-    # DJI M3M files
-    for capture_id in ["20221208115250_0001", "20221208115253_0002"]:
-        for band in ["G", "R", "RE", "NIR"]:
-            img = create_test_image_16bit(height=32, width=32, add_glint=(band == "G"))
-            img.save(tmp_path / f"DJI_{capture_id}_MS_{band}.TIF")
-
-    return tmp_path

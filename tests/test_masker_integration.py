@@ -14,6 +14,7 @@ from PIL import Image
 from glint_mask_tools.glint_algorithms import IntensityRatioAlgorithm, ThresholdAlgorithm
 from glint_mask_tools.image_loaders import (
     DJIM3MLoader,
+    MicasenseRedEdgeDualLoader,
     MicasenseRedEdgeLoader,
     P4MSLoader,
     SingleFileImageLoader,
@@ -79,6 +80,13 @@ def complete_sensor_suite(tmp_path):
         for band in range(1, 6):
             img = create_realistic_test_image(128, 128, 1, 16, add_glint_pattern=(band == 1))
             img.save(micasense_dir / f"IMG_{capture_id}_{band}.tif")
+    # MicaSense RedEdge Dual images
+    dual_dir = tmp_path / "dual"
+    dual_dir.mkdir()
+    for capture_id in [2001]:
+        for band in range(1, 11):
+            img = create_realistic_test_image(128, 128, 1, 16, add_glint_pattern=(band == 1))
+            img.save(dual_dir / f"IMG_{capture_id}_{band}.tif")
 
     # P4MS images
     p4ms_dir = tmp_path / "p4ms"
@@ -100,6 +108,7 @@ def complete_sensor_suite(tmp_path):
         "rgb_dir": rgb_dir,
         "cir_dir": cir_dir,
         "micasense_dir": micasense_dir,
+        "dual_dir": dual_dir,
         "p4ms_dir": p4ms_dir,
         "djim3m_dir": djim3m_dir,
         "mask_dir": mask_dir,
@@ -199,6 +208,28 @@ def test_micasense_complete_workflow(complete_sensor_suite):
         assert Path(mask_path).exists()
 
 
+def test_micasense_dual_complete_workflow(complete_sensor_suite):
+    """Test complete MicaSense Dual masking workflow."""
+    dirs = complete_sensor_suite
+
+    # Setup loader and masker
+    loader = MicasenseRedEdgeDualLoader(dirs["dual_dir"], dirs["mask_dir"])
+    algorithm = ThresholdAlgorithm([0.8] * 10)
+    masker = Masker(algorithm, loader, normalize_16bit_img)
+
+    # Test workflow
+    assert len(masker) == 1  # One capture set
+
+    img_paths = list(loader.paths)
+    capture_paths = img_paths[0]
+
+    img = loader.load_image(capture_paths)
+    assert img.shape[2] == 10  # 10 bands for dual sensor
+
+    mask_paths = list(loader.get_mask_save_paths(capture_paths))
+    assert len(mask_paths) == 10  # One mask per band file
+
+
 def test_p4ms_complete_workflow(complete_sensor_suite):
     """Test complete P4MS masking workflow."""
     dirs = complete_sensor_suite
@@ -296,6 +327,7 @@ def test_metashape_mask_conversion():
     [
         ("rgb", 3),
         ("micasense", 5),
+        ("micasense_dual", 10),
         ("p4ms", 5),
         ("djim3m", 4),
     ],
@@ -312,6 +344,10 @@ def test_all_sensors_produce_valid_masks(complete_sensor_suite, sensor_type, exp
     elif sensor_type == "micasense":
         loader = MicasenseRedEdgeLoader(dirs["micasense_dir"], dirs["mask_dir"])
         algorithm = ThresholdAlgorithm([0.8] * 5)
+        pre_processor = normalize_16bit_img
+    elif sensor_type == "micasense_dual":
+        loader = MicasenseRedEdgeDualLoader(dirs["dual_dir"], dirs["mask_dir"])
+        algorithm = ThresholdAlgorithm([0.8] * 10)
         pre_processor = normalize_16bit_img
     elif sensor_type == "p4ms":
         loader = P4MSLoader(dirs["p4ms_dir"], dirs["mask_dir"])

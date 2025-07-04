@@ -13,6 +13,7 @@ from glint_mask_tools.glint_algorithms import ThresholdAlgorithm
 from glint_mask_tools.image_loaders import (
     BigTiffLoader,
     DJIM3MLoader,
+    MicasenseRedEdgeDualLoader,
     MicasenseRedEdgeLoader,
     P4MSLoader,
     SingleFileImageLoader,
@@ -204,6 +205,28 @@ def test_micasense_threshold_masker(micasense_test_data):
     normalized_img = masker.image_preprocessor(img)
 
     assert normalized_img.shape[2] == 5  # 5 MicaSense bands
+    assert normalized_img.min() >= 0
+    assert normalized_img.max() <= 1
+
+
+def test_micasense_dual_threshold_masker(micasense_dual_test_data):
+    """Test threshold masker with MicaSense RedEdge Dual sensor."""
+    mask_dir = micasense_dual_test_data / "masks"
+    mask_dir.mkdir()
+
+    # Setup loader and masker
+    loader = MicasenseRedEdgeDualLoader(micasense_dual_test_data, mask_dir)
+    algorithm = ThresholdAlgorithm([0.8] * 10)  # Threshold for 10 bands
+    masker = Masker(algorithm, loader, normalize_16bit_img)
+
+    assert len(masker) == 2  # Two capture sets
+
+    # Test image processing
+    img_paths = list(loader.paths)
+    img = loader.load_image(img_paths[0])
+    normalized_img = masker.image_preprocessor(img)
+
+    assert normalized_img.shape[2] == 10  # 10 MicaSense Dual bands
     assert normalized_img.min() >= 0
     assert normalized_img.max() <= 1
 

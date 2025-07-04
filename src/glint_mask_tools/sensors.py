@@ -19,6 +19,7 @@ from .image_loaders import (
     BigTiffLoader,
     DJIM3MLoader,
     ImageLoader,
+    MicasenseRedEdgeDualLoader,
     MicasenseRedEdgeLoader,
     P4MSLoader,
     SingleFileImageLoader,
@@ -103,6 +104,24 @@ msre_sensor = Sensor(
     loader_class=MicasenseRedEdgeLoader,
 )
 
+msre_dual_sensor = Sensor(
+    name="MicaSense RedEdge-MX Dual",
+    bands=[
+        Band("Coastal Blue 444(28)", 1.000),
+        Band("Blue 475(32)", 0.875),
+        Band("Green 531(14)", 1.000),
+        Band("Green 560(27)", 1.000),
+        Band("Red 650(16)", 1.000),
+        Band("Red 668(14)", 1.000),
+        Band("Red Edge 705(10)", 1.000),
+        Band("Red Edge 717(12)", 1.000),
+        Band("Red Edge 740(18)", 1.000),
+        Band("Near-IR 842(57)", 1.000),
+    ],
+    bit_depth=16,
+    loader_class=MicasenseRedEdgeDualLoader,
+)
+
 
 # Auto populate GUI and CLI options
 @dataclass(frozen=True)
@@ -117,4 +136,5 @@ _known_sensors = (
     _KnownSensor(p4ms_sensor, cli_name="p4ms"),
     _KnownSensor(m3m_sensor, cli_name="m3m"),
     _KnownSensor(msre_sensor, cli_name="msre"),
+    _KnownSensor(msre_dual_sensor, cli_name="msre-dual"),
 )
