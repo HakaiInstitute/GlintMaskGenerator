@@ -12,16 +12,12 @@ from abc import ABC, ABCMeta, abstractmethod
 from collections.abc import Iterable
 from functools import singledispatchmethod
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import numpy as np
 import tifffile
 from PIL import Image
 
 from .utils import list_images
-
-if TYPE_CHECKING:
-    from .maskers import Masker
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -79,8 +75,7 @@ class SingleFileImageLoader(ImageLoader):
     @staticmethod
     def load_image(path: str) -> np.ndarray:
         """Load the image into a numpy array."""
-        img = Image.open(path)
-        # noinspection PyTypeChecker
+        img = Image.open(path)[:3]
         return np.array(img).astype(float)
 
     @property
@@ -92,69 +87,11 @@ class SingleFileImageLoader(ImageLoader):
 class BigTiffLoader(SingleFileImageLoader):
     """Class responsible for loading large single, tiff imagery, such as that output by IX Capture software."""
 
-    _crop_size = 256
-
-    def apply_masker(self, img_paths: list[str] | str, masker: Masker) -> None:
-        """Compute the image mask by moving a window over the input.
-
-        These CIR images are too large to be read into memory simultaneously, so this
-        image masking routine is special.
-
-        This is the setup in the following logic:
-        The inner square is the region to be written to the output.
-        The outer square is a padding section used to ensure the pixel buffers are
-        computed properly.
-        x1,y1
-           ,-----------------,
-           |  x,y            |
-           |   ,--------,    |
-           |   |        |    |
-           |   |        |    |
-           |   |________|    |
-           |          xc,yc  |
-           |_________________|
-                           x2,y2
-        """
-        if not isinstance(img_paths, str):
-            msg = "BigTiffLoader can only operate on images at a single path"
-            raise TypeError(msg)
-        img_path = img_paths
-        mask_path = next(self.get_mask_save_paths(img_paths))
-
-        src = tifffile.imread(img_path)
-        height, width, bands = src.shape
-
-        pad = masker.pixel_buffer
-
-        # Make an all black image to store the data
-        with Image.new("L", (width, height)) as dest:
-            for y in range(0, height, self._crop_size):
-                for x in range(0, width, self._crop_size):
-                    xc = min(x + self._crop_size, width)
-                    yc = min(y + self._crop_size, height)
-
-                    x0 = max(x - pad, 0)
-                    x1 = min(xc + pad, width)
-                    y0 = max(y - pad, 0)
-                    y1 = min(yc + pad, height)
-
-                    # noinspection PyTypeChecker
-                    img = src[y0:y1, x0:x1]
-                    img = self.preprocess_image(img)
-                    mask = masker.algorithm(img)
-                    mask = masker.postprocess_mask(mask)
-                    mask = masker.to_metashape_mask(mask)
-
-                    # Remove padding
-                    mask = mask[(y - y0) :, (x - x0) :]
-                    mask = mask[
-                        : self._crop_size + pad - (y1 - yc),
-                        : self._crop_size + pad - (x1 - xc),
-                    ]
-
-                    # Write the mask section
-                    dest.paste(Image.fromarray(mask), (x, y))
-            dest.save(mask_path)
+    @staticmethod
+    def load_image(path: str) -> np.ndarray:
+        """Load the image into a numpy array."""
+        img = tifffile.imread(path)[:, :, :4]
+        return np.array(img).astype(float)
 
 
 class MultiFileImageLoader(ImageLoader, metaclass=ABCMeta):
