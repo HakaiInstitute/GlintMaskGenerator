@@ -63,9 +63,9 @@ jobs:
           --icon='src\gui\resources\gmt.ico'
           --add-data='src\gui\resources\gmt.ico;resources'
           --add-data="src\gui\resources\*.ui;resources"
-          --hidden-import="src.gui.widgets.buffer_ctrl"
-          --hidden-import="src.gui.widgets.threshold_ctrl"
-          --hidden-import="src.gui.widgets.directory_path"
+          --hidden-import="gui.widgets.buffer_ctrl"
+          --hidden-import="gui.widgets.threshold_ctrl"
+          --hidden-import="gui.widgets.directory_path"
           src/gui/__main__.py
 
       - name: Build Linux GUI Executable
@@ -76,9 +76,9 @@ jobs:
           --icon='src/gui/resources/gmt.ico'
           --add-data='src/gui/resources/gmt.ico:resources'
           --add-data="src/gui/resources/*.ui:resources"
-          --hidden-import="src.gui.widgets.buffer_ctrl"
-          --hidden-import="src.gui.widgets.threshold_ctrl"
-          --hidden-import="src.gui.widgets.directory_path"
+          --hidden-import="gui.widgets.buffer_ctrl"
+          --hidden-import="gui.widgets.threshold_ctrl"
+          --hidden-import="gui.widgets.directory_path"
           src/gui/__main__.py
 
       - name: Archive release artifacts
