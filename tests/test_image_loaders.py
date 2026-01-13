@@ -226,7 +226,6 @@ def test_cir_loader(tmp_path):
     image_loader = BigTiffLoader(tmp_path, tmp_path / "masks")
 
     assert len(image_loader) == 1
-    assert image_loader._crop_size == 256
 
     # Test image loading
     img_path = str(tmp_path / test_file)

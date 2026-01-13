@@ -75,8 +75,8 @@ class SingleFileImageLoader(ImageLoader):
     @staticmethod
     def load_image(path: str) -> np.ndarray:
         """Load the image into a numpy array."""
-        img = Image.open(path)[:3]
-        return np.array(img).astype(float)
+        img = np.array(Image.open(path).convert("RGB"))
+        return img.astype(float)
 
     @property
     def paths(self) -> Iterable[str]:
