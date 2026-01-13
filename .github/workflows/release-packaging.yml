@@ -31,7 +31,7 @@ jobs:
       - name: "Set up Python"
         uses: actions/setup-python@v6
         with:
-          poetry-version: "3.13"
+          python-version: "3.13"
 
       - name: Get tag
         id: tag
@@ -52,8 +52,7 @@ jobs:
       - name: Install dependencies
         run: |
           uv version ${{ env.tag }}
-          sed -i "s/0.0.0/${{ env.tag }}/g" src/glint_mask_tools/__init__.py
-          run: uv sync --all-extras --dev
+          uv sync --all-extras --dev
 
       - name: Build Windows GUI Executable
         if: ${{ runner.os == 'Windows' }}

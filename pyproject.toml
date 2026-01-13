@@ -1,6 +1,6 @@
 [project]
 name = "glint-mask-tools"
-dynamic = ["version"]
+version = "0.0.0"
 description = "Create masks for specular reflection in UAV and aerial imagery"
 license = "MIT"
 readme = "README.md"

@@ -16,4 +16,6 @@ Organization: Hakai Institute
 Date: 2020-09-18
 """
 
-__version__ = "0.0.0"
+import importlib.metadata
+
+__version__ = importlib.metadata.version("glint-mask-tools")
