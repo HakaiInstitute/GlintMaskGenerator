@@ -115,6 +115,7 @@ class MicasenseRedEdgeLoader(MultiFileImageLoader):
     """Class responsible for loading imagery from Micasense Red Edge sensors."""
 
     _base_file_pattern = re.compile("(.*[\\\\/])?IMG_[0-9]{4}_1.tif", flags=re.IGNORECASE)
+    _num_bands = 5
 
     @property
     def paths(self) -> Iterable[list[str]]:
@@ -127,13 +128,21 @@ class MicasenseRedEdgeLoader(MultiFileImageLoader):
             # Get the original extension (preserving case)
             original_ext = base_file.suffix
             # Find corresponding band files using original extension
-            band_files = [str(base_file.with_name(f"{base_file.stem[:-1]}{i}{original_ext}")) for i in range(1, 6)]
+            band_files = [
+                str(base_file.with_name(f"{base_file.stem[:-1]}{i + 1}{original_ext}")) for i in range(self._num_bands)
+            ]
 
             # Verify all files exist
             if all(Path(f).exists() for f in band_files):
                 groups.append(band_files)
 
         return groups
+
+
+class MicasenseRedEdgeDualLoader(MicasenseRedEdgeLoader):
+    """Class responsible for loading imagery from Micasense Red Edge Dual sensors."""
+
+    _num_bands = 10
 
 
 class P4MSLoader(MultiFileImageLoader):
