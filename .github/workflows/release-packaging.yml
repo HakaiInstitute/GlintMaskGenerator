@@ -123,15 +123,15 @@ jobs:
 
       - name: Rename release artifacts
         run: |
-          mv win64-dist/__main__.exe GlintMaskGenerator-v${{ env.tag }}-win64.exe
-          mv linux-dist/__main__ GlintMaskGenerator-v${{ env.tag }}-linux
+          mv win64-dist/__main__.exe GlintMaskGenerator-${{ env.tag }}-win64.exe
+          mv linux-dist/__main__ GlintMaskGenerator-${{ env.tag }}-linux
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          name: v${{ env.tag }}
+          name: ${{ env.tag }}
           prerelease: ${{ env.prerelease }}
           draft: true
           files: |
-            GlintMaskGenerator-v${{ env.tag }}-win64.exe
-            GlintMaskGenerator-v${{ env.tag }}-linux
+            GlintMaskGenerator-${{ env.tag }}-win64.exe
+            GlintMaskGenerator-${{ env.tag }}-linux
