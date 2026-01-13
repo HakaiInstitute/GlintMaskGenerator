@@ -170,6 +170,16 @@
           </layout>
          </widget>
         </item>
+        <item>
+         <widget class="QCheckBox" name="per_band_checkbox">
+          <property name="text">
+           <string>Mask each band independently (no union)</string>
+          </property>
+          <property name="toolTip">
+           <string>When checked, each band's mask contains only that band's threshold detection instead of the union of all bands. Only applies to multi-band sensors.</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
       <widget class="QWidget" name="ratio_params_widget">

@@ -41,7 +41,7 @@ def _process(masker: Masker, max_workers: int) -> None:
 def _create_sensor_command(sensor_cfg: Sensor) -> Callable[..., None]:
     """Create a CLI command function for a sensor configuration."""
 
-    def sensor_command(
+    def sensor_command(  # noqa: PLR0913
         img_dir: Annotated[
             Path,
             typer.Argument(
@@ -76,11 +76,17 @@ def _create_sensor_command(sensor_cfg: Sensor) -> Callable[..., None]:
             int,
             typer.Option(help="The maximum number of threads to use for processing."),
         ] = min(4, os.cpu_count()),
+        per_band: Annotated[  # noqa: FBT002
+            bool,
+            typer.Option(
+                help="Mask each band independently without union. Only applies to multi-band sensors.",
+            ),
+        ] = False,
     ) -> None:
         if thresholds is None:
             thresholds = sensor_cfg.get_default_thresholds()
 
-        masker = sensor_cfg.create_masker(str(img_dir), str(out_dir), thresholds, pixel_buffer)
+        masker = sensor_cfg.create_masker(str(img_dir), str(out_dir), thresholds, pixel_buffer, per_band=per_band)
         _process(masker, max_workers)
 
     sensor_command.__doc__ = f"Generate glint masks for {sensor_cfg.name} sensors using threshold algorithm."

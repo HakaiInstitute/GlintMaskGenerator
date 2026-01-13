@@ -59,13 +59,16 @@ class Sensor:
         """Scale the values in the imagery or do other preprocessing logic when overridden."""
         return normalize_img(img, bit_depth=self.bit_depth)
 
-    def create_masker(self, img_dir: str, mask_dir: str, thresholds: list[float], pixel_buffer: int) -> Masker:
+    def create_masker(
+        self, img_dir: str, mask_dir: str, thresholds: list[float], pixel_buffer: int, *, per_band: bool = False
+    ) -> Masker:
         """Create a masker instance for this sensor configuration."""
         return Masker(
-            algorithm=ThresholdAlgorithm(thresholds),
+            algorithm=ThresholdAlgorithm(thresholds, per_band=per_band),
             image_loader=self.loader_class(img_dir, mask_dir),
             image_preprocessor=self.preprocess_image,
             pixel_buffer=pixel_buffer,
+            per_band=per_band,
         )
 
     def get_default_thresholds(self) -> list[float]:

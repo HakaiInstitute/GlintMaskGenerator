@@ -33,13 +33,26 @@ class GlintAlgorithm(ABC):
 class ThresholdAlgorithm(GlintAlgorithm):
     """Algorithm for estimating glint in an image using a simple disjunctive threshold on the band data values."""
 
-    def __init__(self, thresholds: Sequence[float]) -> None:
-        """Create a new ThresholdAlgorithm instance."""
+    def __init__(self, thresholds: Sequence[float], *, per_band: bool = False) -> None:
+        """Create a new ThresholdAlgorithm instance.
+
+        Parameters
+        ----------
+        thresholds
+            The threshold values for each band.
+        per_band
+            If True, return separate masks for each band. If False, combine
+            all bands with logical OR (default behavior).
+
+        """
         super().__init__()
         self.thresholds = thresholds
+        self.per_band = per_band
 
     def __call__(self, img: np.ndarray) -> np.ndarray:
         """Apply the threshold masking algorithm to an img."""
+        if self.per_band:
+            return img > self.thresholds  # Returns (H, W, C) boolean
         return np.any(img > self.thresholds, axis=2)
 
 
