@@ -30,12 +30,15 @@ class Masker:
         image_loader: ImageLoader,
         image_preprocessor: Callable[[np.ndarray], np.ndarray],
         pixel_buffer: int = 0,
+        *,
+        per_band: bool = False,
     ) -> None:
         """Create the Masker object."""
         self.algorithm = algorithm
         self.image_loader = image_loader
         self.image_preprocessor = image_preprocessor
         self.pixel_buffer = pixel_buffer
+        self.per_band = per_band
         self.buffer_kernel = make_circular_kernel(self.pixel_buffer)
 
     # noinspection PyMethodMayBeStatic
@@ -43,9 +46,14 @@ class Masker:
         """Postprocess the generated boolean numpy mask. Can be overridden to customize behavior."""
         if self.pixel_buffer <= 0:
             return mask
-        return (convolve(mask, self.buffer_kernel, mode="constant", cval=0) > 0).astype(
-            int,
-        )
+        if mask.ndim == 2:  # noqa: PLR2004
+            # Single combined mask
+            return (convolve(mask, self.buffer_kernel, mode="constant", cval=0) > 0).astype(int)
+        # Per-band masks: apply buffer to each channel
+        result = np.empty_like(mask, dtype=int)
+        for i in range(mask.shape[2]):
+            result[:, :, i] = (convolve(mask[:, :, i], self.buffer_kernel, mode="constant", cval=0) > 0).astype(int)
+        return result
 
     @staticmethod
     def to_metashape_mask(mask: np.ndarray) -> np.ndarray:
@@ -163,4 +171,4 @@ class Masker:
         mask = self.postprocess_mask(mask)
         mask = self.to_metashape_mask(mask)
 
-        self.image_loader.save_masks(mask, paths)
+        self.image_loader.save_masks(mask, paths, per_band=self.per_band)

@@ -61,12 +61,32 @@ class ImageLoader(ABC):
     def _(self, img_path: str) -> Iterable[str]:
         return self.get_mask_save_paths([img_path])
 
-    def save_masks(self, mask: np.ndarray, img_paths: list[str] | str) -> None:
-        """Save the mask to appropriate locations based on the img_paths."""
-        mask_img = Image.fromarray(mask)
+    def save_masks(self, mask: np.ndarray, img_paths: list[str] | str, *, per_band: bool = False) -> None:
+        """Save the mask to appropriate locations based on the img_paths.
 
-        for out_path in self.get_mask_save_paths(img_paths):
-            mask_img.save(str(out_path))
+        Parameters
+        ----------
+        mask
+            The mask array to save. Can be 2D (H, W) or 3D (H, W, C) for per-band masks.
+        img_paths
+            The paths of the input images, used to determine output paths.
+        per_band
+            If True and mask is 3D, save each channel to its corresponding output file.
+
+        """
+        mask_paths = list(self.get_mask_save_paths(img_paths))
+
+        if mask.ndim == 3 and per_band and len(mask_paths) == mask.shape[2]:  # noqa: PLR2004
+            # Per-band mode: save each channel to its corresponding file
+            for i, out_path in enumerate(mask_paths):
+                mask_img = Image.fromarray(mask[:, :, i])
+                mask_img.save(str(out_path))
+        else:
+            # Combined mode: save same mask to all outputs
+            mask_2d = mask if mask.ndim == 2 else mask[:, :, 0]  # noqa: PLR2004
+            mask_img = Image.fromarray(mask_2d)
+            for out_path in mask_paths:
+                mask_img.save(str(out_path))
 
 
 class SingleFileImageLoader(ImageLoader):

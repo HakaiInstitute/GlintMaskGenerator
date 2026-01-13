@@ -15,6 +15,7 @@ from PyQt6.QtCore import QObject, QRunnable, Qt, QThreadPool, pyqtSignal, pyqtSl
 from PyQt6.QtGui import QIcon
 
 from glint_mask_tools import __version__
+from glint_mask_tools.image_loaders import MultiFileImageLoader
 from glint_mask_tools.sensors import Sensor, _known_sensors
 from gui.utils import resource_path
 from gui.widgets.threshold_ctrl import ThresholdCtrl
@@ -112,6 +113,11 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
             self.selected_sensor = _known_sensors[current_index].sensor
             # Update threshold sliders for the selected sensor
             self.create_threshold_sliders()
+            # Enable per-band checkbox only for multi-file sensors
+            is_multi_file = issubclass(self.selected_sensor.loader_class, MultiFileImageLoader)
+            self.per_band_checkbox.setEnabled(is_multi_file)
+            if not is_multi_file:
+                self.per_band_checkbox.setChecked(False)
 
     def create_threshold_sliders(self) -> None:
         """Dynamically create threshold sliders for the selected sensor's bands."""
@@ -182,6 +188,11 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         """Returns the current threshold values for all bands."""
         return [widget.value for widget in self.threshold_widgets]
 
+    @property
+    def per_band_enabled(self) -> bool:
+        """Returns whether per-band mask output is enabled."""
+        return self.per_band_checkbox.isChecked()
+
     def create_masker(self) -> Masker:
         """Returns an instance of the appropriate glint mask generator given selected options."""
         return self.selected_sensor_config.create_masker(
@@ -189,6 +200,7 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
             mask_dir=self.mask_dir_w.value,
             thresholds=self.threshold_values,
             pixel_buffer=self.pixel_buffer_w.value,
+            per_band=self.per_band_enabled,
         )
 
     @property
