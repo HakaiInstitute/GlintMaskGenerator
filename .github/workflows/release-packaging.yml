@@ -20,16 +20,16 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
-          version: "0.7.12"
+          version: "0.9.17"
           enable-cache: true
 
       - name: "Set up Python"
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           poetry-version: "3.13"
 
@@ -58,7 +58,7 @@ jobs:
       - name: Build Windows GUI Executable
         if: ${{ runner.os == 'Windows' }}
         run: >
-          poetry run pyinstaller
+          uvx pyinstaller
           --onefile
           --windowed
           --icon='src\gui\resources\gmt.ico'
@@ -72,7 +72,7 @@ jobs:
       - name: Build Linux GUI Executable
         if: ${{ runner.os == 'Linux' }}
         run: >
-          poetry run pyinstaller
+          uvx pyinstaller
           --onefile
           --icon='src/gui/resources/gmt.ico'
           --add-data='src/gui/resources/gmt.ico:resources'
@@ -83,7 +83,7 @@ jobs:
           src/gui/__main__.py
 
       - name: Archive release artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.os }}-dist
           path: dist
@@ -95,7 +95,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Get tag
         id: tag
@@ -111,13 +111,13 @@ jobs:
           fi
 
       - name: Download Windows artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v7
         with:
           name: windows-latest-dist
           path: win64-dist
 
       - name: Download Ubuntu artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v7
         with:
           name: ubuntu-latest-dist
           path: linux-dist
