@@ -57,7 +57,7 @@ jobs:
       - name: Build Windows GUI Executable
         if: ${{ runner.os == 'Windows' }}
         run: >
-          uvx pyinstaller
+          uv run pyinstaller
           --onefile
           --windowed
           --icon='src\gui\resources\gmt.ico'
@@ -71,7 +71,7 @@ jobs:
       - name: Build Linux GUI Executable
         if: ${{ runner.os == 'Linux' }}
         run: >
-          uvx pyinstaller
+          uv run pyinstaller
           --onefile
           --icon='src/gui/resources/gmt.ico'
           --add-data='src/gui/resources/gmt.ico:resources'
