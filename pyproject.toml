@@ -13,6 +13,7 @@ dependencies = [
     "imagecodecs>=2024.12.30",
     "loguru>=0.7.3",
     "numpy>=2.0.2",
+    "opencv-python-headless>=4.8.0",
     "pillow>=11.2.1",
     "pyqt6>=6.9.1",
     "scipy>=1.13.1",
@@ -45,9 +46,9 @@ line-length = 120
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
-    "D203",  # incorrect-blank-line-before-class
-    "D213",  # multi-line-summary-second-line
-    "BLE001", # Do not catch blind exception
+    "D203",
+    "D213",
+    "BLE001",
     "COM812",
 ]
 

@@ -54,21 +54,36 @@ class Sensor:
     bands: list[Band]
     bit_depth: int
     loader_class: type[ImageLoader]
+    supports_alignment: bool = False
 
     def preprocess_image(self, img: np.ndarray) -> np.ndarray:
         """Scale the values in the imagery or do other preprocessing logic when overridden."""
         return normalize_img(img, bit_depth=self.bit_depth)
 
-    def create_masker(
-        self, img_dir: str, mask_dir: str, thresholds: list[float], pixel_buffer: int, *, per_band: bool = False
+    def create_masker(  # noqa: PLR0913
+        self,
+        img_dir: str,
+        mask_dir: str,
+        thresholds: list[float],
+        pixel_buffer: int,
+        *,
+        per_band: bool = False,
+        align_bands: bool = True,
     ) -> Masker:
         """Create a masker instance for this sensor configuration."""
+        aligner = None
+        if self.supports_alignment and align_bands:
+            from .band_alignment import BandAligner  # noqa: PLC0415
+
+            aligner = BandAligner(enabled=True)
+
         return Masker(
             algorithm=ThresholdAlgorithm(thresholds, per_band=per_band),
             image_loader=self.loader_class(img_dir, mask_dir),
             image_preprocessor=self.preprocess_image,
             pixel_buffer=pixel_buffer,
             per_band=per_band,
+            band_aligner=aligner,
         )
 
     def get_default_thresholds(self) -> list[float]:
@@ -93,18 +108,21 @@ p4ms_sensor = Sensor(
     bands=[B, G, R, RE, NIR],
     bit_depth=16,
     loader_class=P4MSLoader,
+    supports_alignment=True,
 )
 m3m_sensor = Sensor(
     name="DJI M3M",
     bands=[Band("Green", 0.875), R, RE, NIR],
     bit_depth=16,
     loader_class=DJIM3MLoader,
+    supports_alignment=True,
 )
 msre_sensor = Sensor(
     name="MicaSense RedEdge",
     bands=[B, G, R, RE, NIR],
     bit_depth=16,
     loader_class=MicasenseRedEdgeLoader,
+    supports_alignment=True,
 )
 
 msre_dual_sensor = Sensor(
@@ -123,6 +141,7 @@ msre_dual_sensor = Sensor(
     ],
     bit_depth=16,
     loader_class=MicasenseRedEdgeDualLoader,
+    supports_alignment=True,
 )
 
 
