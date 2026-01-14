@@ -17,6 +17,7 @@ from scipy.ndimage import convolve
 from .utils import make_circular_kernel
 
 if TYPE_CHECKING:
+    from .band_alignment import BandAligner
     from .glint_algorithms import GlintAlgorithm
     from .image_loaders import ImageLoader
 
@@ -24,7 +25,7 @@ if TYPE_CHECKING:
 class Masker:
     """The main class for masking glint in imagery. It is composed of an image loader and glint masking algorithm."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         algorithm: GlintAlgorithm,
         image_loader: ImageLoader,
@@ -32,6 +33,7 @@ class Masker:
         pixel_buffer: int = 0,
         *,
         per_band: bool = False,
+        band_aligner: BandAligner | None = None,
     ) -> None:
         """Create the Masker object."""
         self.algorithm = algorithm
@@ -39,6 +41,7 @@ class Masker:
         self.image_preprocessor = image_preprocessor
         self.pixel_buffer = pixel_buffer
         self.per_band = per_band
+        self.band_aligner = band_aligner
         self.buffer_kernel = make_circular_kernel(self.pixel_buffer)
 
     # noinspection PyMethodMayBeStatic
@@ -71,6 +74,18 @@ class Masker:
         """
         return len(self.image_loader)
 
+    def _calibrate_alignment(self) -> None:
+        """Calibrate band alignment if aligner is configured."""
+        if self.band_aligner is None:
+            return
+        if self.band_aligner.is_calibrated:
+            return
+
+        self.band_aligner.calibrate(
+            image_paths=self.image_loader.paths,
+            load_fn=self.image_loader.load_image,
+        )
+
     def __call__(
         self,
         max_workers: int,
@@ -92,6 +107,8 @@ class Masker:
             a processing failure.
 
         """
+        self._calibrate_alignment()
+
         if max_workers == 0:
             return self.process_unthreaded(callback, err_callback)
         return self.process(max_workers, callback, err_callback)
@@ -166,9 +183,20 @@ class Masker:
         """
         img = self.image_loader.load_image(paths)
 
+        if self.band_aligner is not None:
+            img = self.band_aligner.align(img)
+
         img = self.image_preprocessor(img)
         mask = self.algorithm(img)
         mask = self.postprocess_mask(mask)
+
+        # Shift masks back to original unaligned coordinates for each band
+        # This works for both union masks (2D) and per-band masks (3D)
+        if self.band_aligner is not None:
+            mask = self.band_aligner.unalign_mask(mask)
+
         mask = self.to_metashape_mask(mask)
 
-        self.image_loader.save_masks(mask, paths, per_band=self.per_band)
+        # Save per-band if we have a 3D mask (from alignment) or per_band mode
+        save_per_band = mask.ndim == 3 or self.per_band  # noqa: PLR2004
+        self.image_loader.save_masks(mask, paths, per_band=save_per_band)

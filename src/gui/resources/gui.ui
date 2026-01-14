@@ -180,6 +180,19 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QCheckBox" name="align_bands_checkbox">
+          <property name="text">
+           <string>Auto-align bands before masking</string>
+          </property>
+          <property name="toolTip">
+           <string>When checked, automatically aligns bands using phase correlation before applying thresholds. Calibrates from the first few images. Only applies to multi-band sensors.</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
       <widget class="QWidget" name="ratio_params_widget">

@@ -82,11 +82,20 @@ def _create_sensor_command(sensor_cfg: Sensor) -> Callable[..., None]:
                 help="Mask each band independently without union. Only applies to multi-band sensors.",
             ),
         ] = False,
+        no_align: Annotated[  # noqa: FBT002
+            bool,
+            typer.Option(
+                "--no-align",
+                help="Disable automatic band alignment for multi-band sensors.",
+            ),
+        ] = False,
     ) -> None:
         if thresholds is None:
             thresholds = sensor_cfg.get_default_thresholds()
 
-        masker = sensor_cfg.create_masker(str(img_dir), str(out_dir), thresholds, pixel_buffer, per_band=per_band)
+        masker = sensor_cfg.create_masker(
+            str(img_dir), str(out_dir), thresholds, pixel_buffer, per_band=per_band, align_bands=not no_align
+        )
         _process(masker, max_workers)
 
     sensor_command.__doc__ = f"Generate glint masks for {sensor_cfg.name} sensors using threshold algorithm."

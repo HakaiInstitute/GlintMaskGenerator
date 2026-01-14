@@ -118,6 +118,13 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
             self.per_band_checkbox.setEnabled(is_multi_file)
             if not is_multi_file:
                 self.per_band_checkbox.setChecked(False)
+            # Enable align-bands checkbox only for sensors that support alignment
+            supports_alignment = self.selected_sensor.supports_alignment
+            self.align_bands_checkbox.setEnabled(supports_alignment)
+            if not supports_alignment:
+                self.align_bands_checkbox.setChecked(False)
+            else:
+                self.align_bands_checkbox.setChecked(True)
 
     def create_threshold_sliders(self) -> None:
         """Dynamically create threshold sliders for the selected sensor's bands."""
@@ -193,6 +200,11 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         """Returns whether per-band mask output is enabled."""
         return self.per_band_checkbox.isChecked()
 
+    @property
+    def align_bands_enabled(self) -> bool:
+        """Returns whether automatic band alignment is enabled."""
+        return self.align_bands_checkbox.isChecked()
+
     def create_masker(self) -> Masker:
         """Returns an instance of the appropriate glint mask generator given selected options."""
         return self.selected_sensor_config.create_masker(
@@ -201,6 +213,7 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
             thresholds=self.threshold_values,
             pixel_buffer=self.pixel_buffer_w.value,
             per_band=self.per_band_enabled,
+            align_bands=self.align_bands_enabled,
         )
 
     @property
