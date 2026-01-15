@@ -11,7 +11,7 @@ updates:
       interval: "weekly"
     target-branch: "main"
     groups:
-      all_minor:
+      deps:
         patterns:
           - "*"
         update-types:
