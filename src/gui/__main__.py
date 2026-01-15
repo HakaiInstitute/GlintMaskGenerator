@@ -101,7 +101,8 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
     def _apply_theme(self) -> None:
         """Apply the brutalist theme stylesheet."""
         stylesheet_path = resource_path("resources/brutalist.qss")
-        resources_dir = resource_path("resources")
+        # Use forward slashes for Qt stylesheet URLs (works on all platforms)
+        resources_dir = resource_path("resources").replace("\\", "/")
         try:
             with Path.open(stylesheet_path) as f:
                 stylesheet = f.read()
