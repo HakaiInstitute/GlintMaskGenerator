@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import os
 import sys
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
 from loguru import logger
@@ -54,6 +55,9 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         super().__init__()
         uic.loadUi(resource_path("resources/gui.ui"), self)
 
+        # Apply brutalist theme
+        self._apply_theme()
+
         # Setup window
         self.setWindowTitle(f"Glint Mask Generator v{__version__}")
         self.setWindowIcon(QIcon(resource_path("resources/gmt.ico")))
@@ -90,8 +94,22 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         # Connect signals/slots
         self.run_btn.released.connect(self.run_btn_clicked)
         self.reset_thresholds_btn.released.connect(self.reset_thresholds)
+        self.per_band_checkbox.stateChanged.connect(self.on_per_band_changed)
 
         self.show()
+
+    def _apply_theme(self) -> None:
+        """Apply the brutalist theme stylesheet."""
+        stylesheet_path = resource_path("resources/brutalist.qss")
+        resources_dir = resource_path("resources")
+        try:
+            with Path.open(stylesheet_path) as f:
+                stylesheet = f.read()
+            # Replace relative image paths with absolute paths
+            stylesheet = stylesheet.replace("url(arrow-", f"url({resources_dir}/arrow-")
+            QtWidgets.QApplication.instance().setStyleSheet(stylesheet)
+        except FileNotFoundError:
+            logger.warning("Brutalist theme stylesheet not found at {}", stylesheet_path)
 
     def setup_sensor_dropdown(self) -> None:
         """Setup the sensor dropdown with available sensor configurations."""
@@ -125,6 +143,28 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
                 self.align_bands_checkbox.setChecked(False)
             else:
                 self.align_bands_checkbox.setChecked(True)
+            # Apply per-band checkbox state to align-bands checkbox
+            self.on_per_band_changed(self.per_band_checkbox.checkState().value)
+
+    def on_per_band_changed(self, state: int) -> None:
+        """Handle per-band checkbox state change - disables align-bands when per-band is checked."""
+        per_band_checked = state == Qt.CheckState.Checked.value
+
+        if per_band_checked:
+            # Disable and uncheck align-bands when per-band is enabled
+            self.align_bands_checkbox.setChecked(False)
+            self.align_bands_checkbox.setEnabled(False)
+            self.align_bands_checkbox.setToolTip(
+                "Band alignment is disabled when per-band masking is enabled. "
+                "Per-band outputs separate masks for each band, which is incompatible with alignment."
+            )
+        elif self.selected_sensor and self.selected_sensor.supports_alignment:
+            # Re-enable if sensor supports alignment
+            self.align_bands_checkbox.setEnabled(True)
+            self.align_bands_checkbox.setToolTip(
+                "When checked, automatically aligns bands using phase correlation before applying thresholds. "
+                "Calibrates from the first few images. Only applies to multi-band sensors."
+            )
 
     def create_threshold_sliders(self) -> None:
         """Dynamically create threshold sliders for the selected sensor's bands."""
@@ -139,31 +179,26 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
         self.threshold_widgets.clear()
         self.threshold_labels.clear()
 
-        # Get the grid layout from the threshold group box
-        grid_layout = self.box_band_threshes.layout()
+        # Get the grid layout from the scroll content widget
+        grid_layout = self.thresholdScrollContent.layout()
 
         # Create threshold sliders for each band
         for i, band in enumerate(self.selected_sensor.bands):
             # Create label
             label = QtWidgets.QLabel(band.name)
-            label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+            label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
 
             # Create threshold control
             threshold_ctrl = ThresholdCtrl(self)
             threshold_ctrl.value = band.default_threshold
 
-            # Add to layout (row i, columns 0 and 2)
+            # Add to layout (row i, columns 0 and 1)
             grid_layout.addWidget(label, i, 0)
-            grid_layout.addWidget(threshold_ctrl, i, 2)
+            grid_layout.addWidget(threshold_ctrl, i, 1)
 
             # Store references
             self.threshold_labels.append(label)
             self.threshold_widgets.append(threshold_ctrl)
-
-        # Keep the reset button at the bottom
-        reset_row = len(self.selected_sensor.bands)
-        if hasattr(self, "reset_thresholds_btn"):
-            grid_layout.addWidget(self.reset_thresholds_btn.parent(), reset_row, 2)
 
     def reset_thresholds(self) -> None:
         """Reset all threshold sliders to their default values."""
