@@ -7,7 +7,11 @@ nav:
   - Home: index.md
   - How it works: how_it_works.md
   - Installation: installation.md
-  - Usage: usage.md
+  - Usage:
+    - Overview: usage.md
+    - GUI Guide: gui.md
+    - CLI Reference: cli.md
+    - Python API: python-api.md
   - FAQs: faq.md
   - Issue Tracker: 'https://github.com/HakaiInstitute/GlintMaskGenerator/issues'
 
@@ -24,8 +28,6 @@ theme:
 
 extra:
   social:
-    - icon: fontawesome/brands/x-twitter
-      link: https://x.com/HakaiGeospatial
     - icon: fontawesome/brands/instagram
       link: https://www.instagram.com/hakaiinstitute
     - icon: fontawesome/brands/linkedin
@@ -39,7 +41,7 @@ extra:
       make our documentation better.
 
 watch:
-  - glint_mask_generator
+  - src/glint_mask_tools
 
 markdown_extensions:
   - admonition

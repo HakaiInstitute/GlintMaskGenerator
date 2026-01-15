@@ -11,8 +11,9 @@ updates:
       interval: "weekly"
     target-branch: "main"
     groups:
-      patterns:
-        - "*"
-      update-types:
-        - "minor"
-        - "patch"
+      all_minor:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
