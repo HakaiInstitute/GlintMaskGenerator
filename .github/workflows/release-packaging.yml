@@ -64,6 +64,7 @@ jobs:
           --add-data='src\gui\resources\gmt.ico;resources'
           --add-data="src\gui\resources\*.ui;resources"
           --add-data="src\gui\resources\*.qss;resources"
+          --add-data="src\gui\resources\*.svg;resources"
           --hidden-import="gui.widgets.buffer_ctrl"
           --hidden-import="gui.widgets.threshold_ctrl"
           --hidden-import="gui.widgets.directory_path"
@@ -78,6 +79,7 @@ jobs:
           --add-data='src/gui/resources/gmt.ico:resources'
           --add-data="src/gui/resources/*.ui:resources"
           --add-data="src/gui/resources/*.qss:resources"
+          --add-data="src/gui/resources/*.svg:resources"
           --hidden-import="gui.widgets.buffer_ctrl"
           --hidden-import="gui.widgets.threshold_ctrl"
           --hidden-import="gui.widgets.directory_path"
