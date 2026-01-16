@@ -71,5 +71,11 @@ ignore = [
     "D",
 ]
 
+"benchmark_caching.py" = [
+    "T201",  # print statements are intentional in benchmarks
+    "ANN",   # Type annotations not needed for simple benchmark scripts
+    "E501",  # Allow longer lines for readability
+]
+
 [tool.ruff.lint.isort]
 combine-as-imports = true

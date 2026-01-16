@@ -11,6 +11,7 @@ Organization: Hakai Institute
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 
 import cv2
@@ -42,18 +43,25 @@ class BandOffsets:
 class BandAligner:
     """Handles per-image band alignment using ECC (Enhanced Correlation Coefficient)."""
 
-    def __init__(self, *, enabled: bool = True) -> None:
+    def __init__(self, *, enabled: bool = True, max_workers: int | None = None) -> None:
         """Create a new BandAligner.
 
         Parameters
         ----------
         enabled
             Whether alignment is enabled (default True).
+        max_workers
+            Maximum number of worker threads for parallel band processing.
+            If None, uses min(4, number_of_bands - 1). Set to 1 to disable
+            parallel processing.
 
         """
         self.enabled = enabled
+        self.max_workers = max_workers
+        # Cache of previous warp matrices per band for faster convergence (Dict[band_idx, warp_matrix])
+        self._prev_warp_matrices: dict[int, np.ndarray] = {}
 
-    def align(self, img: np.ndarray) -> tuple[np.ndarray, BandOffsets | None]:
+    def align(self, img: np.ndarray) -> tuple[np.ndarray, BandOffsets | None]:  # noqa: C901
         """Compute alignment transforms and apply them to align an image.
 
         Parameters
@@ -80,13 +88,51 @@ class BandAligner:
         # Identity transform for reference band
         warp_matrices = [np.eye(2, 3, dtype=np.float32)]
 
+        # Determine number of workers for parallel processing
+        num_workers = self.max_workers
+        if num_workers is None:
+            num_workers = min(4, num_bands - 1)
+
+        min_bands_for_parallel = 2
+        use_parallel = num_workers > 1 and num_bands > min_bands_for_parallel
+
         try:
-            for band_idx in range(1, num_bands):
-                target_band = img[:, :, band_idx]
-                warp_matrix = self._estimate_transform(ref_band, target_band)
-                warp_matrices.append(warp_matrix)
+            if use_parallel:
+                # Process bands in parallel using ThreadPoolExecutor
+                # ECC releases the GIL, so threading provides real parallelism
+                warp_results: dict[int, np.ndarray] = {}
+
+                def process_band(band_idx: int) -> tuple[int, np.ndarray]:
+                    target_band = img[:, :, band_idx]
+                    initial_warp = self._prev_warp_matrices.get(band_idx)
+                    warp_matrix = self._estimate_transform(ref_band, target_band, initial_warp)
+                    return band_idx, warp_matrix
+
+                with ThreadPoolExecutor(max_workers=num_workers) as executor:
+                    futures = {executor.submit(process_band, i): i for i in range(1, num_bands)}
+
+                    for future in as_completed(futures):
+                        band_idx, warp_matrix = future.result()
+                        warp_results[band_idx] = warp_matrix
+                        # Cache the result for next image
+                        self._prev_warp_matrices[band_idx] = warp_matrix
+
+                # Reconstruct warp_matrices in order
+                warp_matrices.extend([warp_results[i] for i in range(1, num_bands)])
+            else:
+                # Sequential processing (single-threaded or only 2 bands)
+                for band_idx in range(1, num_bands):
+                    target_band = img[:, :, band_idx]
+                    # Use previous warp matrix as initial guess if available
+                    initial_warp = self._prev_warp_matrices.get(band_idx)
+                    warp_matrix = self._estimate_transform(ref_band, target_band, initial_warp)
+                    warp_matrices.append(warp_matrix)
+                    # Cache the result for next image
+                    self._prev_warp_matrices[band_idx] = warp_matrix
         except cv2.error as e:
             logger.warning(f"Band alignment failed for image: {e}")
+            # Clear cache on failure to prevent bad cached values from persisting
+            self._prev_warp_matrices.clear()
             return img, None
 
         offsets = BandOffsets(warp_matrices=tuple(warp_matrices))
@@ -165,6 +211,7 @@ class BandAligner:
     def _estimate_transform(
         ref_band: np.ndarray,
         target_band: np.ndarray,
+        initial_warp: np.ndarray | None = None,
     ) -> np.ndarray:
         """Estimate Euclidean transform of target band relative to reference using ECC.
 
@@ -172,25 +219,62 @@ class BandAligner:
         motion model (rotation + translation) for robust alignment across
         spectral bands with different intensity distributions.
 
+        Parameters
+        ----------
+        ref_band
+            Reference band to align to.
+        target_band
+            Band to be aligned.
+        initial_warp
+            Optional initial guess for warp matrix. Using the warp matrix from
+            the previous image of the same band can significantly speed up convergence
+            for sequential images with similar alignment parameters. If ECC fails to
+            converge with the initial guess, it will automatically retry with an
+            identity matrix.
+
         Returns
         -------
         np.ndarray
             2x3 warp matrix for use with cv2.WARP_INVERSE_MAP.
 
         """
-        # Initialize warp matrix as identity
-        warp_matrix = np.eye(2, 3, dtype=np.float32)
+        # Initialize warp matrix from previous result or as identity
+        warp_matrix = initial_warp.copy() if initial_warp is not None else np.eye(2, 3, dtype=np.float32)
 
-        # ECC criteria: max 1000 iterations or convergence at 1e-6
-        criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 1000, 1e-6)
+        # Use fewer iterations when we have a good initial guess from cache
+        # This significantly speeds up convergence for sequential images
+        max_iterations = 400 if initial_warp is not None else 1000
+        criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, max_iterations, 1e-6)
 
-        _, warp_matrix = cv2.findTransformECC(
-            ref_band.astype(np.float32),
-            target_band.astype(np.float32),
-            warp_matrix,
-            motionType=cv2.MOTION_EUCLIDEAN,
-            criteria=criteria,
-        )
+        try:
+            _, warp_matrix = cv2.findTransformECC(
+                ref_band.astype(np.float32),
+                target_band.astype(np.float32),
+                warp_matrix,
+                motionType=cv2.MOTION_EUCLIDEAN,
+                criteria=criteria,
+            )
+        except cv2.error as e:
+            # If we had an initial guess and it failed, retry with identity matrix
+            if initial_warp is not None:
+                logger.debug(f"ECC failed with cached initial guess, retrying with identity: {e}")
+                warp_matrix = np.eye(2, 3, dtype=np.float32)
+                try:
+                    _, warp_matrix = cv2.findTransformECC(
+                        ref_band.astype(np.float32),
+                        target_band.astype(np.float32),
+                        warp_matrix,
+                        motionType=cv2.MOTION_EUCLIDEAN,
+                        criteria=criteria,
+                    )
+                except cv2.error as retry_error:
+                    # Retry with identity also failed, re-raise the original error
+                    # This ensures we get the same failure behavior as before caching
+                    logger.debug(f"ECC retry with identity also failed: {retry_error}")
+                    raise e from retry_error
+            else:
+                # No initial guess was used, so re-raise the error
+                raise
 
         return warp_matrix
 
