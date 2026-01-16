@@ -46,7 +46,7 @@ Adjust thresholds for each available band using the sliders:
 
 The following options are only available for multi-sensor systems (P4MS, M3M, MicaSense RedEdge). Single-sensor systems (RGB, CIR) capture all bands in a single file that is already aligned, and can only output a single mask file per image.
 
-- **Auto-align bands before masking** (default: enabled): Automatically aligns bands from different sensors using phase correlation before applying thresholds. The alignment is calibrated from the first few images in the dataset. This compensates for slight positional differences between sensors in multi-camera systems.
+- **Auto-align bands before masking** (default: enabled): Automatically aligns bands from different sensors using phase correlation before applying thresholds. Each image is aligned independently to compensate for slight positional differences between sensors in multi-camera systems.
 
 - **Mask each band independently**: When enabled, each band's mask contains only that band's threshold detection instead of the union of all bands. By default (disabled), all band masks are combined so that a pixel marked as glint in any band is masked in all output files. Enable this option if you need per-band masks that reflect only that specific band's glint detection.
 

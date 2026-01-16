@@ -10,19 +10,15 @@ Organization: Hakai Institute
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 import cv2
 import numpy as np
 from loguru import logger
 
-if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable
-
 
 @dataclass
 class BandOffsets:
-    """Calibrated offsets for each band relative to reference band (index 0)."""
+    """Offsets for each band relative to reference band (index 0)."""
 
     x_offsets: tuple[int, ...]
     y_offsets: tuple[int, ...]
@@ -38,122 +34,21 @@ class BandOffsets:
 
 
 class BandAligner:
-    """Handles band alignment calibration and application using phase correlation."""
+    """Handles per-image band alignment using phase correlation."""
 
-    def __init__(
-        self,
-        calibration_samples: int = 5,
-        *,
-        enabled: bool = True,
-    ) -> None:
+    def __init__(self, *, enabled: bool = True) -> None:
         """Create a new BandAligner.
 
         Parameters
         ----------
-        calibration_samples
-            Number of images to sample for calibration (default 5).
         enabled
             Whether alignment is enabled (default True).
 
         """
-        self.calibration_samples = calibration_samples
         self.enabled = enabled
-        self._offsets: BandOffsets | None = None
-        self._calibrated = False
 
-    @property
-    def is_calibrated(self) -> bool:
-        """Return True if calibration has been performed."""
-        return self._calibrated
-
-    @property
-    def offsets(self) -> BandOffsets | None:
-        """Return the calibrated offsets, or None if not calibrated."""
-        return self._offsets
-
-    def calibrate(
-        self,
-        image_paths: Iterable[list[str] | str],
-        load_fn: Callable[[list[str] | str], np.ndarray],
-    ) -> BandOffsets | None:
-        """Calibrate alignment offsets from a sample of images.
-
-        Parameters
-        ----------
-        image_paths
-            Iterable of image paths (or path groups for multi-file loaders).
-        load_fn
-            Function to load image data given paths.
-
-        Returns
-        -------
-        BandOffsets | None
-            Calibrated offsets for each band, or None if calibration failed.
-
-        """
-        if not self.enabled:
-            self._calibrated = True
-            return None
-
-        paths_list = list(image_paths)
-        if not paths_list:
-            logger.warning("No images found for band alignment calibration")
-            self._calibrated = True
-            return None
-
-        sample_paths = paths_list[: self.calibration_samples]
-        logger.info(f"Calibrating band alignment from {len(sample_paths)} sample images")
-
-        all_x_offsets: list[list[int]] = []
-        all_y_offsets: list[list[int]] = []
-
-        try:
-            for paths in sample_paths:
-                img = load_fn(paths)
-
-                if img.ndim != 3:  # noqa: PLR2004
-                    logger.warning("Image is not multi-band, skipping alignment calibration")
-                    self.enabled = False
-                    self._calibrated = True
-                    return None
-
-                num_bands = img.shape[2]
-                ref_band = img[:, :, 0]
-
-                x_offs = [0]
-                y_offs = [0]
-
-                for band_idx in range(1, num_bands):
-                    target_band = img[:, :, band_idx]
-                    x_off, y_off = self._estimate_offset(ref_band, target_band)
-                    x_offs.append(x_off)
-                    y_offs.append(y_off)
-
-                all_x_offsets.append(x_offs)
-                all_y_offsets.append(y_offs)
-
-        except cv2.error as e:
-            logger.warning(f"Band alignment calibration failed: {e}. Alignment disabled.")
-            self.enabled = False
-            self._calibrated = True
-            return None
-
-        if all_x_offsets:
-            num_bands = len(all_x_offsets[0])
-            median_x = tuple(int(np.median([sample[i] for sample in all_x_offsets])) for i in range(num_bands))
-            median_y = tuple(int(np.median([sample[i] for sample in all_y_offsets])) for i in range(num_bands))
-            self._offsets = BandOffsets(x_offsets=median_x, y_offsets=median_y)
-
-            if self._offsets.has_offset():
-                logger.info(f"Band alignment offsets: x={median_x}, y={median_y}")
-            else:
-                logger.info("Band alignment calibration found no significant offsets")
-
-        self._calibrated = True
-        return self._offsets
-
-    def align(self, img: np.ndarray) -> np.ndarray:
-        """Apply calibrated alignment to an image.
+    def align(self, img: np.ndarray) -> tuple[np.ndarray, BandOffsets | None]:
+        """Compute alignment offsets and apply them to align an image.
 
         Parameters
         ----------
@@ -162,39 +57,50 @@ class BandAligner:
 
         Returns
         -------
-        np.ndarray
-            Aligned image with same shape.
-
-        Raises
-        ------
-        ValueError
-            If image band count doesn't match calibration.
+        tuple[np.ndarray, BandOffsets | None]
+            Tuple of (aligned_image, offsets). Offsets is None if alignment
+            is disabled or image is not multi-band.
 
         """
         if not self.enabled:
-            return img
+            return img, None
 
-        if self._offsets is None:
-            return img
+        if img.ndim != 3:  # noqa: PLR2004
+            return img, None
 
-        if not self._offsets.has_offset():
-            return img
+        num_bands = img.shape[2]
+        ref_band = img[:, :, 0]
 
-        if img.shape[2] != self._offsets.num_bands:
-            msg = f"Image has {img.shape[2]} bands but alignment calibrated for {self._offsets.num_bands} bands"
-            raise ValueError(msg)
+        x_offs = [0]
+        y_offs = [0]
 
+        try:
+            for band_idx in range(1, num_bands):
+                target_band = img[:, :, band_idx]
+                x_off, y_off = self._estimate_offset(ref_band, target_band)
+                x_offs.append(x_off)
+                y_offs.append(y_off)
+        except cv2.error as e:
+            logger.warning(f"Band alignment failed for image: {e}")
+            return img, None
+
+        offsets = BandOffsets(x_offsets=tuple(x_offs), y_offsets=tuple(y_offs))
+
+        if not offsets.has_offset():
+            return img, offsets
+
+        # Apply offsets to align bands
         aligned_bands = []
-        for band_idx in range(img.shape[2]):
+        for band_idx in range(num_bands):
             band = img[:, :, band_idx]
-            x_off = self._offsets.x_offsets[band_idx]
-            y_off = self._offsets.y_offsets[band_idx]
+            x_off = offsets.x_offsets[band_idx]
+            y_off = offsets.y_offsets[band_idx]
             aligned_band = self._apply_offset(band, x_off, y_off)
             aligned_bands.append(aligned_band)
 
-        return np.stack(aligned_bands, axis=2)
+        return np.stack(aligned_bands, axis=2), offsets
 
-    def unalign_mask(self, mask: np.ndarray) -> np.ndarray:
+    def unalign_mask(self, mask: np.ndarray, offsets: BandOffsets | None) -> np.ndarray:
         """Shift a mask back to original (unaligned) coordinate space for each band.
 
         Takes a 2D union mask (or 3D per-band masks) and creates shifted versions
@@ -204,49 +110,48 @@ class BandAligner:
         ----------
         mask
             Mask array with shape (H, W) for union mask or (H, W, num_bands) for per-band.
+        offsets
+            The offsets used during alignment. If None, mask is returned unchanged.
 
         Returns
         -------
         np.ndarray
-            3D mask array (H, W, num_bands) with each band shifted to its original coordinates.
+            3D mask array (H, W, num_bands) with each band shifted to its original coordinates,
+            or the original mask if no offsets were applied.
 
         """
         if not self.enabled:
             return mask
 
-        if self._offsets is None:
+        if offsets is None:
             return mask
 
-        if not self._offsets.has_offset():
+        if not offsets.has_offset():
             return mask
 
         # Handle 2D union mask - replicate and shift for each band
         if mask.ndim == 2:  # noqa: PLR2004
-            logger.info(
-                f"Shifting union mask to per-band coordinates: x={self._offsets.x_offsets}, y={self._offsets.y_offsets}"
-            )
+            logger.debug(f"Shifting union mask to per-band coordinates: x={offsets.x_offsets}, y={offsets.y_offsets}")
             unaligned_masks = []
-            for band_idx in range(self._offsets.num_bands):
-                x_off = -self._offsets.x_offsets[band_idx]
-                y_off = -self._offsets.y_offsets[band_idx]
+            for band_idx in range(offsets.num_bands):
+                x_off = -offsets.x_offsets[band_idx]
+                y_off = -offsets.y_offsets[band_idx]
                 unaligned_mask = self._apply_offset(mask.astype(np.float32), x_off, y_off)
                 unaligned_masks.append(unaligned_mask)
             return np.stack(unaligned_masks, axis=2)
 
         # Handle 3D per-band masks
-        if mask.shape[2] != self._offsets.num_bands:
-            msg = f"Mask has {mask.shape[2]} bands but alignment calibrated for {self._offsets.num_bands} bands"
+        if mask.shape[2] != offsets.num_bands:
+            msg = f"Mask has {mask.shape[2]} bands but alignment computed for {offsets.num_bands} bands"
             raise ValueError(msg)
 
-        logger.info(
-            f"Shifting per-band masks to original coordinates: x={self._offsets.x_offsets}, y={self._offsets.y_offsets}"
-        )
+        logger.debug(f"Shifting per-band masks to original coordinates: x={offsets.x_offsets}, y={offsets.y_offsets}")
 
         unaligned_masks = []
         for band_idx in range(mask.shape[2]):
             mask_band = mask[:, :, band_idx]
-            x_off = -self._offsets.x_offsets[band_idx]
-            y_off = -self._offsets.y_offsets[band_idx]
+            x_off = -offsets.x_offsets[band_idx]
+            y_off = -offsets.y_offsets[band_idx]
             unaligned_mask = self._apply_offset(mask_band.astype(np.float32), x_off, y_off)
             unaligned_masks.append(unaligned_mask)
 

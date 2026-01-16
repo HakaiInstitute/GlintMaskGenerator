@@ -74,18 +74,6 @@ class Masker:
         """
         return len(self.image_loader)
 
-    def _calibrate_alignment(self) -> None:
-        """Calibrate band alignment if aligner is configured."""
-        if self.band_aligner is None:
-            return
-        if self.band_aligner.is_calibrated:
-            return
-
-        self.band_aligner.calibrate(
-            image_paths=self.image_loader.paths,
-            load_fn=self.image_loader.load_image,
-        )
-
     def __call__(
         self,
         max_workers: int,
@@ -107,8 +95,6 @@ class Masker:
             a processing failure.
 
         """
-        self._calibrate_alignment()
-
         if max_workers == 0:
             return self.process_unthreaded(callback, err_callback)
         return self.process(max_workers, callback, err_callback)
@@ -183,8 +169,9 @@ class Masker:
         """
         img = self.image_loader.load_image(paths)
 
+        offsets = None
         if self.band_aligner is not None:
-            img = self.band_aligner.align(img)
+            img, offsets = self.band_aligner.align(img)
 
         img = self.image_preprocessor(img)
         mask = self.algorithm(img)
@@ -193,7 +180,7 @@ class Masker:
         # Shift masks back to original unaligned coordinates for each band
         # This works for both union masks (2D) and per-band masks (3D)
         if self.band_aligner is not None:
-            mask = self.band_aligner.unalign_mask(mask)
+            mask = self.band_aligner.unalign_mask(mask, offsets)
 
         mask = self.to_metashape_mask(mask)
 
