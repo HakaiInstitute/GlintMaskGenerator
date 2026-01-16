@@ -11,7 +11,6 @@ Organization: Hakai Institute
 
 from __future__ import annotations
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 
 import cv2
@@ -40,6 +39,34 @@ class BandOffsets:
         return any(not np.allclose(m, identity, atol=0.01) for m in self.warp_matrices)
 
 
+def _compose_warp_matrices(m1: np.ndarray, m2: np.ndarray) -> np.ndarray:
+    """Compose two 2x3 Euclidean warp matrices.
+
+    Given transforms m1 (A → B) and m2 (B → C), returns the combined
+    transform (A → C).
+
+    Parameters
+    ----------
+    m1
+        2x3 warp matrix for first transformation.
+    m2
+        2x3 warp matrix for second transformation.
+
+    Returns
+    -------
+    np.ndarray
+        2x3 composed warp matrix.
+
+    """
+    # Convert to 3x3 homogeneous matrices
+    m1_h = np.vstack([m1, [0, 0, 1]])
+    m2_h = np.vstack([m2, [0, 0, 1]])
+    # Compose: m2 @ m1 applies m1 first, then m2
+    composed = m2_h @ m1_h
+    # Return as 2x3
+    return composed[:2, :].astype(np.float32)
+
+
 class BandAligner:
     """Handles per-image band alignment using ECC (Enhanced Correlation Coefficient)."""
 
@@ -51,18 +78,27 @@ class BandAligner:
         enabled
             Whether alignment is enabled (default True).
         max_workers
-            Maximum number of worker threads for parallel band processing.
-            If None, uses min(4, number_of_bands - 1). Set to 1 to disable
-            parallel processing.
+            Deprecated parameter, kept for backwards compatibility.
+            Previously controlled parallel band processing, but chained
+            alignment requires sequential processing.
 
         """
         self.enabled = enabled
-        self.max_workers = max_workers
-        # Cache of previous warp matrices per band for faster convergence (Dict[band_idx, warp_matrix])
+        self.max_workers = max_workers  # Kept for backwards compatibility
+        # Cache of previous local warp matrices per band for faster convergence
+        # Each entry maps band_idx -> local transform (band_idx -> band_idx-1)
         self._prev_warp_matrices: dict[int, np.ndarray] = {}
 
-    def align(self, img: np.ndarray) -> tuple[np.ndarray, BandOffsets | None]:  # noqa: C901
+    def align(self, img: np.ndarray) -> tuple[np.ndarray, BandOffsets | None]:
         """Compute alignment transforms and apply them to align an image.
+
+        Uses chained/sequential alignment where each band is aligned to its
+        previous neighbor (band 1 to band 0, band 2 to band 1, etc.). This
+        improves alignment success for bands that are spectrally distant from
+        the reference, since adjacent bands typically share more similar features.
+
+        The final warp matrices are composed so each represents the cumulative
+        transform from that band to band 0's coordinate space.
 
         Parameters
         ----------
@@ -83,59 +119,38 @@ class BandAligner:
             return img, None
 
         num_bands = img.shape[2]
-        ref_band = img[:, :, 0]
 
-        # Identity transform for reference band
-        warp_matrices = [np.eye(2, 3, dtype=np.float32)]
-
-        # Determine number of workers for parallel processing
-        num_workers = self.max_workers
-        if num_workers is None:
-            num_workers = min(4, num_bands - 1)
-
-        min_bands_for_parallel = 2
-        use_parallel = num_workers > 1 and num_bands > min_bands_for_parallel
+        # Identity transform for reference band (band 0)
+        cumulative_warp_matrices = [np.eye(2, 3, dtype=np.float32)]
 
         try:
-            if use_parallel:
-                # Process bands in parallel using ThreadPoolExecutor
-                # ECC releases the GIL, so threading provides real parallelism
-                warp_results: dict[int, np.ndarray] = {}
+            # Sequential/chained alignment: each band aligned to its previous neighbor
+            # This improves success rate for spectrally distant bands (e.g., NIR to Blue)
+            # since adjacent bands share more similar features
+            cumulative_warp = np.eye(2, 3, dtype=np.float32)
 
-                def process_band(band_idx: int) -> tuple[int, np.ndarray]:
-                    target_band = img[:, :, band_idx]
-                    initial_warp = self._prev_warp_matrices.get(band_idx)
-                    warp_matrix = self._estimate_transform(ref_band, target_band, initial_warp)
-                    return band_idx, warp_matrix
+            for band_idx in range(1, num_bands):
+                ref_band = img[:, :, band_idx - 1]
+                target_band = img[:, :, band_idx]
 
-                with ThreadPoolExecutor(max_workers=num_workers) as executor:
-                    futures = {executor.submit(process_band, i): i for i in range(1, num_bands)}
+                # Use previous local warp matrix as initial guess if available
+                initial_warp = self._prev_warp_matrices.get(band_idx)
+                local_warp = self._estimate_transform(ref_band, target_band, initial_warp)
 
-                    for future in as_completed(futures):
-                        band_idx, warp_matrix = future.result()
-                        warp_results[band_idx] = warp_matrix
-                        # Cache the result for next image
-                        self._prev_warp_matrices[band_idx] = warp_matrix
+                # Cache the local transform for next image
+                self._prev_warp_matrices[band_idx] = local_warp
 
-                # Reconstruct warp_matrices in order
-                warp_matrices.extend([warp_results[i] for i in range(1, num_bands)])
-            else:
-                # Sequential processing (single-threaded or only 2 bands)
-                for band_idx in range(1, num_bands):
-                    target_band = img[:, :, band_idx]
-                    # Use previous warp matrix as initial guess if available
-                    initial_warp = self._prev_warp_matrices.get(band_idx)
-                    warp_matrix = self._estimate_transform(ref_band, target_band, initial_warp)
-                    warp_matrices.append(warp_matrix)
-                    # Cache the result for next image
-                    self._prev_warp_matrices[band_idx] = warp_matrix
+                # Compose with previous cumulative transform to get band → band 0
+                cumulative_warp = _compose_warp_matrices(local_warp, cumulative_warp)
+                cumulative_warp_matrices.append(cumulative_warp.copy())
+
         except cv2.error as e:
             logger.warning(f"Band alignment failed for image: {e}")
             # Clear cache on failure to prevent bad cached values from persisting
             self._prev_warp_matrices.clear()
             return img, None
 
-        offsets = BandOffsets(warp_matrices=tuple(warp_matrices))
+        offsets = BandOffsets(warp_matrices=tuple(cumulative_warp_matrices))
 
         if not offsets.has_offset():
             return img, offsets
