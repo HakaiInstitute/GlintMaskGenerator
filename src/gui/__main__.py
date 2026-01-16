@@ -164,7 +164,7 @@ class GlintMaskGenerator(QtWidgets.QMainWindow):
             self.align_bands_checkbox.setEnabled(True)
             self.align_bands_checkbox.setToolTip(
                 "When checked, automatically aligns bands using phase correlation before applying thresholds. "
-                "Calibrates from the first few images. Only applies to multi-band sensors."
+                "Each image is aligned independently. Only applies to multi-band sensors."
             )
 
     def create_threshold_sliders(self) -> None:
