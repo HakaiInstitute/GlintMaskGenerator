@@ -34,7 +34,7 @@ class BandOffsets:
 
     def has_offset(self) -> bool:
         """Return True if any band has non-zero offset."""
-        return any(x != 0 or y != 0 for x, y in zip(self.x_offsets, self.y_offsets))
+        return any(x != 0 or y != 0 for x, y in zip(self.x_offsets, self.y_offsets, strict=False))
 
 
 class BandAligner:

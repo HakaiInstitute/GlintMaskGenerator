@@ -8,7 +8,7 @@ repository = "https://github.com/HakaiInstitute/GlintMaskGenerator"
 authors = [
     { name = "Taylor Denouden", email = "taylor.denouden@hakai.org" }
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 dependencies = [
     "imagecodecs>=2024.12.30",
     "loguru>=0.7.3",
