@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import concurrent.futures
 import os
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 import numpy as np
 from scipy.ndimage import convolve
@@ -17,6 +17,8 @@ from scipy.ndimage import convolve
 from .utils import make_circular_kernel
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from .band_alignment import BandAligner
     from .glint_algorithms import GlintAlgorithm
     from .image_loaders import ImageLoader

@@ -8,7 +8,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 from PyQt6 import QtWidgets, uic
@@ -22,6 +22,8 @@ from gui.utils import resource_path
 from gui.widgets.threshold_ctrl import ThresholdCtrl
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from glint_mask_tools.maskers import Masker
 
 

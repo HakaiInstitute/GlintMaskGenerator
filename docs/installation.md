@@ -1,6 +1,6 @@
 # Installation and Updating
 
-The library is currently available for Python versions 3.9 through 3.12. Support for
+The library is currently available for Python versions 3.11 through 3.15. Support for
 future versions will be added when possible.
 
 ## GUI Tool

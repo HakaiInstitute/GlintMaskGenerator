@@ -39,7 +39,7 @@ areas with data from overlapping imagery that are not glinty.
 - Operating Systems:
     - Windows 10 or later
     - Linux (modern distributions)
-- Python 3.9 - 3.12 (for CLI/Python package)
+- Python 3.11 - 3.15 (for CLI/Python package)
 - Minimum 4GB RAM
 - Storage space: 100MB + space for your imagery
 

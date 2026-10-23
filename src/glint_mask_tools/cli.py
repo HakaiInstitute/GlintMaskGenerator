@@ -11,7 +11,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path  # noqa: TC003
-from typing import TYPE_CHECKING, Annotated, Callable
+from typing import TYPE_CHECKING, Annotated
 
 import typer
 from tqdm import tqdm
@@ -19,6 +19,8 @@ from tqdm import tqdm
 from .sensors import Sensor, _known_sensors
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from .maskers import Masker
 
 
