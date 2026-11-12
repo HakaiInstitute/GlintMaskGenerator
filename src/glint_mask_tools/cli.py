@@ -43,7 +43,7 @@ def _process(masker: Masker, max_workers: int) -> None:
 def _create_sensor_command(sensor_cfg: Sensor) -> Callable[..., None]:
     """Create a CLI command function for a sensor configuration."""
 
-    def sensor_command(  # noqa: PLR0913
+    def sensor_command(  # noqa: PLR0913, PLR0917
         img_dir: Annotated[
             Path,
             typer.Argument(
