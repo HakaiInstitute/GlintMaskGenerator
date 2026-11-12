@@ -226,7 +226,7 @@ requires-dist = [
     { name = "imagecodecs", specifier = ">=2024.12.30" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "numpy", specifier = ">=2.0.2" },
-    { name = "opencv-python-headless", specifier = ">=4.8.0" },
+    { name = "opencv-python-headless", specifier = ">=4.8.0,<6" },
     { name = "pillow", specifier = ">=11.2.1" },
     { name = "pyqt6", specifier = ">=6.9.1" },
     { name = "scipy", specifier = ">=1.13.1" },
